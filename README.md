@@ -11,7 +11,7 @@ and shows the result as captions, sends it to [asbplayer](https://github.com/kil
 or saves it as an `.srt` file.
 
 [![Tests](https://github.com/arrow-poppa/buttercup-revival/actions/workflows/test.yml/badge.svg)](https://github.com/arrow-poppa/buttercup-revival/actions/workflows/test.yml)
-![Version](https://img.shields.io/badge/version-0.5.0-d7476b)
+[![Release](https://img.shields.io/github/v/release/arrow-poppa/buttercup-revival?color=d7476b)](https://github.com/arrow-poppa/buttercup-revival/releases/latest)
 ![Platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20Linux-342334)
 ![Browsers](https://img.shields.io/badge/browsers-Chrome%20%7C%20Edge%20%7C%20Chromium-342334)
 ![Manifest V3](https://img.shields.io/badge/manifest-v3-342334)
@@ -72,7 +72,7 @@ No experience needed. Four steps, about ten minutes.
 
 ### Step 1 · Download
 
-1. **[Download Buttercup (ZIP)](https://github.com/arrow-poppa/buttercup-revival/archive/refs/heads/main.zip)**.
+1. **[Download Buttercup (ZIP)](https://github.com/arrow-poppa/buttercup-revival/releases/latest/download/Buttercup-Revival.zip)**.
 2. **Extract** the ZIP: right-click it → **Extract All…**
 3. Put the extracted folder somewhere it can stay, for example **Documents**.
 
@@ -225,7 +225,7 @@ Translations live in [`locales/`](locales), one file per language, as `"original
 
 ## 🔄 Updating
 
-1. Download the new ZIP and extract it **over the same folder**, replacing the files.
+1. Download the [latest ZIP](https://github.com/arrow-poppa/buttercup-revival/releases/latest/download/Buttercup-Revival.zip) and extract it **over the same folder**, replacing the files.
 2. Run the installer again.
 3. Open `chrome://extensions` and click the **reload** arrow on the Buttercup card.
 
@@ -298,6 +298,7 @@ python -m venv .venv
 npm ci
 
 npm run build                       # copies the extension to dist/extension
+npm run package                     # builds the release archive, dist/Buttercup-Revival.zip
 npm test                            # JavaScript unit tests
 .venv/bin/python -m pytest tests/backend -q
 ```

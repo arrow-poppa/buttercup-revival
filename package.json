@@ -6,6 +6,7 @@
   "scripts": {
     "test": "node --test tests/*.test.js",
     "build": "node scripts/build.mjs",
+    "package": "python scripts/package.py",
     "test:browser": "node scripts/browser-smoke.mjs",
     "test:settings-browser": "node scripts/browser-settings.mjs",
     "test:connection-browser": "node scripts/browser-connection.mjs",
