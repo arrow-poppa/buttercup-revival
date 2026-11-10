@@ -1,0 +1,18 @@
+# Local secrets and generated artifacts (all platforms)
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.env
+.env.*
+!.env.example
+*cookies*.txt
+*cookies*.json
+token.private.json
+backend.lock
+backend-state/
+dist/
+node_modules/
+.tools/
+test-results/
+*.log

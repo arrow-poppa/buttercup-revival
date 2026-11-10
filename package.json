@@ -1,0 +1,24 @@
+{
+  "name": "buttercup-revival",
+  "version": "0.5.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "build": "node scripts/build.mjs",
+    "test:browser": "node scripts/browser-smoke.mjs",
+    "test:settings-browser": "node scripts/browser-settings.mjs",
+    "test:connection-browser": "node scripts/browser-connection.mjs",
+    "test:deepinfra-browser": "node scripts/browser-deepinfra.mjs",
+    "test:groq-browser": "node scripts/browser-deepinfra.mjs --groq",
+    "test:assistant-browser": "node scripts/browser-assistant.mjs",
+    "test:youtube": "node scripts/browser-youtube.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "fake-indexeddb": "^6.2.6"
+  }
+}

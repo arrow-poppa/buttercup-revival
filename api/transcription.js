@@ -1,189 +1,118 @@
-/**
- * Transcription handler for Buttercup
- * Manages the process of downloading audio and transcribing it
- */
+import { backend } from './backend.js';
+import { validateTranscription, requireDeepInfraKey, requireGroqKey } from './config.js';
+import { transcribe } from './provider.js';
+import { cacheDescriptor, cacheKey, cacheOperation, publicRecord } from '../cache/local.js';
+import { normalize, mergeChunks, formatTranscript } from '../subtitles/formats.js';
 
-class TranscriptionHandler {
-    constructor(apiConfig) {
-        this.apiConfig = apiConfig;
-        this.cobaltAPI = apiConfig.getCobaltAPI();
-        this.groqAPI = apiConfig.getGroqAPI();
-        this.isProcessing = false;
-        this.lastVideoId = null;
-        this.lastTranslate = false;
-    }
+const pause = (ms, signal) => new Promise((resolve, reject) => {
+    const done = () => { signal.removeEventListener('abort', abort); resolve(); };
+    const timer = setTimeout(done, ms);
+    const abort = () => { clearTimeout(timer); reject(new DOMException('Cancelled', 'AbortError')); };
+    signal.addEventListener('abort', abort, { once: true });
+    if (signal.aborted) abort();
+});
 
-    /**
-     * Check if the handler is currently processing a transcription
-     * @returns {boolean} True if processing, false otherwise
-     */
-    isCurrentlyProcessing() {
-        return this.isProcessing;
-    }
+async function community(settings, key, record) {
+    const response = await fetch(`${settings.communityUrl}/subtitles/${key}`, {
+        method: record ? 'PUT' : 'GET',
+        ...(record ? { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(publicRecord(record)) } : {}),
+        credentials: 'omit', redirect: 'error', signal: AbortSignal.timeout(10000),
+    });
+    if (response.status === 404) return null;
+    if (!response.ok) throw new Error(`Community cache HTTP ${response.status}`);
+    return response.json();
+}
 
-    /**
-     * Check if the handler has all required API keys
-     * @returns {boolean} True if all required API keys are set, false otherwise
-     */
-    hasRequiredApiKeys() {
-        return this.apiConfig.hasAllApiKeys();
-    }
-
-    /**
-     * Check if the current request is a duplicate of the last one
-     * @param {string} videoId - The YouTube video ID
-     * @param {boolean} translate - Whether to translate the subtitles
-     * @returns {boolean} True if duplicate, false otherwise
-     */
-    isDuplicateRequest(videoId, translate) {
-        return this.lastVideoId === videoId && this.lastTranslate === translate;
-    }
-
-    /**
-     * Set the last request details
-     * @param {string} videoId - The YouTube video ID
-     * @param {boolean} translate - Whether to translate the subtitles
-     */
-    setLastRequest(videoId, translate) {
-        this.lastVideoId = videoId;
-        this.lastTranslate = translate;
-    }
-
-    /**
-     * Download a file from a URL and return as a Blob
-     * @param {string} url - The URL to download
-     * @returns {Promise<Blob>} - The downloaded file as a Blob
-     */
-    async downloadFile(url) {
+export async function processVideo(videoId, settings, signal, progress) {
+    validateTranscription(settings);
+    const descriptor = cacheDescriptor(videoId, settings), key = await cacheKey(descriptor);
+    let record = settings.cache ? await cacheOperation('get', key) : null;
+    // Before revision 2 a single unfinished word discarded every word time,
+    // leaving only the provider's long segments. Transcribe those once more.
+    if (record && settings.wordTimestamps && (record.revision || 1) < 2 && !record.transcript.words?.length
+        && record.transcript.warnings?.some(warning => warning.startsWith('Invalid word timestamps'))) record = null;
+    if (!record && settings.communityRead && settings.communityUrl) {
         try {
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`Failed to download file: ${response.status} ${response.statusText}`);
+            const shared = await community(settings, key);
+            if (shared) {
+                const checked = publicRecord(shared);
+                const expected = publicRecord({ key, descriptor, transcript: { words: [], segments: [] } }).descriptor;
+                if (checked.key !== key || JSON.stringify(checked.descriptor) !== JSON.stringify(expected)) throw new Error('Invalid shared metadata');
+                const candidate = { ...checked, descriptor };
+                formatTranscript(candidate.transcript, settings);
+                record = candidate;
+                if (settings.cache) await cacheOperation('put', record);
             }
-            return await response.blob();
-        } catch (error) {
-            console.error('[Buttercup] Error downloading file:', error);
-            throw error;
-        }
+        } catch { progress({ stage: 'cache', message: 'Community cache unavailable; continuing locally.' }); }
     }
-
-    /**
-     * Process a video for transcription
-     * @param {string} videoId - The YouTube video ID
-     * @param {boolean} translate - Whether to translate the subtitles
-     * @param {function} onProgress - Callback for progress updates
-     * @param {function} onSuccess - Callback for successful transcription
-     * @param {function} onError - Callback for errors
-     */
-    async processVideo(videoId, translate, onProgress, onSuccess, onError) {
-        if (this.isProcessing) {
-            onError(new Error('Already processing a video'));
-            return;
-        }
-
-        if (!this.hasRequiredApiKeys()) {
-            const errorMsg = this.apiConfig.getUseCobaltApiKey()
-                ? 'API keys not set. Please set up Cobalt and Groq API keys in the extension settings.'
-                : 'Groq API key not set. Please set up the Groq API key in the extension settings.';
-            onError(new Error(errorMsg));
-            return;
-        }
-
-        if (this.isDuplicateRequest(videoId, translate)) {
-            onError(new Error('This video has already been processed with the same settings.'));
-            return;
-        }
-
-        // Check if translation is requested but not supported by the model
-        if (translate && !this.apiConfig.supportsTranslation()) {
-            onError(new Error(`The selected model (${this.apiConfig.getGroqModel()}) does not support translation. Please select whisper-large-v3 for translation.`));
-            return;
-        }
-
-        this.isProcessing = true;
-        this.setLastRequest(videoId, translate);
-
-        try {
-            // Step 1: Notify progress - Starting download
-            onProgress('Downloading audio...');
-
-            // Step 2: Download audio using Cobalt API
-            const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
-            const audioResult = await this.cobaltAPI.downloadAudio(videoUrl);
-            
-            if (!audioResult || !audioResult.url) {
-                throw new Error('Failed to download audio');
-            }
-
-            // Step 3: Download the audio file from the Cobalt URL
-            onProgress('Processing audio file...');
-            const audioBlob = await this.downloadFile(audioResult.url);
-            
-            // Step 4: Notify progress - Starting transcription
-            onProgress(translate ? 'Translating audio...' : 'Transcribing audio...');
-
-            // Step 5: Transcribe or translate using Groq API with the downloaded file
-            // Prepare options for transcription/translation
-            const options = {
-                wordTimestamps: this.apiConfig.getUseWordTimestamps()
-            };
-            
-            // Add prompt if available
-            const prompt = this.apiConfig.getPrompt();
-            if (prompt && prompt.trim() !== '') {
-                options.prompt = prompt;
-            }
-            
-            let transcriptionResult;
-            if (translate) {
-                transcriptionResult = await this.groqAPI.translate(audioBlob, options);
-            } else {
-                transcriptionResult = await this.groqAPI.transcribe(audioBlob, options);
-            }
-
-            // Step 6: Convert to YouTube format with word-level timestamps if enabled
-            const formatOptions = {
-                useWordTimestamps: this.apiConfig.getUseWordTimestamps(),
-                wordsPerLine: this.apiConfig.getWordsPerLine(),
-                maxLineLength: this.apiConfig.getMaxLineLength()
-            };
-            
-            const youtubeFormat = this.groqAPI.convertToYouTubeFormat(transcriptionResult, formatOptions);
-            
-            // Step 7: Notify success
-            onSuccess(youtubeFormat);
-        } catch (error) {
-            console.error('[Buttercup] Transcription error:', error);
-            onError(error);
-        } finally {
-            this.isProcessing = false;
-        }
+    if (record) return { record, segments: formatTranscript(record.transcript, settings), source: 'cache' };
+    signal.throwIfAborted();
+    if (settings.provider === 'openrouter' && !settings.apiKey) throw new Error('Set your OpenRouter API key first.');
+    if (settings.provider === 'deepinfra') requireDeepInfraKey(settings);
+    if (settings.provider === 'groq') requireGroqKey(settings);
+    if (!settings.backendToken) throw new Error('Pair the local backend first.');
+    const whole = settings.audioMode === 'whole';
+    if (settings.audioTrack === 'original' || whole) {
+        const health = await backend(settings, '/health', { signal });
+        if (settings.audioTrack === 'original' && !health.audio_track_selection?.includes('original')) throw new Error('Restart the local Buttercup backend to enable original audio selection.');
+        if (whole && !health.audio_modes?.includes('whole')) throw new Error('Restart the local Buttercup assistant to enable whole-audio uploads. No audio was sent.');
     }
-
-    /**
-     * Generate SRT file from YouTube format subtitles
-     * @param {Object} youtubeFormat - YouTube format subtitles
-     * @param {string} filename - Filename for the SRT file
-     */
-    generateSRT(youtubeFormat, filename) {
-        try {
-            const srtContent = this.groqAPI.convertToSRT(youtubeFormat);
-            
-            const blob = new Blob([srtContent], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            a.click();
-            URL.revokeObjectURL(url);
-            
-            return true;
-        } catch (error) {
-            console.error('[Buttercup] Error generating SRT:', error);
-            return false;
+    let job;
+    try {
+        progress({ stage: 'extracting', message: 'Extracting YouTube audio…' });
+        job = await backend(settings, '/jobs/extract', { method: 'POST', body: JSON.stringify({
+            video: videoId, chunk_seconds: settings.chunkSeconds, max_upload_bytes: settings.maxUploadMb * 1000000,
+            ...(whole ? { audio_mode: 'whole' } : {}),
+            ...(settings.audioTrack === 'original' ? { audio_track: 'original' } : {}) }), signal });
+        while (!['ready', 'error', 'cancelled'].includes(job.state)) {
+            await pause(700, signal);
+            job = await backend(settings, `/jobs/${job.id}`, { signal });
+            progress({ stage: job.state, message: job.state === 'converting' ? 'Converting and splitting audio…' : 'Extracting YouTube audio…', ...job.progress });
         }
+        if (job.state !== 'ready') throw new Error(job.error?.message || 'Extraction cancelled');
+        if (settings.audioTrack === 'original' && job.audio_track !== 'original') throw new Error('Backend did not confirm original audio selection. No audio was sent to the provider.');
+        if (whole && (job.audio_mode !== 'whole' || job.chunks?.length !== 1 || job.chunks[0].offset !== 0)) throw new Error('Backend did not confirm a whole-audio upload. No audio was sent to the provider.');
+        const parts = await transcribeChunks(job.chunks, settings.parallelRequests || 1, signal, async (chunk, requestSignal, done) => {
+            progress({ stage: 'transcribing', message: whole ? 'Transcribing the whole audio in one request…'
+                : `Transcribing part ${chunk.index + 1}/${job.chunks.length} (${Math.round(chunk.offset)}–${Math.round(chunk.offset + chunk.duration)}s${chunk.size ? `, ${(chunk.size / 1000000).toFixed(2)} MB` : ''})…`, progress: done / job.chunks.length });
+            const audio = await backend(settings, `/jobs/${job.id}/chunks/${chunk.index}`, { blob: true, signal: requestSignal });
+            requestSignal.throwIfAborted();
+            const transcript = normalize(await transcribe(settings, audio, requestSignal));
+            if (!transcript.words.length && !transcript.segments.length) throw new Error('Provider returned text without timestamps; synchronized captions require another model.');
+            return { offset: chunk.offset, duration: chunk.duration, transcript };
+        });
+        progress({ stage: 'processing', message: 'Combining subtitle timestamps…' });
+        record = { key, descriptor, transcript: mergeChunks(parts), createdAt: new Date().toISOString(), revision: 2 };
+        const segments = formatTranscript(record.transcript, settings);
+        if (settings.cache) await cacheOperation('put', record);
+        if (settings.communityShare && settings.communityUrl) {
+            try { await community(settings, key, record); }
+            catch { progress({ stage: 'cache', message: 'Subtitles ready; community upload failed.' }); }
+        }
+        return { record, segments, source: 'transcription' };
+    } finally {
+        if (job?.id) await backend(settings, `/jobs/${job.id}`, { method: 'DELETE' }).catch(() => {});
     }
 }
 
-// Export the class
-window.TranscriptionHandler = TranscriptionHandler;
+// A bounded queue preserves original chunk order even when responses finish out
+// of order. Failures abort in-flight work and stop the queue; no request is retried.
+async function transcribeChunks(chunks, concurrency, signal, operation) {
+    if (!Array.isArray(chunks) || !chunks.length) throw new Error('The backend returned no audio parts.');
+    const stop = new AbortController(), combined = AbortSignal.any([signal, stop.signal]);
+    const parts = new Array(chunks.length);
+    let cursor = 0, completed = 0, failure;
+    const worker = async () => {
+        while (!combined.aborted && cursor < chunks.length) {
+            const index = cursor++;
+            try {
+                parts[index] = await operation(chunks[index], combined, completed);
+                completed++;
+            } catch (error) { failure ||= error; stop.abort(); return; }
+        }
+    };
+    await Promise.allSettled(Array.from({ length: Math.min(concurrency, chunks.length) }, worker));
+    if (failure) throw failure;
+    signal.throwIfAborted();
+    return parts;
+}

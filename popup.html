@@ -1,191 +1,148 @@
-<!DOCTYPE html>
-<html data-theme="cupcake" lang="en">
-
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="initial-scale=1.0" />
-    <title>Buttercup</title>
-    <link href="assets/css/daisyui-4.7.2.full.min.css" rel="stylesheet" type="text/css" />
-    <script src="assets/js/tailwindcss.3.4.1.js"></script>
-    <style type="text/css">
-        body {
-            width: 400px;
-            height: 500px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .content-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 0 1rem;
-        }
-
-        .form-control {
-            width: 100%;
-        }
-
-        #buttons {
-            grid-auto-flow: column !important;
-        }
-
-        .tab-content {
-            padding-top: 1rem;
-            width: 100%;
-            display: block;
-        }
-
-        .api-input {
-            width: 100%;
-            margin-bottom: 0.5rem;
-        }
-
-        .footer {
-            margin-top: auto;
-        }
-    </style>
-</head>
-
+<!doctype html>
+<html lang="pt-BR" data-build-version="0.5.0"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Buttercup Revival</title><link rel="stylesheet" href="assets/css/popup.css"></head>
 <body>
-    <div class="text-center pt-5 px-4">
-        <h1 class="text-5xl font-bold">Buttercup</h1>
-        <p class="text-sm pt-3 pb-3">
-            Replace YouTube's crappy auto-generated subtitles with
-            Buttercup's awesome Whisper-generated ones
-        </p>
-    </div>
-    <div role="tablist" class="tabs tabs-boxed mx-auto w-4/5">
-        <a role="tab" class="tab tab-active" id="tab-general">General</a>
-        <a role="tab" class="tab" id="tab-api">API Setup</a>
-        <a role="tab" class="tab" id="tab-advanced">Advanced</a>
-    </div>
-    </div>
-    
-    <div class="content-container">
-        <!-- General Settings Tab -->
-        <div id="general-tab" class="tab-content">
-            <div class="divider">Settings</div>
-            <div class="form-control">
-                <label class="label cursor-pointer">
-                    <span class="label-text">Enabled</span>
-                    <input type="checkbox" class="toggle" id="enabled" checked />
-                </label>
-                <label class="label cursor-pointer" id="translate-container">
-                    <span class="label-text">Translate everything to English</span>
-                    <input type="checkbox" class="toggle" id="translate" />
-                </label>
-                <label class="label cursor-pointer">
-                    <span class="label-text">Use cache database</span>
-                    <input type="checkbox" class="toggle" id="cache" checked />
-                </label>
-                <label class="label cursor-pointer">
-                    <span class="label-text">Download SRT</span>
-                    <input type="checkbox" class="toggle" id="download" />
-                </label>
-            </div>
-        </div>
-        
-        <!-- API Setup Tab -->
-        <div id="api-tab" class="tab-content hidden">
-            <div class="divider">Cobalt API</div>
-            <div class="form-control">
-                <label class="label cursor-pointer">
-                    <span class="label-text">Use Cobalt API Key</span>
-                    <input type="checkbox" class="toggle" id="use-cobalt-api-key" checked />
-                </label>
-                
-                <div id="cobalt-api-key-container">
-                    <label class="label">
-                        <span class="label-text">Cobalt API Key</span>
-                    </label>
-                    <input type="password" placeholder="Enter your Cobalt API key" class="input input-bordered api-input" id="cobalt-api-key" />
-                </div>
-                
-                <label class="label">
-                    <span class="label-text">Cobalt API Base URL</span>
-                </label>
-                <input type="text" placeholder="https://api.cobalt.tools" value="https://api.cobalt.tools" class="input input-bordered api-input" id="cobalt-api-base" />
-            </div>
-            
-            <div class="divider">Groq API</div>
-            <div class="form-control">
-                <label class="label">
-                    <span class="label-text">Groq API Key</span>
-                </label>
-                <input type="password" placeholder="Enter your Groq API key" class="input input-bordered api-input" id="groq-api-key" />
-                
-                <label class="label">
-                    <span class="label-text">Groq Model</span>
-                </label>
-                <select class="select select-bordered w-full api-input" id="groq-model">
-                    <option value="whisper-large-v3">whisper-large-v3 (Best quality, multilingual, translation)</option>
-                    <option value="whisper-large-v3-turbo">whisper-large-v3-turbo (Faster, multilingual)</option>
-                    <option value="distil-whisper-large-v3-en">distil-whisper-large-v3-en (Fastest, English only)</option>
-                </select>
-                <p class="text-xs text-gray-500 mt-1" id="model-translation-note">
-                    Note: Only whisper-large-v3 supports translation
-                </p>
-            </div>
-            
-            <button class="btn btn-primary w-full mt-4 mb-4" id="save-api-settings">Save API Settings</button>
-        </div>
-        
-        <!-- Advanced Settings Tab -->
-        <div id="advanced-tab" class="tab-content hidden">
-            <div class="divider">Word-Level Timestamps</div>
-            <div class="form-control">
-                <label class="label cursor-pointer">
-                    <span class="label-text">Use word-level timestamps</span>
-                    <input type="checkbox" class="toggle" id="use-word-timestamps" checked />
-                </label>
-                
-                <div id="word-timestamp-settings">
-                    <label class="label">
-                        <span class="label-text">Words per line</span>
-                    </label>
-                    <input type="number" min="1" max="20" value="12" class="input input-bordered w-full mb-2" id="words-per-line" />
-                    
-                    <label class="label">
-                        <span class="label-text">Words per line break</span>
-                    </label>
-                    <input type="number" min="0" max="20" value="8" class="input input-bordered w-full mb-2" id="max-line-length" />
-                    <p class="text-xs text-gray-500 mt-1">
-                        Number of words before inserting a line break. Set to 0 to disable line breaks.
-                    </p>
-                </div>
-            </div>
-            
-            <div class="divider">Model Prompting</div>
-            <div class="form-control">
-                <label class="label">
-                    <span class="label-text">Prompt for the model</span>
-                </label>
-                <textarea class="textarea textarea-bordered h-24" placeholder="Enter a prompt to guide the model's style or specify how to spell unfamiliar words" id="model-prompt" maxlength="896"></textarea>
-                <p class="text-xs text-gray-500 mt-1">
-                    Limited to 896 characters (recommended ~500). Use this to guide the model's style or specify how to spell unfamiliar words.
-                </p>
-            </div>
-            
-            <button class="btn btn-primary w-full mt-4 mb-4" id="save-advanced-settings">Save Advanced Settings</button>
-        </div>
-    </div>
-    
-    <footer class="footer p-4 bg-neutral text-neutral-content flex flex-row justify-center">
-        <div class="grid grid-flow-col" id="buttons">
-            <a href="https://igerman.cc/" target="_blank" class="btn btn-primary btn-wide btn-sm max-w-24">
-                Contact
-            </a>
-            <a href="https://ko-fi.com/D1D2BJ5D6" target="_blank" class="btn btn-secondary btn-wide btn-sm max-w-24">
-                Donate
-            </a>
-            <a href="https://buttercup.igerman.cc" target="_blank" class="btn btn-wide btn-sm max-w-24">
-                Cache DB
-            </a>
-        </div>
-    </footer>
-</body>
-
-<script src="assets/js/buttons.js"></script>
-
-</html>
+<header><img src="icons/icon48.png" alt="" width="44" height="44"><div><h1>Buttercup</h1><p>Better YouTube captions · Revival</p></div><select data-setting="uiLanguage" aria-label="Language" title="Language"><option value="auto">Auto</option><option value="en">English</option><option value="pt-BR">Português</option><option value="es">Español</option><option value="ja">日本語</option><option value="zh-CN">简体中文</option></select></header>
+<main>
+<p id="status" role="status" aria-live="polite">Ready</p>
+<p id="update-message" class="hint" hidden>A atualização está pronta. Recarregue a extensão para concluir; o modo e o provider fixado permanecem salvos.</p>
+<button type="button" id="update-extension" class="primary" hidden>Recarregar extensão</button>
+<section id="assistant-card" class="assistant-card" data-state="checking" aria-label="Assistente local">
+<div class="assistant-title"><strong>Assistente local</strong><span id="assistant-badge" role="status">Verificando…</span></div>
+<p id="assistant-message">Prepara o áudio do YouTube no seu computador. A transcrição usa o provedor que você escolher.</p>
+<div class="actions"><button type="button" id="start-backend" class="primary">Iniciar e conectar</button><button type="button" id="check-backend">Verificar conexão</button></div>
+<details id="assistant-help"><summary>Como conectar</summary>
+<p>Depois da configuração inicial, basta clicar em <strong>Iniciar e conectar</strong>. Você pode fechar a janela; o assistente continua funcionando enquanto o computador estiver ligado.</p>
+<ol><li>In the Buttercup folder, run <strong>Install Buttercup.cmd</strong> on Windows or <strong>install.sh</strong> on Linux. You only do this once.</li><li>Extension ID, for troubleshooting: <code id="assistant-extension-id"></code> <button type="button" id="copy-extension-id">Copiar ID</button></li><li>Come back here and click <strong>Start and connect</strong>. Pairing is automatic.</li></ol>
+<p class="hint">Você só precisa instalar uma vez por navegador. Não é preciso abrir terminal, informar endereço ou copiar token para usar no dia a dia.</p>
+</details>
+</section>
+<div class="actions"><button id="generate" class="primary">Generate captions</button><button id="cancel">Cancel</button></div>
+<label>Subtitle track<select id="track"><option value="">Current transcription</option></select></label>
+<div class="actions"><button id="srt">Download SRT</button><button id="vtt">Download VTT</button><button id="send">Send to asbplayer</button></div>
+<form id="settings-form" novalidate>
+<p id="settings-status" class="hint" role="status" aria-live="polite">Changes are saved automatically, including unfinished fields.</p>
+<button type="button" id="reload-settings" hidden>Retry loading saved settings</button>
+<fieldset id="settings-fields">
+<details open><summary>General</summary>
+<label>Audio track for transcription<select data-setting="audioTrack"><option value="default">Default audio</option><option value="original">Original audio (avoid dubbing)</option></select></label>
+<p class="hint">Original audio uses the track identified as original by YouTube. Select the same track in the YouTube player for matching playback.</p>
+<label class="check"><input type="checkbox" data-setting="enabled">Enable Buttercup</label>
+<label class="check"><input type="checkbox" data-setting="preferHuman">Prefer human captions</label>
+<label class="check"><input type="checkbox" data-setting="showOnPlayer">Show Buttercup captions on the YouTube video</label>
+<p class="hint">Turn off to use the subtitles only in asbplayer or as SRT/VTT files. Sending to asbplayer never depends on this, nor on the BC button in the player.</p>
+<label>Spoken language (blank = automatic)<input data-setting="language" placeholder="pt, en, ja…" maxlength="20"></label>
+<label class="check"><input type="checkbox" data-setting="translate">Translate speech to English (custom API only)</label>
+<label class="check"><input type="checkbox" data-setting="downloadSrt">Save SRT automatically after generating</label>
+<label>Folder for subtitle files (blank = browser Downloads)<input data-setting="saveFolder" placeholder="D:\Subtitles" maxlength="400" spellcheck="false"></label>
+<p class="hint">Files are named <code>[videoID]___Title.srt</code> and replace an older file of the same name. A folder here is written by the local assistant, so it must be connected; the folder must already exist. Also used by Download SRT / VTT.</p>
+</details>
+<details open><summary>Transcription</summary>
+<label class="provider-picker">Provedor de transcrição<select data-setting="provider"><option value="openrouter">OpenRouter</option><option value="deepinfra">DeepInfra</option><option value="groq">Groq</option><option value="custom">Custom API</option></select></label>
+<p class="hint">Each provider keeps its own key and model. Only the selected provider's options are shown below.</p>
+<div id="groq-settings" hidden>
+<p class="hint">Transcrição direta pelo Groq, sem OpenRouter ou troca automática de provedor. Use uma chave própria do Groq.</p>
+<label>Groq API key<input data-setting="groqApiKey" type="password" autocomplete="off"></label>
+<label>Groq model<input data-setting="groqModel" list="groq-model-list" placeholder="whisper-large-v3-turbo" maxlength="200"><datalist id="groq-model-list"><option value="whisper-large-v3-turbo"><option value="whisper-large-v3"></datalist></label>
+<p class="hint">Usa Audio Transcriptions com timestamps de segmentos e, quando solicitado, de palavras. Não inclua openai/ no ID do modelo.</p>
+</div>
+<div id="deepinfra-settings" hidden>
+<p class="hint">Direct transcription through DeepInfra, without OpenRouter or fallback to another provider. Requires a DeepInfra account/key; OpenRouter credits and keys do not apply.</p>
+<label>DeepInfra API key<input data-setting="deepinfraApiKey" type="password" autocomplete="off"></label>
+<label>DeepInfra model<input data-setting="deepinfraModel" list="deepinfra-model-list" placeholder="openai/whisper-large-v3-turbo" maxlength="200"><datalist id="deepinfra-model-list"><option value="openai/whisper-large-v3-turbo"><option value="openai/whisper-large-v3"><option value="Qwen/Qwen3-ASR-1.7B"><option value="Qwen/Qwen3-ASR-0.6B"><option value="mistralai/Voxtral-Mini-3B-2507"><option value="mistralai/Voxtral-Small-24B-2507"></datalist></label>
+<p class="hint">Whisper, Qwen ASR, Voxtral e outros modelos do catálogo ASR. O botão abaixo consulta a lista atual do DeepInfra. Solicita timestamps de palavras ou segmentos pela API nativa. O modelo precisa devolver texto com tempos reais para gerar legendas; diarização sem texto não é transcrição.</p>
+</div>
+<div id="openrouter-settings">
+<label>OpenRouter API<select data-setting="openrouterMode"><option value="transcriptions">Audio Transcriptions</option><option value="chat">Chat Completions (audio + provider pinning)</option></select></label>
+<div id="openrouter-chat-settings" hidden>
+<label>Fixar provedor / Pin provider (type or select; blank = automatic)<input data-setting="openrouterProvider" list="provider-list" placeholder="Type a provider slug, e.g. groq" maxlength="100"></label>
+<p class="hint">A pinned provider is the only provider allowed for the request. Fallback to another provider is disabled.</p>
+<p class="hint">Select an audio-input chat model that can return timestamped segments. Untimed replies cannot produce synchronized captions. Timestamp accuracy depends on the model.</p>
+</div>
+</div>
+<div id="custom-settings" hidden>
+<label>Custom API endpoint<select data-setting="customMode"><option value="transcriptions">Audio Transcriptions (/audio/transcriptions)</option><option value="chat">Chat Completions (/chat/completions)</option></select></label>
+<label>Fixar provedor / Pin provider (optional; type or select)<input data-setting="customProvider" list="provider-list" placeholder="Blank = automatic; or type a provider slug" maxlength="100"></label>
+<p class="hint">Optional OpenRouter-compatible routing: sends provider.only and allow_fallbacks=false. Your API must support these fields on the selected endpoint.</p>
+<p id="custom-chat-hint" class="hint" hidden>Choose a model that accepts audio input and returns timestamped segments. Untimed text cannot produce synchronized captions.</p>
+</div>
+<div id="openrouter-safety">
+<label class="check"><input type="checkbox" data-setting="openrouterNoFallback">Never fall back to another provider (strict)</label>
+<p class="hint">Requires a pinned provider and OpenRouter Chat Completions. Unsupported routes are blocked before sending audio. No automatic retry with another provider or model.</p>
+<p class="hint">With strict mode enabled, Buttercup accepts model:provider as shorthand for compatible audio chat models. Whisper cannot use Chat Completions, including with a provider suffix.</p>
+<p id="strict-routing-status" class="hint" role="status"></p>
+</div>
+<datalist id="provider-list"><option value="groq"><option value="google-vertex"><option value="deepinfra"></datalist>
+<label id="shared-base">Base URL<input data-setting="baseUrl" type="url"></label>
+<label id="shared-key"><span id="shared-key-label">OpenRouter API key</span><input data-setting="apiKey" type="password" autocomplete="off"></label>
+<label id="shared-model">Model (type an ID or select a suggestion)<input data-setting="model" list="model-list" placeholder="Type any model ID" required><datalist id="model-list"><option value="openai/whisper-large-v3"><option value="openai/whisper-large-v3-turbo"><option value="openai/whisper-1"><option value="elevenlabs/scribe-v2"></datalist></label>
+<p id="model-route-hint" class="hint" hidden><strong>Whisper cannot use Chat Completions.</strong> OpenRouter requires Audio Transcriptions for this model, with automatic provider routing. A direct provider API requires that provider's own key. <a href="https://openrouter.ai/docs/guides/overview/multimodal/stt" target="_blank" rel="noreferrer">OpenRouter documentation</a></p>
+<button type="button" id="use-openrouter-transcriptions" hidden>Use Audio Transcriptions — automatic provider routing</button>
+<button type="button" id="models">Fetch available models</button>
+<p class="hint">Consulta os modelos atuais do provedor selecionado. No DeepInfra inclui famílias como Qwen ASR, Voxtral e NVIDIA; no Groq e OpenRouter mostra os modelos de transcrição disponíveis. Nem todo modelo fornece os timestamps necessários para legendas: use o teste com uma amostra antes de um vídeo longo.</p>
+<div id="openrouter-routing">
+<p class="hint">Audio Transcriptions uses automatic provider routing. Select <strong>Chat Completions</strong> above to pin a provider through OpenRouter.</p>
+</div>
+<label id="transcription-format">Response format<select data-setting="responseFormat"><option value="verbose_json">verbose_json (timestamps)</option><option value="json">json (provider-specific timestamps)</option></select></label>
+<label class="check"><input type="checkbox" data-setting="wordTimestamps">Request word timestamps</label>
+<label id="translation-support" class="check"><input type="checkbox" data-setting="supportsTranslation">Custom API supports /audio/translations</label>
+<label>Vocabulary prompt<textarea data-setting="prompt" maxlength="896"></textarea></label>
+<label id="extra-headers-setting">Additional X- headers (JSON)<textarea data-setting="extraHeaders" spellcheck="false"></textarea></label>
+<label>Test with a short spoken audio sample (up to 2 MB)<input id="sample" type="file" accept="audio/*"></label>
+<button type="button" id="provider-test">Test transcription and timestamps</button><p class="hint">This sends your selected sample to the configured provider and may incur usage charges.</p>
+</details>
+<details open><summary>Subtitle layout</summary>
+<label>Start a new subtitle<select data-setting="cueBreaks"><option value="speech">When the speaker ends a sentence or pauses</option><option value="words">Only when the word limit is reached</option></select></label>
+<p class="hint">Following the speaker ends each subtitle with the sentence, at a comma once it is fairly full, or at a breath, so subtitles appear and leave with the speech. The word limit below still caps their size.</p>
+<div class="grid"><label>Max words per subtitle<input type="number" data-setting="wordsPerLine" min="1" max="40"></label><label>Line break every N words (0 = one line)<input type="number" data-setting="maxLineLength" min="0" max="40"></label></div>
+<p class="hint"><strong>Max words per subtitle</strong>: how many words stay on screen together before the next subtitle starts (a pause longer than 1 s also starts a new one). Needs word timestamps (keep “Request word timestamps” on); a model that returns none keeps its own, often long, segments. <strong>Line break</strong>: only wraps that subtitle into lines. Neither changes what is sent to the API, so you can adjust them without paying for a new transcription.</p>
+</details>
+<details><summary>Audio upload (advanced)</summary>
+<p class="hint">How the audio is sent to the API. This does not change how subtitles look.</p>
+<label>Envio do áudio<select data-setting="audioMode"><option value="chunks">Em partes (compatível com vídeos longos)</option><option value="whole">Áudio inteiro (um único pedido)</option></select></label>
+<p id="whole-audio-hint" class="hint" hidden>Envia o áudio completo uma vez, sem cortes do Buttercup. Deve caber no limite abaixo e ser aceito pelo modelo. Se o pedido falhar, não há reenvio automático; pode ser necessário aumentar o timeout. O provedor ainda pode dividir o áudio internamente.</p>
+<div id="chunk-options"><label>Pedidos simultâneos<select data-setting="parallelRequests"><option value="1">1 — um de cada vez</option><option value="2">2 — mais rápido</option><option value="3">3 — mais rápido, exige maior limite da API</option></select></label>
+<p class="hint">Envia partes ao mesmo provedor em paralelo e mantém a ordem das legendas. Em caso de erro, não inicia mais partes nem tenta outro provedor. Pedidos já enviados podem ser cobrados pela API.</p>
+<label>Part length (seconds)<input type="number" data-setting="chunkSeconds" min="5" max="1200"></label></div>
+<label>Max size of one upload (MB)<input type="number" data-setting="maxUploadMb" min="1" max="100"></label>
+<p class="hint">A limit per request, not per video: about 45 minutes of audio fit in 24 MB. Parts overlap by 1.5 s so no word is lost at a cut. Groq and OpenRouter reject uploaded files above 25 MB, also on paid plans; raise this only for an API that accepts more.</p>
+<label>Request timeout (seconds)<input type="number" data-setting="timeoutSeconds" min="10" max="600"></label>
+</details>
+<details id="backend-advanced"><summary>Conexão local — opções avançadas</summary>
+<p class="hint">Normalmente não é necessário alterar estes campos. Use “Iniciar e conectar” acima para conectar automaticamente.</p>
+<p class="hint">Your extension ID: <code id="extension-id"></code></p>
+<label>Local address<input data-setting="backendUrl" type="url" required></label>
+<label>Pairing token<input data-setting="backendToken" type="password" autocomplete="off"></label>
+<button type="button" id="health">Verificar assistente</button><details><summary>Detalhes técnicos da conexão</summary><pre id="health-status"></pre></details>
+</details>
+<details><summary>YouTube Authentication / Cookies</summary>
+<p class="hint">Only explicitly imported YouTube/Google Netscape cookies are sent to the local backend.</p>
+<p id="cookie-status">Check backend connection to see cookie status.</p>
+<label>Import / replace cookies.txt<input type="file" id="cookies" accept=".txt,text/plain"></label>
+<label class="check"><input type="checkbox" id="persist-cookies">Authorize persistence between backend sessions</label>
+<div class="actions"><button type="button" id="import-cookies">Import cookies</button><button type="button" id="toggle-cookies">Enable / disable</button><button type="button" id="remove-cookies">Remove cookies</button></div>
+</details>
+<details><summary>Cache</summary>
+<label class="check"><input type="checkbox" data-setting="cache">Use persistent local cache</label>
+<button type="button" id="clear-cache">Clear local cache</button>
+<label>Optional community cache URL<input type="url" data-setting="communityUrl" placeholder="https://your-worker.example"></label>
+<label class="check"><input type="checkbox" data-setting="communityRead">Look up community subtitles</label>
+<label class="check"><input type="checkbox" data-setting="communityShare">I consent to publish subtitle text and video/model metadata</label>
+<p class="hint">Sharing is off by default. Audio, cookies, keys and local tokens are never included.</p>
+</details>
+<details><summary>Integrations · asbplayer</summary>
+<label>Official local server<input type="url" data-setting="asbplayerUrl"></label>
+<label class="check"><input type="checkbox" data-setting="autoSend">Auto-send subtitles to asbplayer</label>
+<label>Optional mediaId<input data-setting="mediaId" placeholder="ID from bound media"></label>
+<button type="button" id="asb-status">Check connected media</button><pre id="asb-result"></pre>
+</details>
+<details><summary>Backup</summary>
+<p class="hint">Save your settings to a file and load them again later, for example after reinstalling. The file contains your API keys, so keep it private. The local connection and the subtitle cache are not included.</p>
+<button type="button" id="export-settings">Export settings</button>
+<label>Settings file to import<input type="file" id="settings-file" accept=".json,application/json"></label>
+<button type="button" id="import-settings">Import settings</button>
+</details>
+<button type="submit" class="primary save">Save settings</button>
+</fieldset>
+</form>
+</main><footer>v<span id="build-version">0.5.0</span> · Based on <a href="https://github.com/iGerman00/buttercup-chrome" target="_blank" rel="noreferrer">iGerman00’s Buttercup</a></footer>
+<script type="module" src="assets/js/buttons.js"></script></body></html>

@@ -1,211 +1,141 @@
-// Create and inject API scripts
-const apiScripts = [
-    'api/cobalt.js',
-    'api/groq.js',
-    'api/config.js',
-    'api/transcription.js'
-];
-
-// Inject API scripts first
-apiScripts.forEach(scriptPath => {
-    const script = document.createElement('script');
-    script.src = chrome.runtime.getURL(scriptPath);
-    document.documentElement.prepend(script);
-});
-
-// Then inject the main script
-const mainScript = document.createElement('script');
-mainScript.src = chrome.runtime.getURL('buttercup.js');
-document.documentElement.prepend(mainScript);
-
-// set default config if not set
-chrome.storage.sync.get(['buttercup_translate'], function (result) {
-    if (result.buttercup_translate === undefined) {
-        chrome.storage.sync.set({ buttercup_translate: false });
-    }
-});
-
-chrome.storage.sync.get(['buttercup_enabled'], function (result) {
-    if (result.buttercup_enabled === undefined) {
-        chrome.storage.sync.set({ buttercup_enabled: true });
-    }
-});
-
-chrome.storage.sync.get(['buttercup_cache'], function (result) {
-    if (result.buttercup_cache === undefined) {
-        chrome.storage.sync.set({ buttercup_cache: true });
-    }
-});
-
-chrome.storage.sync.get(['buttercup_download_srt'], function (result) {
-    if (result.buttercup_download_srt === undefined) {
-        chrome.storage.sync.set({ buttercup_download_srt: false });
-    }
-});
-
-// Set default API settings if not set
-chrome.storage.sync.get(['buttercup_use_cobalt_api_key'], function (result) {
-    if (result.buttercup_use_cobalt_api_key === undefined) {
-        chrome.storage.sync.set({ buttercup_use_cobalt_api_key: true });
-    }
-});
-
-chrome.storage.sync.get(['buttercup_cobalt_api_base'], function (result) {
-    if (result.buttercup_cobalt_api_base === undefined) {
-        chrome.storage.sync.set({ buttercup_cobalt_api_base: 'https://api.cobalt.tools' });
-    }
-});
-
-chrome.storage.sync.get(['buttercup_groq_model'], function (result) {
-    if (result.buttercup_groq_model === undefined) {
-        chrome.storage.sync.set({ buttercup_groq_model: 'whisper-large-v3' });
-    }
-});
-
-// Set default word timestamp settings if not set
-chrome.storage.sync.get(['buttercup_use_word_timestamps'], function (result) {
-    if (result.buttercup_use_word_timestamps === undefined) {
-        chrome.storage.sync.set({ buttercup_use_word_timestamps: true });
-    }
-});
-
-chrome.storage.sync.get(['buttercup_words_per_line'], function (result) {
-    if (result.buttercup_words_per_line === undefined) {
-        chrome.storage.sync.set({ buttercup_words_per_line: 16 });
-    }
-});
-
-chrome.storage.sync.get(['buttercup_max_line_length'], function (result) {
-    if (result.buttercup_max_line_length === undefined) {
-        chrome.storage.sync.set({ buttercup_max_line_length: 8 });
-    } else if (result.buttercup_max_line_length > 20) {
-        // Convert old character-based setting to word-based setting
-        // If the old value was the default 64 characters, set to new default of 6 words
-        // Otherwise, set to a reasonable value of 6 words
-        chrome.storage.sync.set({ buttercup_max_line_length: 6 });
-    }
-});
-
-// Set default prompt if not set
-chrome.storage.sync.get(['buttercup_prompt'], function (result) {
-    if (result.buttercup_prompt === undefined) {
-        chrome.storage.sync.set({
-            buttercup_prompt: "Today, we're diving deep—yes, really deep—into Apple's latest marvel: the iPhone 15 Pro Max! Is it worth the hype (and the hefty price)? Let's find out. First impressions: sleek, powerful, and surprisingly lightweight. But wait… what's this? USB-C instead of Lightning? Finally! Cameras: 48MP main, 5x optical zoom—insane quality, folks. Battery life? Mind-blowing; lasted 14+ hours of heavy use. Verdict: it's fantastic—but do you need one? Well, that's entirely up to you. Like, subscribe, comment below"
-        });
-    }
-});
-
-// Listen for the custom event to save settings
-document.addEventListener('buttercupSaveSetting', function (e) {
-    if (e.detail && e.detail.key && e.detail.value !== undefined) {
-        const settingObj = {};
-        settingObj[e.detail.key] = e.detail.value;
-        chrome.storage.sync.set(settingObj);
-        console.info(`[Buttercup] Saved setting: ${e.detail.key}`);
-    }
-});
-
-// Listen for the custom event
-document.addEventListener('requestButtercupTranslate', function () {
-    chrome.storage.sync.get(['buttercup_translate'], function (result) {
-        const translate = result.buttercup_translate;
-        // Send the value back to the page
-        document.dispatchEvent(new CustomEvent('responseButtercupTranslate', { detail: translate }));
-    });
-});
-
-document.addEventListener('requestButtercupEnabled', function () {
-    chrome.storage.sync.get(['buttercup_enabled'], function (result) {
-        const enabled = result.buttercup_enabled;
-        // Send the value back to the page
-        document.dispatchEvent(new CustomEvent('responseButtercupEnabled', { detail: enabled }));
-    });
-});
-
-document.addEventListener('requestButtercupCache', function () {
-    chrome.storage.sync.get(['buttercup_cache'], function (result) {
-        const cache = result.buttercup_cache;
-        // Send the value back to the page
-        document.dispatchEvent(new CustomEvent('responseButtercupCache', { detail: cache }));
-    });
-});
-
-document.addEventListener('requestButtercupDownloadSrt', function () {
-    chrome.storage.sync.get(['buttercup_download_srt'], function (result) {
-        const download = result.buttercup_download_srt;
-        // Send the value back to the page
-        document.dispatchEvent(new CustomEvent('responseButtercupDownloadSrt', { detail: download }));
-    });
-});
-
-// Listen for API settings requests
-document.addEventListener('requestButtercupApiSettings', function () {
-    chrome.storage.sync.get([
-        'buttercup_use_cobalt_api_key',
-        'buttercup_cobalt_api_key',
-        'buttercup_cobalt_api_base',
-        'buttercup_groq_api_key',
-        'buttercup_groq_model',
-        'buttercup_use_word_timestamps',
-        'buttercup_words_per_line',
-        'buttercup_max_line_length',
-        'buttercup_prompt'
-    ], function (result) {
-        // Send the values back to the page
-        document.dispatchEvent(new CustomEvent('responseButtercupApiSettings', {
-            detail: {
-                useCobaltApiKey: result.buttercup_use_cobalt_api_key !== false,
-                cobaltApiKey: result.buttercup_cobalt_api_key || '',
-                cobaltApiBase: result.buttercup_cobalt_api_base || 'https://api.cobalt.tools',
-                groqApiKey: result.buttercup_groq_api_key || '',
-                groqModel: result.buttercup_groq_model || 'whisper-large-v3',
-                useWordTimestamps: result.buttercup_use_word_timestamps !== false,
-                wordsPerLine: result.buttercup_words_per_line || 12,
-                maxLineLength: result.buttercup_max_line_length || 64,
-                prompt: result.buttercup_prompt || "Today, we're diving deep—yes, really deep—into Apple's latest marvel: the iPhone 15 Pro Max! Is it worth the hype (and the hefty price)? Let's find out. First impressions: sleek, powerful, and surprisingly lightweight. But wait… what's this? USB-C instead of Lightning? Finally! Cameras: 48MP main, 5x optical zoom—insane quality, folks. Battery life? Mind-blowing; lasted 14+ hours of heavy use. Verdict: it's fantastic—but do you need one? Well, that's entirely up to you. Like, subscribe, comment below"
+(() => {
+    globalThis.__buttercupContent?.dispose();
+    document.getElementById('buttercup-button')?.remove();
+    document.getElementById('buttercup-notice')?.remove();
+    const events = new AbortController();
+    let disposed = false, interval;
+    const renderer = new ButtercupRenderer();
+    let settings = { enabled: true, preferHuman: true, showOnPlayer: true }, videoId = '', button, lastStatus, activity = null, strings = {};
+    const say = text => strings[text] || text;
+    const request = async message => {
+        let result;
+        try { result = await chrome.runtime.sendMessage(message); }
+        catch (error) {
+            if (/Extension context invalidated|Receiving end does not exist|Could not establish connection/i.test(error.message)) {
+                throw new Error(say('A extensão foi atualizada. Abra o popup do Buttercup para reconectar o player.'));
             }
-        }));
-    });
-});
-
-// Listen for error notification requests
-document.addEventListener('buttercupShowError', function (e) {
-    if (e.detail && e.detail.message) {
-        // Inject error notification into the page
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-            chrome.scripting.executeScript({
-                target: { tabId: tabs[0].id },
-                func: (message) => {
-                    // Create snackbar element
-                    const snackbar = document.createElement('div');
-                    snackbar.style.position = 'fixed';
-                    snackbar.style.bottom = '20px';
-                    snackbar.style.left = '50%';
-                    snackbar.style.transform = 'translateX(-50%)';
-                    snackbar.style.backgroundColor = '#f44336';
-                    snackbar.style.color = 'white';
-                    snackbar.style.padding = '16px';
-                    snackbar.style.borderRadius = '4px';
-                    snackbar.style.zIndex = '9999';
-                    snackbar.style.boxShadow = '0 2px 5px rgba(0,0,0,0.3)';
-                    snackbar.style.minWidth = '250px';
-                    snackbar.style.textAlign = 'center';
-                    snackbar.textContent = `Buttercup Error: ${message}`;
-                    
-                    // Add to page
-                    document.body.appendChild(snackbar);
-                    
-                    // Remove after 5 seconds
-                    setTimeout(() => {
-                        if (document.body.contains(snackbar)) {
-                            document.body.removeChild(snackbar);
-                        }
-                    }, 5000);
-                },
-                args: [e.detail.message]
-            });
-        });
+            throw error;
+        }
+        if (!result?.ok) throw new Error(result?.error || say('Buttercup unavailable'));
+        return result.data;
+    };
+    function currentId() {
+        const url = new URL(location.href);
+        const candidate = url.searchParams.get('v') || (/^\/(shorts|live)\//.test(url.pathname) ? url.pathname.split('/')[2] : '');
+        return /^[A-Za-z0-9_-]{11}$/.test(candidate || '') ? candidate : '';
     }
-});
-
-document.dispatchEvent(new CustomEvent('buttercupSettingsChanged'));
+    function notify(text, keep = false) {
+        lastStatus = text;
+        if (button) { button.title = `Buttercup: ${text}`; button.setAttribute('aria-label', button.title); }
+        let notice = document.getElementById('buttercup-notice');
+        if (!notice) {
+            notice = document.createElement('div'); notice.id = 'buttercup-notice'; notice.setAttribute('role', 'status');
+            Object.assign(notice.style, { position: 'fixed', bottom: '80px', right: '24px', maxWidth: '420px', padding: '12px 18px',
+                borderRadius: '12px', background: '#301e35', color: '#fff', zIndex: '2147483647', font: '14px system-ui' });
+            document.body.append(notice);
+        }
+        notice.textContent = `Buttercup · ${text}`;
+        clearTimeout(notify.timer);
+        if (!keep) notify.timer = setTimeout(() => notice.remove(), 7000);
+    }
+    // The notice stays for the whole job, with a percentage when the stage has
+    // one and the elapsed time, so one long request never looks stalled.
+    function progress(status) {
+        const finished = ['ready', 'error', 'cancelled', 'idle'].includes(status.stage);
+        let text = status.message || status.stage;
+        const fraction = status.total_bytes ? status.downloaded_bytes / status.total_bytes : status.progress;
+        if (!finished && fraction > 0 && fraction <= 1) text += ` ${Math.round(fraction * 100)}%`;
+        activity = finished ? null : { text, since: activity?.since || Date.now() };
+        if (finished) notify(text); else tick();
+    }
+    function tick() {
+        if (!activity) return;
+        const seconds = Math.floor((Date.now() - activity.since) / 1000);
+        notify(`${activity.text} · ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`, true);
+    }
+    async function generate() {
+        try { await request({ type: 'GENERATE' }); if (!activity) progress({ stage: 'starting', message: say('Starting…') }); }
+        catch (error) { activity = null; notify(error.message); }
+    }
+    async function navigation() {
+        const next = currentId();
+        if (next === videoId) return;
+        if (videoId) await request({ type: 'CANCEL' }).catch(() => {});
+        renderer.clear(); videoId = next;
+        if (activity) { activity = null; clearTimeout(notify.timer); document.getElementById('buttercup-notice')?.remove(); }
+        if (button) button.setAttribute('aria-pressed', 'false');
+    }
+    function attach() {
+        if (disposed) return;
+        if (!chrome.runtime.id) { dispose(); return; }
+        navigation();
+        const controls = document.querySelector('#movie_player .ytp-right-controls');
+        if (!controls || !videoId || !settings.enabled) { button?.remove(); button = null; return; }
+        if (button?.parentElement !== controls) {
+            button?.remove(); button = document.createElement('button');
+            button.className = 'ytp-button'; button.id = 'buttercup-button'; button.textContent = 'BC';
+            button.dataset.buttercupConnection = '1';
+            // YouTube's own controls hold an icon; centre the label the same way.
+            Object.assign(button.style, { font: 'bold 14px system-ui', color: '#ffb1c2', display: 'inline-flex',
+                alignItems: 'center', justifyContent: 'center', verticalAlign: 'top', lineHeight: '1', padding: '0' });
+            button.title = `Buttercup: ${lastStatus || say('Generate better captions')}`;
+            button.setAttribute('aria-label', button.title); button.setAttribute('aria-pressed', 'false');
+            button.addEventListener('click', async event => {
+                if (!event.isTrusted) return;
+                if (renderer.segments.length) {
+                    const showing = renderer.toggle(); button.setAttribute('aria-pressed', String(showing));
+                    // Do not restore/reload YouTube's caption source when only
+                    // hiding Buttercup: other subtitle tools may follow it.
+                    if (showing) await request({ type: 'HIDE_YOUTUBE_CAPTIONS' }).catch(() => {});
+                } else generate();
+            });
+            controls.prepend(button);
+        }
+        const video = document.querySelector('#movie_player video');
+        if (renderer.segments.length && video && video !== renderer.video) {
+            const segments = renderer.segments, showing = renderer.track?.mode === 'showing';
+            renderer.show(video, segments);
+            if (!showing) renderer.toggle();
+        }
+    }
+    function onMessage(message, sender, respond) {
+        if (sender.id !== chrome.runtime.id) return;
+        if (message.type === 'BUTTERCUP_READY') {
+            respond({ ready: true, version: chrome.runtime.getManifest().version, videoId: currentId() });
+            return false;
+        }
+        if (message.type === 'PROGRESS') progress(message.status);
+        if (message.type === 'SETTINGS') {
+            const shown = settings.showOnPlayer !== false, show = message.settings.showOnPlayer !== false;
+            settings = message.settings; strings = settings.strings || {};
+            if (settings.enabled && shown !== show && renderer.segments.length && (renderer.track?.mode === 'showing') !== show) {
+                renderer.toggle(); button?.setAttribute('aria-pressed', String(show));
+                if (show) request({ type: 'HIDE_YOUTUBE_CAPTIONS' }).catch(() => {});
+            }
+            if (!settings.enabled) { renderer.clear(); request({ type: 'CANCEL' }).catch(() => {}); request({ type: 'RESTORE' }).catch(() => {}); }
+            attach();
+        }
+        if (message.type === 'SUBTITLES' && message.videoId === currentId()) {
+            const video = document.querySelector('#movie_player video');
+            const visible = message.visible !== false;
+            if (video) { renderer.show(video, message.segments, message.language, visible); button?.setAttribute('aria-pressed', String(visible)); }
+            respond({ received: !!video });
+            return false;
+        }
+    }
+    function dispose() {
+        disposed = true;
+        events.abort();
+        clearInterval(interval); clearTimeout(notify.timer);
+        renderer.clear(); button?.remove();
+        document.getElementById('buttercup-notice')?.remove();
+        try { chrome.runtime.onMessage.removeListener(onMessage); } catch {}
+    }
+    globalThis.__buttercupContent = { dispose };
+    chrome.runtime.onMessage.addListener(onMessage);
+    request({ type: 'PUBLIC_SETTINGS' }).then(value => { settings = value; strings = value.strings || {}; attach(); }).catch(() => {});
+    // A reloaded page picks up the job that is still running for this tab.
+    request({ type: 'STATUS' }).then(status => { if (!activity && !['ready', 'error', 'cancelled', 'idle'].includes(status.stage)) progress(status); }).catch(() => {});
+    document.addEventListener('yt-navigate-finish', attach, { signal: events.signal });
+    interval = setInterval(() => { attach(); tick(); }, 1000);
+})();
