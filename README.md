@@ -300,9 +300,6 @@ npm ci
 npm run build                       # copies the extension to dist/extension
 npm test                            # JavaScript unit tests
 .venv/bin/python -m pytest tests/backend -q
-
-npx playwright install chromium     # once, for the browser tests
-npm run test:browser                # end-to-end in Chromium with simulated services
 ```
 
 The extension has no bundler: `npm run build` only copies files, so `node scripts/build.mjs` is all the installer needs.
