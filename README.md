@@ -7,7 +7,7 @@
 **Accurate, well-timed subtitles for any YouTube video, generated on demand.**
 
 Buttercup transcribes the audio of the video you are watching with a speech model of your choice
-and shows the result as captions, sends it to [asbplayer](https://github.com/killergerbah/asbplayer),
+and shows the result as captions, sends it to [asbplayer](https://github.com/asbplayer/asbplayer),
 or saves it as an `.srt` file.
 
 [![Tests](https://github.com/arrow-poppa/buttercup-revival/actions/workflows/test.yml/badge.svg)](https://github.com/arrow-poppa/buttercup-revival/actions/workflows/test.yml)
@@ -161,11 +161,33 @@ The first time takes roughly as long as the provider needs to transcribe the aud
 
 ## 📚 Using it with asbplayer
 
-Buttercup can hand its subtitles straight to [asbplayer](https://github.com/killergerbah/asbplayer) for language study.
+Buttercup can hand its subtitles straight to [asbplayer](https://github.com/asbplayer/asbplayer) for language study.
 
-1. Run asbplayer's local server, as described in its [external API guide](https://docs.asbplayer.dev/docs/reference/external-api/).
-2. In the Buttercup popup, open **Integrations · asbplayer** and turn on **Auto-send subtitles to asbplayer**.
-3. To see only asbplayer's subtitles, turn off **Show Buttercup captions on the YouTube video** under **General**.
+The two talk through asbplayer's **WebSocket server**, a small program from the asbplayer project that runs on your computer. It is not part of Buttercup and the installer does not set it up, so do this once:
+
+**1 · Start asbplayer's WebSocket server**
+
+Install [Go](https://go.dev/dl/) and [Git](https://git-scm.com/downloads), then run in a terminal:
+
+```sh
+git clone https://github.com/asbplayer/asbplayer.git
+cd asbplayer/scripts/web-socket-server
+go run .
+```
+
+Leave that window open while you use asbplayer. Next time, only the last two lines are needed. asbplayer's own [WebSocket server guide](https://docs.asbplayer.dev/docs/guides/web-socket-server) has the details and options.
+
+**2 · Let asbplayer connect to it**
+
+Open asbplayer's settings, go to **Misc**, and enable the **WebSocket client**. Leave the address as it is.
+
+**3 · Tell Buttercup to use it**
+
+In the Buttercup popup, open **Integrations · asbplayer**:
+
+- Click **Check connected media** to confirm Buttercup can reach the server.
+- Turn on **Auto-send subtitles to asbplayer**.
+- To see only asbplayer's subtitles, turn off **Show Buttercup captions on the YouTube video** under **General**.
 
 From then on, pressing **BC** generates the subtitles and loads them into asbplayer. The **Send to asbplayer** button sends them again at any time, including from the cache.
 
@@ -250,6 +272,7 @@ Python, Node.js and FFmpeg stay installed, since other programs may use them. Re
 | *"Set your … API key first"* | Paste the key of the provider selected under **Transcription** |
 | *"YouTube rejected extraction (403)"* or *authentication failed* | Import fresh cookies, or try again later; YouTube sometimes blocks downloads temporarily |
 | Subtitles are huge blocks of text | Keep **Request word timestamps** on and lower **Max words per subtitle**. Some models do not return word timings; try a Whisper model |
+| *"asbplayer is unavailable"* | Start asbplayer's WebSocket server and enable the WebSocket client in asbplayer; see [Using it with asbplayer](#-using-it-with-asbplayer) |
 | The upload is refused as too large | Use **Audio sending → In parts** |
 | The installer says a program could not be installed | Install it by hand ([Python](https://www.python.org/downloads/), [Node.js](https://nodejs.org/), [FFmpeg](https://ffmpeg.org/download.html)) and run the installer again |
 | Nothing happens and there is no message | Open the popup: the status line at the top shows the last error |
