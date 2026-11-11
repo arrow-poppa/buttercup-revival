@@ -3,7 +3,7 @@
   "minimum_chrome_version": "120",
   "name": "Buttercup Revival",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvj1inTaXz72dW/bGQ3PlnwFbBylQ/4HrWlqL0HKIi1dUDZPGPK4inx9gbNOzFartuPLNXtiUZJh0aHkyJcQmiEkpJH/Yw1puLouDY964f7qg/p6c7r+sj+8mufs6PUdnsrzK0/E8OUBZEaafjsH7CqwiJ2DfJORLzNq/jhhyLgRS4RC4DsbUXofT4IOgn94d3YlFw92+nd2F7hHnvRKHqCO0aqBVUFN0SbxAtJsDYd+T85R8Yk1O50aAfJWP6/gsaGyYrwSGoomB10jhBpYmZ4IOnINqEoqT0OdHKOrSAgQdEkhXn1bG0n2oSiJ6dkOtkFreubCLQd0RmKJk2tpemQIDAQAB",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Better YouTube captions with local audio extraction and configurable transcription APIs",
   "permissions": ["storage", "scripting", "offscreen", "activeTab", "downloads", "nativeMessaging"],
   "host_permissions": ["https://www.youtube.com/*", "https://openrouter.ai/*", "https://api.deepinfra.com/*", "https://api.groq.com/*", "http://127.0.0.1/*"],
