@@ -160,3 +160,94 @@ test('subtitles follow the speaker: sentence ends, full clauses and breaths star
     assert.deepEqual([cues[0].start, cues[0].end, cues[1].start], [words[0].start, words[1].end, words[2].start]);
     assert.throws(() => validateSettings({ cueBreaks: 'other' }), /break mode/);
 });
+
+const timedText = (parts, language = '') => normalize({ language, words: parts.map((text, index) => ({ text, start: index * .2, end: index * .2 + .15 })) });
+
+test('Japanese timed words join without artificial spaces and count characters, not provider tokens', () => {
+    const transcript = timedText(['今日', 'は', '日本語', 'を', '勉強', 'します。'], 'ja');
+    const cues = formatTranscript(transcript, { ...DEFAULTS, wordsPerLine: 6, maxLineLength: 0 });
+    assert.deepEqual(cues.map(cue => cue.text), ['今日は日本語', 'を勉強します。']);
+    assert.deepEqual(cues.map(({ start, end }) => [start, end]), [[0, .55], [.6, 1.15]]);
+});
+
+test('simplified and traditional Chinese respect sentence punctuation and closing quotes', () => {
+    for (const [parts, expected] of [
+        [['你', '好，', '世界。', '再见！'], ['你好，世界。', '再见！']],
+        [['他說', '「你好。', '」', '再見！'], ['他說「你好。」', '再見！']],
+    ]) {
+        const cues = formatTranscript(timedText(parts), { ...DEFAULTS, wordsPerLine: 12, maxLineLength: 0 });
+        assert.deepEqual(cues.map(cue => cue.text), expected);
+    }
+});
+
+test('unpunctuated Chinese still splits at character limits and provider timing gaps', () => {
+    const transcript = timedText(['今天', '天气', '很好', '我们', '出去', '走走']);
+    transcript.words[4].start = 3; transcript.words[4].end = 3.15;
+    transcript.words[5].start = 3.2; transcript.words[5].end = 3.35;
+    const cues = formatTranscript(transcript, { ...DEFAULTS, wordsPerLine: 6, maxLineLength: 0 });
+    assert.deepEqual(cues.map(cue => cue.text), ['今天天气很好', '我们', '出去走走']);
+    assert.equal(cues[2].start, 3);
+});
+
+test('Japanese and Chinese segment-only results wrap without inventing times or splitting Unicode graphemes', () => {
+    for (const [text, expected] of [
+        ['今日は日本語を勉強します。', '今日は日本語\nを勉強します。'],
+        ['你好世界今天学习中文。', '你好世界今天\n学习中文。'],
+        ['你好「世界」。', '你好「世界」。'],
+    ]) {
+        const cues = formatTranscript(normalize({ segments: [{ start: 2, end: 8, text }] }), { ...DEFAULTS, maxLineLength: 6 });
+        assert.deepEqual(cues, [{ start: 2, end: 8, text: expected }]);
+    }
+    const text = 'か\u3099👩‍💻日本語';
+    const cues = formatTranscript(normalize({ segments: [{ start: 0, end: 2, text }] }), { ...DEFAULTS, maxLineLength: 2 });
+    assert.equal(cues[0].text, 'か\u3099👩‍💻\n日本\n語');
+});
+
+test('CJK wrapping keeps brackets with their content and punctuation off the start of a line', () => {
+    const transcript = normalize({ segments: [{ start: 0, end: 5, text: '你好「世界」，再见。' }] });
+    const cues = formatTranscript(transcript, { ...DEFAULTS, maxLineLength: 2 });
+    assert.equal(cues[0].text, '你好\n「世界」，\n再见。');
+    assert.equal(formatTranscript(transcript, { ...DEFAULTS, maxLineLength: 0 })[0].text, '你好「世界」，再见。');
+});
+
+test('mixed CJK and Latin text preserves Latin words, numbers and their spaces', () => {
+    const transcript = timedText(['使用', 'OpenAI', 'speech', '2026', '模型。']);
+    const cues = formatTranscript(transcript, { ...DEFAULTS, wordsPerLine: 40, maxLineLength: 4 });
+    assert.equal(cues[0].text, '使用OpenAI speech\n2026模型。');
+});
+
+test('Thai combining marks stay attached and timed tokens do not gain spaces', () => {
+    const cues = formatTranscript(timedText(['สวัสดี', 'ครับ']), { ...DEFAULTS, wordsPerLine: 40, maxLineLength: 0 });
+    assert.equal(cues[0].text, 'สวัสดีครับ');
+});
+
+test('English, Portuguese and Korean retain space-based subtitle formatting', () => {
+    for (const [parts, expected] of [
+        [['Hello', 'world', 'today.'], 'Hello world\ntoday.'],
+        [['Olá', 'mundo', 'hoje.'], 'Olá mundo\nhoje.'],
+        [['오늘', '한국어를', '공부합니다.'], '오늘 한국어를\n공부합니다.'],
+    ]) {
+        const cues = formatTranscript(timedText(parts), { ...DEFAULTS, maxLineLength: 2 });
+        assert.equal(cues[0].text, expected);
+    }
+});
+
+test('a long CJK provider word stays at its supplied times while its display wraps', () => {
+    const cues = formatTranscript(timedText(['今天我们一起学习中文。']), { ...DEFAULTS, wordsPerLine: 2, maxLineLength: 4 });
+    assert.deepEqual(cues, [{ start: 0, end: .15, text: '今天我们\n一起学习\n中文。' }]);
+});
+
+
+test('mixed text keeps contractions, hyphenated words, decimals and combining marks intact', () => {
+    const transcript = normalize({ segments: [{ start: 0, end: 5, text: "日本語OpenAI-compatible don't 1,234.56字幕" }] });
+    assert.equal(formatTranscript(transcript, { ...DEFAULTS, maxLineLength: 3 })[0].text,
+        "日本語\nOpenAI-compatible don't 1,234.56\n字幕");
+    const decomposed = formatTranscript(timedText(['か\u3099', 'OpenAI', 'です。']), { ...DEFAULTS, maxLineLength: 0 });
+    assert.equal(decomposed[0].text, 'か\u3099OpenAIです。');
+});
+
+
+test('Japanese opening brackets do not add spaces before Latin words', () => {
+    const cues = formatTranscript(timedText(['「', 'OpenAI', 'です。', '」']), { ...DEFAULTS, maxLineLength: 0 });
+    assert.equal(cues[0].text, '「OpenAIです。」');
+});

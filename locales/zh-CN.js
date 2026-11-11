@@ -1,5 +1,6 @@
 // English source string -> translation. See api/i18n.js.
 export default {
+    "Japanese, Chinese and other supported scripts without spaces use character counts for these limits. Latin words and numbers remain intact. Provider timestamps determine where a subtitle can split.": "日语、中文及其他受支持的不使用空格分词的文字按字符数计算这些上限。拉丁字母单词和数字串保持完整。字幕分割位置由服务商返回的时间戳决定。",
     "Better YouTube captions · Revival": "更好的 YouTube 字幕 · Revival",
     "Ready": "就绪",
     "The update is ready. Reload the extension to finish; the mode and the pinned provider stay saved.": "更新已就绪。请重新加载扩展以完成；模式和固定的提供商会保留。",

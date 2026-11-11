@@ -1,3 +1,5 @@
+import { canBreakBetween, joinTimedWords, textSize, wrapText } from './text.js';
+
 // Word grouping and line breaks preserve the original Buttercup preferences.
 export function cleanSegments(items) {
     if (!Array.isArray(items) || items.length > 100000) throw new Error('Invalid subtitle segments');
@@ -19,13 +21,6 @@ export function cleanSegments(items) {
         if (seen.has(key)) return false;
         seen.add(key); return true;
     });
-}
-
-function lines(text, limit) {
-    if (!limit) return text;
-    const words = text.split(/\s+/u), result = [];
-    for (let i = 0; i < words.length; i += limit) result.push(words.slice(i, i + limit).join(' '));
-    return result.join('\n');
 }
 
 // Whisper regularly leaves a word without an end time, or with a zero length,
@@ -110,16 +105,16 @@ export function mergeChunks(parts) {
 
 // Where a speaker finishes a sentence or a clause, read from the provider's
 // own punctuation. Abbreviations and initials do not end a sentence.
-const SENTENCE_END = /[.!?…。！？]+["'”’»)\]]*$/u, CLAUSE_END = /[,;:，、；：]["'”’»)\]]*$/u;
+const SENTENCE_END = /[.!?…。！？]+["'”’»)\]」』）】〉》〕］｝]*$/u, CLAUSE_END = /[,;:，、；：]["'”’»)\]」』）】〉》〕］｝]*$/u;
 const ABBREVIATION = /^(?:(?:mr|mrs|ms|dr|sr|sra|st|vs|etc|prof|jr|no)\.|(?:\p{L}\.)+)$/iu;
 
 export function formatTranscript(transcript, options) {
     let segments;
     if ((options.wordTimestamps || !transcript.segments.length) && transcript.words.length) {
-        segments = []; let group = [];
+        segments = []; let group = [], size = 0;
         const flush = () => {
-            if (group.length) segments.push({ start: group[0].start, end: group.at(-1).end, text: group.map(word => word.text).join(' ') });
-            group = [];
+            if (group.length) segments.push({ start: group[0].start, end: group.at(-1).end, text: joinTimedWords(group) });
+            group = []; size = 0;
         };
         // Older cached records have no per-part fallback metadata. Recover
         // provider segments that have no overlapping words at all, without
@@ -138,20 +133,26 @@ export function formatTranscript(transcript, options) {
         // 'speech' follows the speaker: a subtitle ends with the sentence, at a
         // comma once it is fairly full, or at a breath. The word limit stays a cap.
         const speech = options.cueBreaks !== 'words', limit = options.wordsPerLine;
-        for (const word of timeline) {
+        for (const [index, word] of timeline.entries()) {
             if (!word.isWord) { flush(); segments.push(word); continue; }
             const gap = group.length ? word.start - group.at(-1).end : 0;
-            if (group.length && (group.length >= limit || gap > 1 || speech && gap >= .35 && group.length * 2 >= limit)) flush();
-            group.push(word);
+            const weight = textSize(word.text);
+            // A timed provider entry is indivisible: never fabricate per-character
+            // times when a model returns a whole phrase as one "word".
+            if (group.length && canBreakBetween(group.at(-1).text, word.text)
+                && (size + weight > limit || gap > 1 || speech && gap >= .35 && size * 2 >= limit)) flush();
+            group.push(word); size += weight;
             if (!speech) continue;
-            if (SENTENCE_END.test(word.text) ? !ABBREVIATION.test(word.text) : CLAUSE_END.test(word.text) && group.length >= limit * .6) flush();
+            const text = joinTimedWords(group), next = timeline[index + 1];
+            if (next?.isWord && !canBreakBetween('', next.text)) continue;
+            if (SENTENCE_END.test(text) ? !ABBREVIATION.test(word.text) : CLAUSE_END.test(text) && size >= limit * .6) flush();
         }
         flush();
     } else segments = transcript.segments;
     if (!segments.length) throw new Error('This model returned text without usable timestamps. Choose a timestamp-capable model.');
     return cleanSegments(segments).map((item, index, all) => ({ ...item,
         end: all[index + 1] ? Math.min(item.end, Math.max(item.start + .001, all[index + 1].start)) : item.end,
-        text: lines(item.text, options.maxLineLength) }));
+        text: wrapText(item.text, options.maxLineLength) }));
 }
 
 export function timestamp(seconds, vtt = false) {

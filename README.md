@@ -239,6 +239,8 @@ Age-restricted or members-only videos need you to be signed in. Under **YouTube 
 
 </details>
 
+For Japanese, Chinese, and other supported scripts without spaces, subtitle layout uses character counts instead of space-separated words. Timed tokens join without artificial spaces; Latin words and numbers stay intact in mixed text. Line wrapping preserves Unicode graphemes and keeps closing punctuation with the preceding text. Subtitle boundaries still follow provider timestamps: a long phrase returned as one timed entry can wrap onto multiple lines, but is not assigned invented per-character times.
+
 ## 🌍 Languages
 
 The interface is available in **English, Português (Brasil), Español, 日本語 and 简体中文**. Pick one from the menu at the top of the popup.

@@ -1,5 +1,6 @@
 // English source string -> translation. See api/i18n.js.
 export default {
+    "Japanese, Chinese and other supported scripts without spaces use character counts for these limits. Latin words and numbers remain intact. Provider timestamps determine where a subtitle can split.": "日本語、中国語など、空白で単語を区切らない対応文字では、この上限は文字数として数えます。英単語と数字列は分割しません。字幕の分割位置には、プロバイダーが返したタイムスタンプを使います。",
     "Better YouTube captions · Revival": "YouTube の字幕をもっと良く · Revival",
     "Ready": "準備完了",
     "The update is ready. Reload the extension to finish; the mode and the pinned provider stay saved.": "更新の準備ができました。完了するには拡張機能を再読み込みしてください。モードと固定したプロバイダーは保存されたままです。",
