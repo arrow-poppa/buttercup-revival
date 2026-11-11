@@ -25,22 +25,22 @@ def load_config(directory):
     config = json.loads((directory / 'assistant.json').read_text(encoding='utf-8'))
     ids = config.get('extension_ids', [])
     if not ids or any(not re.fullmatch(r'[a-p]{32}', item) for item in ids):
-        raise ValueError('Configure novamente o assistente com o ID da extensão.')
+        raise ValueError('Set up the assistant again with the extension ID.')
     if type(config.get('port')) is not int or not 1 <= config['port'] <= 65535:
-        raise ValueError('Porta inválida. Configure novamente o assistente.')
+        raise ValueError('Invalid port. Set up the assistant again.')
     return config
 
 
 def read_message(stream):
     header = stream.read(4)
     if len(header) != 4:
-        raise ValueError('Mensagem incompleta.')
+        raise ValueError('Incomplete message.')
     size = struct.unpack('=I', header)[0]
     if not 1 <= size <= 4096:
-        raise ValueError('Mensagem inválida.')
+        raise ValueError('Invalid message.')
     body = stream.read(size)
     if len(body) != size:
-        raise ValueError('Mensagem incompleta.')
+        raise ValueError('Incomplete message.')
     return json.loads(body)
 
 
@@ -57,10 +57,10 @@ def probe(directory, config):
         with build_opener(ProxyHandler({})).open(request, timeout=1) as response:
             health = json.load(response)
         if health.get('status') != 'ok' or health.get('version') != '0.2.0' or 'yt_dlp' not in health:
-            raise RuntimeError('Outro programa está usando a porta do Buttercup. Feche-o e tente novamente.')
+            raise RuntimeError('Another program is using the Buttercup port. Close it and try again.')
         return token
     except HTTPError:
-        raise RuntimeError('Outro serviço está usando a porta com uma conexão diferente. Reinicie o Buttercup.') from None
+        raise RuntimeError('Another service is using this port with a different connection. Restart Buttercup.') from None
     except (URLError, TimeoutError, OSError):
         return None
 
@@ -86,15 +86,15 @@ def start_service(directory, config):
             if token:
                 return token
             time.sleep(.15)
-    raise RuntimeError('O assistente não conseguiu abrir. Execute “Configurar assistente Buttercup” para verificar a instalação.')
+    raise RuntimeError('The assistant could not start. Run “Set up Buttercup assistant” to check the installation.')
 
 
 def handle(message, origin, directory):
     config = load_config(directory)
     if origin not in [f'chrome-extension://{item}/' for item in config['extension_ids']]:
-        raise ValueError('Extensão não autorizada. Configure o assistente para este navegador.')
+        raise ValueError('Unauthorized extension. Set up the assistant for this browser.')
     if message != {'action': 'start'}:
-        raise ValueError('Ação não permitida.')
+        raise ValueError('Action not allowed.')
     token = start_service(directory, config)
     return {'ok': True, 'backendUrl': f'http://127.0.0.1:{config["port"]}', 'backendToken': token}
 
@@ -107,10 +107,10 @@ def main():
     try:
         result = handle(read_message(sys.stdin.buffer), sys.argv[1] if len(sys.argv) > 1 else '', state_directory())
     except (FileNotFoundError, PermissionError):
-        result = {'ok': False, 'error': 'Instalação incompleta. Execute “Configurar assistente Buttercup” novamente.'}
+        result = {'ok': False, 'error': 'Incomplete installation. Run “Set up Buttercup assistant” again.'}
     except Exception as error:
         # Never echo request data, configuration or secrets into browser errors.
-        safe = str(error) if isinstance(error, (ValueError, RuntimeError)) else 'Não foi possível abrir o assistente local.'
+        safe = str(error) if isinstance(error, (ValueError, RuntimeError)) else 'Could not start the local assistant.'
         result = {'ok': False, 'error': safe}
     write_message(sys.stdout.buffer, result)
 

@@ -7,6 +7,7 @@
     "test": "node --test tests/*.test.js",
     "build": "node scripts/build.mjs",
     "package": "python scripts/package.py",
+    "test:i18n-browser": "node scripts/browser-i18n.mjs",
     "test:browser": "node scripts/browser-smoke.mjs",
     "test:settings-browser": "node scripts/browser-settings.mjs",
     "test:connection-browser": "node scripts/browser-connection.mjs",

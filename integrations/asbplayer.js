@@ -8,7 +8,7 @@ export function subtitlePayload(segments, name, mediaId = '') {
 }
 
 async function request(settings, path, payload) {
-    const response = await fetch(baseUrl(settings.asbplayerUrl, true, 'Endereço do asbplayer') + '/asbplayer/' + path, {
+    const response = await fetch(baseUrl(settings.asbplayerUrl, true, "asbplayer address") + '/asbplayer/' + path, {
         method: payload ? 'POST' : 'GET', ...(payload ? { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) } : {}),
         signal: AbortSignal.timeout(10000), credentials: 'omit', redirect: 'error',
     }).catch(() => { throw new Error('asbplayer is unavailable. Start its official local WebSocket server on port 8766.'); });

@@ -1,19 +1,19 @@
 <!doctype html>
-<html lang="pt-BR" data-build-version="0.5.0"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Buttercup Revival</title><link rel="stylesheet" href="assets/css/popup.css"></head>
+<html lang="en" data-build-version="0.5.0"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Buttercup Revival</title><link rel="stylesheet" href="assets/css/popup.css"></head>
 <body>
 <header><img src="icons/icon48.png" alt="" width="44" height="44"><div><h1>Buttercup</h1><p>Better YouTube captions · Revival</p></div><select data-setting="uiLanguage" aria-label="Language" title="Language"><option value="auto">Auto</option><option value="en">English</option><option value="pt-BR">Português</option><option value="es">Español</option><option value="ja">日本語</option><option value="zh-CN">简体中文</option></select></header>
 <main>
 <p id="status" role="status" aria-live="polite">Ready</p>
-<p id="update-message" class="hint" hidden>A atualização está pronta. Recarregue a extensão para concluir; o modo e o provider fixado permanecem salvos.</p>
-<button type="button" id="update-extension" class="primary" hidden>Recarregar extensão</button>
-<section id="assistant-card" class="assistant-card" data-state="checking" aria-label="Assistente local">
-<div class="assistant-title"><strong>Assistente local</strong><span id="assistant-badge" role="status">Verificando…</span></div>
-<p id="assistant-message">Prepara o áudio do YouTube no seu computador. A transcrição usa o provedor que você escolher.</p>
-<div class="actions"><button type="button" id="start-backend" class="primary">Iniciar e conectar</button><button type="button" id="check-backend">Verificar conexão</button></div>
-<details id="assistant-help"><summary>Como conectar</summary>
-<p>Depois da configuração inicial, basta clicar em <strong>Iniciar e conectar</strong>. Você pode fechar a janela; o assistente continua funcionando enquanto o computador estiver ligado.</p>
-<ol><li>In the Buttercup folder, run <strong>Install Buttercup.cmd</strong> on Windows or <strong>install.sh</strong> on Linux. You only do this once.</li><li>Extension ID, for troubleshooting: <code id="assistant-extension-id"></code> <button type="button" id="copy-extension-id">Copiar ID</button></li><li>Come back here and click <strong>Start and connect</strong>. Pairing is automatic.</li></ol>
-<p class="hint">Você só precisa instalar uma vez por navegador. Não é preciso abrir terminal, informar endereço ou copiar token para usar no dia a dia.</p>
+<p id="update-message" class="hint" hidden>The update is ready. Reload the extension to finish; the mode and the pinned provider stay saved.</p>
+<button type="button" id="update-extension" class="primary" hidden>Reload extension</button>
+<section id="assistant-card" class="assistant-card" data-state="checking" aria-label="Local assistant">
+<div class="assistant-title"><strong>Local assistant</strong><span id="assistant-badge" role="status">Checking…</span></div>
+<p id="assistant-message">Prepares the YouTube audio on your computer. Transcription uses the provider you choose.</p>
+<div class="actions"><button type="button" id="start-backend" class="primary">Start and connect</button><button type="button" id="check-backend">Check connection</button></div>
+<details id="assistant-help"><summary>How to connect</summary>
+<p>After the initial setup, just click <strong>Start and connect</strong>. You can close the window; the assistant keeps running while the computer is on.</p>
+<ol><li>In the Buttercup folder, run <strong>Install Buttercup.cmd</strong> on Windows or <strong>install.sh</strong> on Linux. You only do this once.</li><li>Extension ID, for troubleshooting: <code id="assistant-extension-id"></code> <button type="button" id="copy-extension-id">Copy ID</button></li><li>Come back here and click <strong>Start and connect</strong>. Pairing is automatic.</li></ol>
+<p class="hint">You only need to install once per browser. There is no need to open a terminal, type an address or copy a token for everyday use.</p>
 </details>
 </section>
 <div class="actions"><button id="generate" class="primary">Generate captions</button><button id="cancel">Cancel</button></div>
@@ -37,31 +37,31 @@
 <p class="hint">Files are named <code>[videoID]___Title.srt</code> and replace an older file of the same name. A folder here is written by the local assistant, so it must be connected; the folder must already exist. Also used by Download SRT / VTT.</p>
 </details>
 <details open><summary>Transcription</summary>
-<label class="provider-picker">Provedor de transcrição<select data-setting="provider"><option value="openrouter">OpenRouter</option><option value="deepinfra">DeepInfra</option><option value="groq">Groq</option><option value="custom">Custom API</option></select></label>
+<label class="provider-picker">Transcription provider<select data-setting="provider"><option value="openrouter">OpenRouter</option><option value="deepinfra">DeepInfra</option><option value="groq">Groq</option><option value="custom">Custom API</option></select></label>
 <p class="hint">Each provider keeps its own key and model. Only the selected provider's options are shown below.</p>
 <div id="groq-settings" hidden>
-<p class="hint">Transcrição direta pelo Groq, sem OpenRouter ou troca automática de provedor. Use uma chave própria do Groq.</p>
+<p class="hint">Direct transcription through Groq, without OpenRouter or automatic provider switching. Use your own Groq key.</p>
 <label>Groq API key<input data-setting="groqApiKey" type="password" autocomplete="off"></label>
 <label>Groq model<input data-setting="groqModel" list="groq-model-list" placeholder="whisper-large-v3-turbo" maxlength="200"><datalist id="groq-model-list"><option value="whisper-large-v3-turbo"><option value="whisper-large-v3"></datalist></label>
-<p class="hint">Usa Audio Transcriptions com timestamps de segmentos e, quando solicitado, de palavras. Não inclua openai/ no ID do modelo.</p>
+<p class="hint">Uses Audio Transcriptions with segment timestamps and, when requested, word timestamps. Do not include openai/ in the model ID.</p>
 </div>
 <div id="deepinfra-settings" hidden>
 <p class="hint">Direct transcription through DeepInfra, without OpenRouter or fallback to another provider. Requires a DeepInfra account/key; OpenRouter credits and keys do not apply.</p>
 <label>DeepInfra API key<input data-setting="deepinfraApiKey" type="password" autocomplete="off"></label>
 <label>DeepInfra model<input data-setting="deepinfraModel" list="deepinfra-model-list" placeholder="openai/whisper-large-v3-turbo" maxlength="200"><datalist id="deepinfra-model-list"><option value="openai/whisper-large-v3-turbo"><option value="openai/whisper-large-v3"><option value="Qwen/Qwen3-ASR-1.7B"><option value="Qwen/Qwen3-ASR-0.6B"><option value="mistralai/Voxtral-Mini-3B-2507"><option value="mistralai/Voxtral-Small-24B-2507"></datalist></label>
-<p class="hint">Whisper, Qwen ASR, Voxtral e outros modelos do catálogo ASR. O botão abaixo consulta a lista atual do DeepInfra. Solicita timestamps de palavras ou segmentos pela API nativa. O modelo precisa devolver texto com tempos reais para gerar legendas; diarização sem texto não é transcrição.</p>
+<p class="hint">Whisper, Qwen ASR, Voxtral and other models from the ASR catalog. The button below fetches DeepInfra's current list. Word or segment timestamps are requested through the native API. The model must return text with real timings to produce subtitles; diarization without text is not transcription.</p>
 </div>
 <div id="openrouter-settings">
 <label>OpenRouter API<select data-setting="openrouterMode"><option value="transcriptions">Audio Transcriptions</option><option value="chat">Chat Completions (audio + provider pinning)</option></select></label>
 <div id="openrouter-chat-settings" hidden>
-<label>Fixar provedor / Pin provider (type or select; blank = automatic)<input data-setting="openrouterProvider" list="provider-list" placeholder="Type a provider slug, e.g. groq" maxlength="100"></label>
+<label>Pin provider (type or select; blank = automatic)<input data-setting="openrouterProvider" list="provider-list" placeholder="Type a provider slug, e.g. groq" maxlength="100"></label>
 <p class="hint">A pinned provider is the only provider allowed for the request. Fallback to another provider is disabled.</p>
 <p class="hint">Select an audio-input chat model that can return timestamped segments. Untimed replies cannot produce synchronized captions. Timestamp accuracy depends on the model.</p>
 </div>
 </div>
 <div id="custom-settings" hidden>
 <label>Custom API endpoint<select data-setting="customMode"><option value="transcriptions">Audio Transcriptions (/audio/transcriptions)</option><option value="chat">Chat Completions (/chat/completions)</option></select></label>
-<label>Fixar provedor / Pin provider (optional; type or select)<input data-setting="customProvider" list="provider-list" placeholder="Blank = automatic; or type a provider slug" maxlength="100"></label>
+<label>Pin provider (optional; type or select)<input data-setting="customProvider" list="provider-list" placeholder="Blank = automatic; or type a provider slug" maxlength="100"></label>
 <p class="hint">Optional OpenRouter-compatible routing: sends provider.only and allow_fallbacks=false. Your API must support these fields on the selected endpoint.</p>
 <p id="custom-chat-hint" class="hint" hidden>Choose a model that accepts audio input and returns timestamped segments. Untimed text cannot produce synchronized captions.</p>
 </div>
@@ -78,7 +78,7 @@
 <p id="model-route-hint" class="hint" hidden><strong>Whisper cannot use Chat Completions.</strong> OpenRouter requires Audio Transcriptions for this model, with automatic provider routing. A direct provider API requires that provider's own key. <a href="https://openrouter.ai/docs/guides/overview/multimodal/stt" target="_blank" rel="noreferrer">OpenRouter documentation</a></p>
 <button type="button" id="use-openrouter-transcriptions" hidden>Use Audio Transcriptions — automatic provider routing</button>
 <button type="button" id="models">Fetch available models</button>
-<p class="hint">Consulta os modelos atuais do provedor selecionado. No DeepInfra inclui famílias como Qwen ASR, Voxtral e NVIDIA; no Groq e OpenRouter mostra os modelos de transcrição disponíveis. Nem todo modelo fornece os timestamps necessários para legendas: use o teste com uma amostra antes de um vídeo longo.</p>
+<p class="hint">Fetches the current models of the selected provider. On DeepInfra it includes families such as Qwen ASR, Voxtral and NVIDIA; on Groq and OpenRouter it shows the available transcription models. Not every model provides the timestamps subtitles need: use the sample test before a long video.</p>
 <div id="openrouter-routing">
 <p class="hint">Audio Transcriptions uses automatic provider routing. Select <strong>Chat Completions</strong> above to pin a provider through OpenRouter.</p>
 </div>
@@ -98,21 +98,21 @@
 </details>
 <details><summary>Audio upload (advanced)</summary>
 <p class="hint">How the audio is sent to the API. This does not change how subtitles look.</p>
-<label>Envio do áudio<select data-setting="audioMode"><option value="chunks">Em partes (compatível com vídeos longos)</option><option value="whole">Áudio inteiro (um único pedido)</option></select></label>
-<p id="whole-audio-hint" class="hint" hidden>Envia o áudio completo uma vez, sem cortes do Buttercup. Deve caber no limite abaixo e ser aceito pelo modelo. Se o pedido falhar, não há reenvio automático; pode ser necessário aumentar o timeout. O provedor ainda pode dividir o áudio internamente.</p>
-<div id="chunk-options"><label>Pedidos simultâneos<select data-setting="parallelRequests"><option value="1">1 — um de cada vez</option><option value="2">2 — mais rápido</option><option value="3">3 — mais rápido, exige maior limite da API</option></select></label>
-<p class="hint">Envia partes ao mesmo provedor em paralelo e mantém a ordem das legendas. Em caso de erro, não inicia mais partes nem tenta outro provedor. Pedidos já enviados podem ser cobrados pela API.</p>
+<label>Audio sending<select data-setting="audioMode"><option value="chunks">In parts (works with long videos)</option><option value="whole">Whole audio (a single request)</option></select></label>
+<p id="whole-audio-hint" class="hint" hidden>Sends the complete audio once, without cuts by Buttercup. It must fit the limit below and be accepted by the model. If the request fails there is no automatic resend; you may need to raise the timeout. The provider may still split the audio internally.</p>
+<div id="chunk-options"><label>Simultaneous requests<select data-setting="parallelRequests"><option value="1">1 — one at a time</option><option value="2">2 — faster</option><option value="3">3 — faster, needs a higher API limit</option></select></label>
+<p class="hint">Sends parts to the same provider in parallel and keeps the subtitle order. On an error it starts no more parts and tries no other provider. Requests already sent may be charged by the API.</p>
 <label>Part length (seconds)<input type="number" data-setting="chunkSeconds" min="5" max="1200"></label></div>
 <label>Max size of one upload (MB)<input type="number" data-setting="maxUploadMb" min="1" max="100"></label>
 <p class="hint">A limit per request, not per video: about 45 minutes of audio fit in 24 MB. Parts overlap by 1.5 s so no word is lost at a cut. Groq and OpenRouter reject uploaded files above 25 MB, also on paid plans; raise this only for an API that accepts more.</p>
 <label>Request timeout (seconds)<input type="number" data-setting="timeoutSeconds" min="10" max="600"></label>
 </details>
-<details id="backend-advanced"><summary>Conexão local — opções avançadas</summary>
-<p class="hint">Normalmente não é necessário alterar estes campos. Use “Iniciar e conectar” acima para conectar automaticamente.</p>
+<details id="backend-advanced"><summary>Local connection — advanced options</summary>
+<p class="hint">You normally do not need to change these fields. Use “Start and connect” above to connect automatically.</p>
 <p class="hint">Your extension ID: <code id="extension-id"></code></p>
 <label>Local address<input data-setting="backendUrl" type="url" required></label>
 <label>Pairing token<input data-setting="backendToken" type="password" autocomplete="off"></label>
-<button type="button" id="health">Verificar assistente</button><details><summary>Detalhes técnicos da conexão</summary><pre id="health-status"></pre></details>
+<button type="button" id="health">Check assistant</button><details><summary>Technical connection details</summary><pre id="health-status"></pre></details>
 </details>
 <details><summary>YouTube Authentication / Cookies</summary>
 <p class="hint">Only explicitly imported YouTube/Google Netscape cookies are sent to the local backend.</p>

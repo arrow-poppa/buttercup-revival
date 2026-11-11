@@ -1,34 +1,34 @@
-# Backend local
+# Local backend
 
-Consulte o [README principal](../README.md) para instalação em Windows/Linux e conexão com a extensão.
+See the [main README](../README.md) for Windows/Linux installation and extension setup.
 
-Executar da raiz, com Python 3.11+ e dependências instaladas:
+Run from the project root with Python 3.11+ and the dependencies installed:
 
 ```sh
-python -m backend.app --extension-id ID_DE_32_LETRAS --show-token
+python -m backend.app --extension-id YOUR_32_LETTER_EXTENSION_ID --show-token
 ```
 
-O módulo CLI fixa o bind em `127.0.0.1`. Não é necessário executar `uvicorn` manualmente nem configurar acesso público. Um token pode ser fornecido por `BUTTERCUP_TOKEN`; caso contrário é gerado e armazenado no estado privado. Não coloque tokens em URLs.
+The CLI binds only to `127.0.0.1`; there is no need to run `uvicorn` manually or expose a public endpoint. Supply a token through `BUTTERCUP_TOKEN`, or let the service generate one in its private state directory. Never put tokens in URLs.
 
-Todas as rotas, incluindo `/health`, exigem `Authorization: Bearer TOKEN`. Origens enviadas precisam estar explicitamente autorizadas. Requisições sem Origin (por exemplo clientes CLI locais) ainda exigem token e Host loopback. O CORS não aceita curingas. O backend nunca recebe chaves do provedor de transcrição.
+Every route, including `/health`, requires `Authorization: Bearer TOKEN`. Request origins must be explicitly allowed. Requests without an Origin header (such as local CLI clients) still require the token and a loopback Host header. CORS does not accept wildcards. The backend never receives transcription provider keys.
 
-| Método | Rota | Comportamento |
+| Method | Route | Behavior |
 |---|---|---|
-| GET | `/health` | Versões e disponibilidade das dependências |
-| POST | `/cookies/import` | JSON `{content,persist:false}`; substitui cookies após validar |
-| GET | `/cookies/status` | Status sem os valores dos cookies |
+| GET | `/health` | Dependency versions and availability |
+| POST | `/cookies/import` | JSON `{content,persist:false}`; validates and replaces cookies |
+| GET | `/cookies/status` | Status without cookie values |
 | PATCH | `/cookies` | JSON `{enabled:true}` |
-| DELETE | `/cookies` | Cancela extrações autenticadas e remove cookies |
-| POST | `/jobs/extract` | JSON `{video,chunk_seconds:120,max_upload_bytes:24000000,audio_track:"default"}`; `audio_track` também aceita `"original"` |
-| GET | `/jobs/{id}` | Progresso, erros fixos/sanitizados e metadados dos chunks |
-| GET | `/jobs/{id}/chunks/{index}` | MP3 local autenticado |
-| POST | `/jobs/{id}/cancel` | Cancela e remove trabalho e arquivos |
-| DELETE | `/jobs/{id}` | Remove trabalho e arquivos |
+| DELETE | `/cookies` | Cancels authenticated extractions and removes cookies |
+| POST | `/jobs/extract` | JSON `{video,chunk_seconds:120,max_upload_bytes:24000000,audio_track:"default"}`; `audio_track` also accepts `"original"` |
+| GET | `/jobs/{id}` | Progress, sanitized errors and chunk metadata |
+| GET | `/jobs/{id}/chunks/{index}` | Authenticated local MP3 |
+| POST | `/jobs/{id}/cancel` | Cancels and removes a job and its files |
+| DELETE | `/jobs/{id}` | Removes a job and its files |
 
-Os subprocessos usam listas de argumentos sem shell. Windows usa Job Objects para encerrar processos descendentes e ACLs para proteger o estado; Unix usa grupos de processo e modos POSIX. Arquivos e limites usam `pathlib`, sem caminhos ou ferramentas exclusivas de Unix no fluxo comum.
+Subprocesses use argument lists without a shell. Windows uses Job Objects to terminate descendants and ACLs to protect state; Unix uses process groups and POSIX permissions. File paths use `pathlib`, with no Unix-only paths or tools in the shared workflow.
 
-`/health` informa `audio_track_selection: ["default", "original"]`. Em modo original, yt-dlp seleciona o melhor formato somente de áudio identificado como original (`language_preference=10`); pytubefix filtra os streams com metadados explícitos de faixa original. Ausência dessa identificação gera erro e não permite substituir por dublagem ou por uma faixa sem identificação. O job confirma `audio_track` e o backend verifica a confirmação do extrator antes da conversão.
+`/health` advertises `audio_track_selection: ["default", "original"]`. In original mode, yt-dlp selects the best audio-only format marked as original (`language_preference=10`); pytubefix filters streams by explicit original-track metadata. Missing identification causes an error instead of falling back to a dub or an unidentified track. The job confirms `audio_track`, and the backend checks the extractor's confirmation before conversion.
 
-Use `python -m backend.app --help` para porta, estado, limites, runtime JavaScript e caminhos dos executáveis FFmpeg/FFprobe.
+Use `python -m backend.app --help` for port, state, limits, JavaScript runtime and FFmpeg/FFprobe executable options.
 
-`POST /jobs/extract` também aceita `audio_mode: "whole"` (padrão `"chunks"`). O modo inteiro produz um único MP3 com offset zero e toda a duração; se o tamanho estimado ultrapassar a margem do limite escolhido, falha antes da conversão/upload. O tamanho final também é conferido. Não há corte/split silencioso no modo inteiro. `/health` anuncia `audio_modes` e o job devolve `audio_mode` para confirmação da extensão. O backend só prepara áudio; o limite de pedidos simultâneos ao provedor é aplicado pela extensão, que mantém as chaves da API fora do backend.
+`POST /jobs/extract` also accepts `audio_mode: "whole"` (default: `"chunks"`). Whole mode produces one MP3 with zero offset and the full duration. If its estimated size exceeds the selected upload safety margin, it fails before conversion/upload; the final size is checked too. Whole mode never silently splits audio. `/health` advertises `audio_modes`, and the job returns `audio_mode` for the extension to verify. The backend only prepares audio; the extension limits concurrent provider requests and keeps API keys out of the backend.

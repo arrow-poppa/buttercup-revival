@@ -1,8 +1,8 @@
 #!/bin/sh
 # Buttercup Revival - one-step setup for Linux.
 # Installs what is missing (Python, Node.js, FFmpeg) with your package manager,
-# prepares the local assistant inside this folder and registers it for Chrome,
-# Chromium and Edge. Only the package installation asks for your password.
+# prepares the local assistant inside this folder and registers it for
+# Chromium-based browsers. Only the package installation asks for your password.
 set -eu
 root=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 cd "$root"
@@ -79,13 +79,13 @@ step 4 'Connecting the assistant to your browsers'
 step 5 'One last step, done by you in the browser'
 extension="$root/dist/extension"
 printf '\n\033[32m  Installed! Now add the extension to your browser:\033[0m\n\n'
-note '1. Open Chrome, Chromium or Edge and type in the address bar:   chrome://extensions'
+note '1. Open your Chromium-based browser and go to:   chrome://extensions'
 note '2. Turn on "Developer mode" (a switch on that page).'
 note '3. Click "Load unpacked" and choose this folder:'
 printf '         \033[33m%s\033[0m\n' "$extension"
 note '4. Click the Buttercup icon, then "Start and connect".'
 printf '\n'
 note 'Do not move or delete this folder afterwards: the extension runs from it.'
-note 'Browsers installed as Snap or Flatpak cannot reach the assistant; use a regular (.deb/.rpm) browser.'
+note 'For Snap, Flatpak or a custom Chromium fork, see docs/BROWSERS.md for connection options.'
 note 'The full guide, with pictures, is in README.md.'
 printf '\n'

@@ -28,7 +28,7 @@ test('an older worker dropping the provider pin requires reload and cannot trigg
     const data = setup(t, async message => { calls.push(message.type); return { ok: true, data: { ...DEFAULTS } }; }, {
         settings: { ...DEFAULTS }, [DRAFT_PREFIX + 'openrouterMode']: 'chat', [DRAFT_PREFIX + 'openrouterProvider']: 'groq',
     });
-    await assert.rejects(saveDraftWithWorker(), error => error.code === 'BUTTERCUP_UPDATE_REQUIRED' && /Recarregar extensão/.test(error.message));
+    await assert.rejects(saveDraftWithWorker(), error => error.code === 'BUTTERCUP_UPDATE_REQUIRED' && /Reload extension/.test(error.message));
     assert.deepEqual(calls, ['SAVE']);
     assert.equal(data[DRAFT_PREFIX + 'openrouterMode'], 'chat');
     assert.equal(data[DRAFT_PREFIX + 'openrouterProvider'], 'groq');

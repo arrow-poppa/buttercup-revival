@@ -41,7 +41,7 @@ test('a lost response to a paid operation is never replayed', async () => {
         requests++;
         throw noReceiver();
     };
-    await assert.rejects(connections(api).sendOffscreen({ type: 'PROVIDER_TEST' }), /conexão.*encerrada/);
+    await assert.rejects(connections(api).sendOffscreen({ type: 'PROVIDER_TEST' }), /connection.*closed/);
     assert.equal(requests, 1);
 });
 
@@ -53,7 +53,7 @@ test('an incompatible offscreen process blocks actions without closing or restar
         assert.equal(message.type, 'BUTTERCUP_READY');
         return { ready: true, protocol: -1 };
     };
-    await assert.rejects(connections(api).sendOffscreen({ type: 'RUN' }), /Recarregue a extensão/);
+    await assert.rejects(connections(api).sendOffscreen({ type: 'RUN' }), /Reload the extension/);
 });
 
 test('concurrent reconnects inject once and healthy content is left running', async () => {
@@ -91,9 +91,9 @@ test('subtitle delivery recovers a receiver lost after readiness without startin
 test('recovery never injects into other origins or delivers to a different video', async () => {
     const api = fixture();
     api.scripting.executeScript = async () => assert.fail('Do not inject');
-    await assert.rejects(connections(api).content(1, 'lmnopqrstuv'), /vídeo mudou/);
+    await assert.rejects(connections(api).content(1, 'lmnopqrstuv'), /video changed/);
     api.tabs.get = async () => ({ url: 'https://example.com/watch?v=abcdefghijk' });
-    await assert.rejects(connections(api).content(1), /YouTube primeiro/);
+    await assert.rejects(connections(api).content(1), /YouTube video first/);
 });
 
 test('legacy controls trigger one page reload to remove orphaned handlers before generation', async () => {

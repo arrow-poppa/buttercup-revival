@@ -50,7 +50,7 @@ async function translator() {
     return tr;
 }
 const CONTENT_STRINGS = ['Starting…', 'Generate better captions', 'Buttercup unavailable',
-    'A extensão foi atualizada. Abra o popup do Buttercup para reconectar o player.'];
+    "The extension was updated. Open the Buttercup popup to reconnect the player."];
 async function contentSettings(settings) {
     await translator();
     return { ...publicSettings(settings), strings: Object.fromEntries(CONTENT_STRINGS.map(text => [text, tr(text)])) };
@@ -89,7 +89,7 @@ async function handle(message, sender) {
     if (runner && message.type === 'DELIVER') {
         if (await tabVideo(message.tabId).catch(() => '') !== message.videoId) return {};
         const delivered = await connection.deliver(message.tabId, { type: 'SUBTITLES', videoId: message.videoId, segments: message.segments, language: message.language, visible: message.visible !== false });
-        if (!delivered?.received) throw new Error('O player não recebeu as legendas. Abra o vídeo e tente novamente; o resultado foi preservado no cache.');
+        if (!delivered?.received) throw new Error("The player did not receive the subtitles. Open the video and try again; the result was kept in the cache.");
         // Hidden Buttercup captions leave YouTube's caption source untouched.
         if (message.visible !== false) await toggleYouTubeCaptions(message.tabId, false);
         return {};

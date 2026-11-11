@@ -27,10 +27,10 @@ def test_native_origin_and_action_before_any_process_or_secret(monkeypatch, tmp_
     calls = []
     monkeypatch.setattr(assistant, 'start_service', lambda *args: calls.append(True) or 'PRIVATE_LOCAL_TOKEN')
     for origin in ('', 'https://youtube.com/', 'chrome-extension://' + 'b' * 32 + '/'):
-        with pytest.raises(ValueError, match='não autorizada'):
+        with pytest.raises(ValueError, match='Unauthorized'):
             assistant.handle({'action': 'start'}, origin, tmp_path)
     for message in ({'action': 'stop'}, {'action': 'start', 'command': 'anything'}, {'action': 'start', 'port': 9}):
-        with pytest.raises(ValueError, match='não permitida'):
+        with pytest.raises(ValueError, match='not allowed'):
             assistant.handle(message, 'chrome-extension://' + 'a' * 32 + '/', tmp_path)
     assert calls == []
     result = assistant.handle({'action': 'start'}, 'chrome-extension://' + 'a' * 32 + '/', tmp_path)

@@ -92,10 +92,10 @@ export function validateTranscription(settings) {
     return route;
 }
 
-export function baseUrl(value, localOnly = false, label = 'Endereço da API') {
+export function baseUrl(value, localOnly = false, label = "API address") {
     let url;
     try { url = new URL(value); }
-    catch { throw new Error(`${label} inválido. Informe um endereço completo, como ${localOnly ? DEFAULTS.backendUrl : 'https://seu-provedor.example/v1'}.`); }
+    catch { throw new Error(`${label} is invalid. Enter a full address, such as ${localOnly ? DEFAULTS.backendUrl : 'https://your-provider.example/v1'}.`); }
     if (url.username || url.password || url.search || url.hash) throw new Error('URL must not contain credentials, query, or fragment');
     if (localOnly && (url.hostname !== '127.0.0.1' || url.protocol !== 'http:' || !['', '/'].includes(url.pathname))) {
         throw new Error('Local services must use http://127.0.0.1 with an optional port');
@@ -125,12 +125,12 @@ export function validateSettings(input) {
     // Presets have fixed API addresses. An unfinished Custom address must not
     // prevent the user from using DeepInfra/Groq, or erase that Custom draft.
     if (value.provider === 'openrouter') value.baseUrl = DEFAULTS.baseUrl;
-    else if (value.provider === 'custom') value.baseUrl = baseUrl(value.baseUrl, false, 'Endereço da Custom API');
-    value.backendUrl = baseUrl(value.backendUrl || DEFAULTS.backendUrl, true, 'Endereço do assistente local');
+    else if (value.provider === 'custom') value.baseUrl = baseUrl(value.baseUrl, false, "Custom API address");
+    value.backendUrl = baseUrl(value.backendUrl || DEFAULTS.backendUrl, true, "Local assistant address");
     value.asbplayerUrl ||= DEFAULTS.asbplayerUrl;
-    if (value.autoSend) value.asbplayerUrl = baseUrl(value.asbplayerUrl, true, 'Endereço do asbplayer');
+    if (value.autoSend) value.asbplayerUrl = baseUrl(value.asbplayerUrl, true, "asbplayer address");
     if (value.communityUrl && (value.communityRead || value.communityShare)) {
-        value.communityUrl = baseUrl(value.communityUrl, false, 'Endereço do cache comunitário');
+        value.communityUrl = baseUrl(value.communityUrl, false, "Community cache address");
         if (new URL(value.communityUrl).protocol !== 'https:') throw new Error('Community cache requires HTTPS');
     }
     for (const [key, min, max] of [['wordsPerLine', 1, 40], ['maxLineLength', 0, 40], ['chunkSeconds', 5, 1200], ['maxUploadMb', 1, 100], ['timeoutSeconds', 10, 600], ['parallelRequests', 1, 3]]) {

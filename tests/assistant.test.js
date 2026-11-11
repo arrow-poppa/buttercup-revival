@@ -12,12 +12,12 @@ test('DeepInfra and Groq ignore incomplete inactive URL/header drafts without lo
         assert.equal(settings.baseUrl, 'not a URL');
         assert.deepEqual(settings.extraHeaders, {});
         assert.equal(draft.extraHeaders, '{');
-        assert.throws(() => draftSettings({ ...draft, provider: 'custom', extraHeaders: '{}' }), /Endereço da Custom API inválido/);
-        assert.throws(() => draftSettings({ ...draft, autoSend: true }), /Endereço do asbplayer inválido/);
-        assert.throws(() => draftSettings({ ...draft, communityRead: true }), /Endereço do cache comunitário inválido/);
+        assert.throws(() => draftSettings({ ...draft, provider: 'custom', extraHeaders: '{}' }), /Custom API address is invalid/);
+        assert.throws(() => draftSettings({ ...draft, autoSend: true }), /asbplayer address is invalid/);
+        assert.throws(() => draftSettings({ ...draft, communityRead: true }), /Community cache address is invalid/);
     }
     assert.equal(validateSettings({ backendUrl: '', asbplayerUrl: '' }).backendUrl, DEFAULTS.backendUrl);
-    assert.throws(() => validateSettings({ backendUrl: 'wrong' }), /Endereço do assistente local inválido/);
+    assert.throws(() => validateSettings({ backendUrl: 'wrong' }), /Local assistant address is invalid/);
 });
 
 test('local status works independently of incomplete provider settings and gives a pairing hint', async t => {
@@ -33,9 +33,9 @@ test('local status works independently of incomplete provider settings and gives
 
 test('local status explains stopped, unpaired and incomplete services', async t => {
     const fetch = t.mock.method(globalThis, 'fetch', async () => { throw new TypeError('Failed to fetch'); });
-    assert.match((await assistantStatus({ backendToken: 'LOCAL_KEY' })).message, /Iniciar e conectar/);
+    assert.match((await assistantStatus({ backendToken: 'LOCAL_KEY' })).message, /Start and connect/);
     fetch.mock.mockImplementation(async () => Response.json({}, { status: 401 }));
-    assert.match((await assistantStatus({ backendToken: 'LOCAL_KEY' })).message, /reconectado/);
+    assert.match((await assistantStatus({ backendToken: 'LOCAL_KEY' })).message, /reconnected/);
     fetch.mock.mockImplementation(async () => Response.json({ status: 'ok', version: '0.2.0', ffmpeg: false }));
     assert.equal((await assistantStatus({ backendToken: 'LOCAL_KEY' })).state, 'dependencies');
 });
@@ -47,6 +47,6 @@ test('native startup accepts only a local connection and does not send credentia
     });
     assert.deepEqual(settings, { backendUrl: DEFAULTS.backendUrl, backendToken: 'x'.repeat(40) });
     await assert.rejects(startAssistant(async () => ({ ok: true, backendUrl: 'https://outside.example', backendToken: 'x'.repeat(40) })), /Local services/);
-    await assert.rejects(startAssistant(async () => ({ ok: true, backendToken: 'short' })), /conexão inválida/);
+    await assert.rejects(startAssistant(async () => ({ ok: true, backendToken: 'short' })), /invalid connection/);
     await assert.rejects(startAssistant(async () => { throw new Error('host missing'); }), /Install Buttercup/);
 });

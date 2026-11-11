@@ -153,11 +153,11 @@ function action(id, callback) {
     });
 }
 function showBackend(value) {
-    const labels = { checking: 'Verificando…', starting: 'Iniciando…', online: 'Conectado', offline: 'Desconectado', pair: 'Conectar', dependencies: 'Instalação incompleta' };
+    const labels = { checking: "Checking…", starting: "Starting…", online: "Connected", offline: "Disconnected", pair: "Connect", dependencies: "Incomplete installation" };
     $('assistant-card').dataset.state = value.state;
-    $('assistant-badge').textContent = labels[value.state] || 'Desconectado';
+    $('assistant-badge').textContent = labels[value.state] || "Disconnected";
     $('assistant-message').textContent = value.message;
-    $('start-backend').textContent = value.state === 'online' ? 'Reconectar' : 'Iniciar e conectar';
+    $('start-backend').textContent = value.state === 'online' ? "Reconnect" : "Start and connect";
     if (value.health) $('health-status').textContent = JSON.stringify(value.health, null, 2);
 }
 let backendCheck;
@@ -276,7 +276,7 @@ action('start-backend', async () => {
     // Finish an older check first so a late "offline" result cannot overwrite
     // the successful startup. Pairing changes only the two local fields.
     if (backendCheck) await backendCheck;
-    showBackend({ state: 'starting', message: 'Abrindo o assistente e conectando automaticamente. Aguarde alguns segundos…' });
+    showBackend({ state: 'starting', message: "Opening the assistant and connecting automatically. Wait a few seconds…" });
     try {
         const value = await rpc({ type: 'START_BACKEND' });
         const stored = await popupSettings();
@@ -284,12 +284,12 @@ action('start-backend', async () => {
             document.querySelector(`[data-setting="${key}"]`).value = stored.draft[key];
             lastDraft[key] = stored.draft[key];
         }
-        try { readForm(); $('settings-status').textContent = 'Conexão salva. Suas configurações foram preservadas.'; }
-        catch (error) { $('settings-status').textContent = `Conexão salva. ${error.message}`; }
+        try { readForm(); $('settings-status').textContent = "Connection saved. Your settings were kept."; }
+        catch (error) { $('settings-status').textContent = `Connection saved. ${error.message}`; }
         showBackend(value);
         if (value.state === 'online') {
             $('assistant-help').open = false;
-            status('Assistente conectado. Escolha seu provedor e gere as legendas.');
+            status("Assistant connected. Choose your provider and generate the subtitles.");
         } else $('assistant-help').open = true;
     } catch (error) {
         showBackend({ state: 'offline', message: error.message });
@@ -299,13 +299,13 @@ action('start-backend', async () => {
 action('check-backend', checkBackend);
 action('copy-extension-id', async () => {
     await navigator.clipboard.writeText(chrome.runtime.id);
-    status('ID copiado. Cole no configurador do assistente.');
+    status("ID copied. Paste it into the assistant installer.");
 });
 action('health', async () => {
     const pending = persistChanges();
     if (pending) await pending;
     const value = await checkBackend();
-    status(value.state === 'online' ? 'Assistente local conectado.' : value.message);
+    status(value.state === 'online' ? "Local assistant connected." : value.message);
     if (value.state === 'online') await cookieStatus().catch(() => {});
 });
 action('models', async () => {

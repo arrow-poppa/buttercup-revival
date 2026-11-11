@@ -12,7 +12,7 @@
         try { result = await chrome.runtime.sendMessage(message); }
         catch (error) {
             if (/Extension context invalidated|Receiving end does not exist|Could not establish connection/i.test(error.message)) {
-                throw new Error(say('A extensão foi atualizada. Abra o popup do Buttercup para reconectar o player.'));
+                throw new Error(say("The extension was updated. Open the Buttercup popup to reconnect the player."));
             }
             throw error;
         }

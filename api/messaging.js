@@ -3,7 +3,7 @@ import { popupSettings, draftSettings } from './settings.js';
 
 export class ExtensionUpdateRequired extends Error {
     constructor() {
-        super('A extensão precisa concluir a atualização. Clique em Recarregar extensão; suas configurações permanecem salvas.');
+        super("The extension needs to finish updating. Click Reload extension; your settings stay saved.");
         this.code = 'BUTTERCUP_UPDATE_REQUIRED';
     }
 }

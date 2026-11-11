@@ -22,10 +22,10 @@ export function connections(api = chrome) {
                 try { reply = await api.runtime.sendMessage({ target: 'offscreen', type: 'BUTTERCUP_READY' }); }
                 catch (error) { if (!missingReceiver(error)) throw error; }
                 if (reply?.ready && reply.protocol === OFFSCREEN_PROTOCOL) return;
-                if (reply?.ready || reply?.ok === false) throw new Error('O processamento de áudio precisa ser atualizado. Recarregue a extensão; suas configurações estão salvas.');
+                if (reply?.ready || reply?.ok === false) throw new Error("Audio processing needs to be updated. Reload the extension; your settings are saved.");
                 await pause(50);
             } while (Date.now() < deadline);
-            throw new Error('O processamento de áudio não iniciou. Recarregue a extensão e tente novamente.');
+            throw new Error("Audio processing did not start. Reload the extension and try again.");
         })().finally(() => { starting = null; });
         return starting;
     }
@@ -34,7 +34,7 @@ export function connections(api = chrome) {
         await offscreen();
         try { return await api.runtime.sendMessage({ ...message, target: 'offscreen' }); }
         catch (error) {
-            if (missingReceiver(error)) throw new Error('A conexão com o processamento de áudio foi encerrada. Tente a ação novamente.');
+            if (missingReceiver(error)) throw new Error("The connection to audio processing was closed. Try the action again.");
             throw error;
         }
     }
@@ -42,7 +42,7 @@ export function connections(api = chrome) {
     function content(tabId, videoId, reloadLegacy = true) {
         if (!attaching.has(tabId)) attaching.set(tabId, (async () => {
             const tab = await api.tabs.get(tabId);
-            if (new URL(tab.url).origin !== 'https://www.youtube.com') throw new Error('Abra um vídeo do YouTube primeiro.');
+            if (new URL(tab.url).origin !== 'https://www.youtube.com') throw new Error("Open a YouTube video first.");
             const probe = () => api.tabs.sendMessage(tabId, { type: 'BUTTERCUP_READY' }, { frameId: 0 }).catch(() => null);
             let reply = await probe();
             if (!reply?.ready || reply.version !== version) {
@@ -66,12 +66,12 @@ export function connections(api = chrome) {
                     reply = await probe();
                 }
             }
-            if (!reply?.ready || reply.version !== version) throw new Error('Não foi possível conectar o player. Recarregue a página do YouTube.');
+            if (!reply?.ready || reply.version !== version) throw new Error("Could not connect to the player. Reload the YouTube page.");
             return reply;
         })().finally(() => attaching.delete(tabId)));
         return attaching.get(tabId).then(reply => {
             if (reply.legacy) return reloadLegacy ? content(tabId, videoId) : reply;
-            if (videoId && reply.videoId !== videoId) throw new Error('O vídeo mudou. Inicie as legendas no vídeo atual.');
+            if (videoId && reply.videoId !== videoId) throw new Error("The video changed. Start the subtitles on the current video.");
             return reply;
         });
     }

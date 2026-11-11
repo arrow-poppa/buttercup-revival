@@ -16,11 +16,22 @@ sys.path.insert(0, str(ROOT))
 from backend.app.config import state_directory
 from backend.app.security import private_directory, private_write
 from native_assistant import HOST
+from browser_registration import (WINDOWS_BROWSER_KEYS, browser_registry_keys,
+                                  linux_host_paths as browser_host_paths, native_host_directories)
 
 
-def linux_host_paths(config_root):
-    return [config_root / browser / 'NativeMessagingHosts' / (HOST + '.json')
-            for browser in ('google-chrome', 'google-chrome-for-testing', 'chromium', 'microsoft-edge', 'microsoft-edge-beta', 'microsoft-edge-dev')]
+def linux_host_paths(config_root, extra_directories=()):
+    return browser_host_paths(config_root, HOST, extra_directories)
+
+
+def registration_options(directory, extra_directories=(), extra_registry_keys=()):
+    config_file = directory / 'assistant.json'
+    config = json.loads(config_file.read_text(encoding='utf-8')) if config_file.exists() else {}
+    directories = native_host_directories([*config.get('native_host_directories', []), *extra_directories])
+    keys = browser_registry_keys([*config.get('browser_registry_keys', []), *extra_registry_keys])
+    if keys and os.name != 'nt':
+        raise ValueError('Custom registry keys are available only on Windows.')
+    return directories, keys
 
 
 def manifest_extension_id():
@@ -31,19 +42,23 @@ def manifest_extension_id():
     return ''.join(chr(ord('a') + int(digit, 16)) for digit in digest)
 
 
-def uninstall():
+def uninstall(extra_directories=(), extra_registry_keys=()):
     directory = state_directory()
+    directories, keys = registration_options(directory, extra_directories, extra_registry_keys)
     if os.name == 'nt':
         import winreg
-        for browser in ('Google\\Chrome', 'Microsoft\\Edge', 'Chromium'):
+        for browser in (*WINDOWS_BROWSER_KEYS, *keys):
             try:
                 winreg.DeleteKey(winreg.HKEY_CURRENT_USER, 'Software\\' + browser + '\\NativeMessagingHosts\\' + HOST)
             except FileNotFoundError:
                 pass
     else:
         config_root = Path(os.environ.get('XDG_CONFIG_HOME', Path.home() / '.config'))
-        for location in linux_host_paths(config_root):
+        for location in linux_host_paths(config_root, directories):
             location.unlink(missing_ok=True)
+    if os.name == 'nt':
+        for location in directories:
+            (location / (HOST + '.json')).unlink(missing_ok=True)
     if directory.is_dir():
         # A running service watches for this file and exits; then its data can go.
         private_write(directory / 'stop.request', 'stop\n')
@@ -53,13 +68,15 @@ def uninstall():
     return directory
 
 
-def install(extension_id):
+def install(extension_id, extra_directories=(), extra_registry_keys=()):
     if not re.fullmatch(r'[a-p]{32}', extension_id):
-        raise ValueError('Copie o ID de 32 letras mostrado em “Como conectar”, na extensão.')
+        raise ValueError('Copy the 32-letter ID shown under “How to connect” in the extension.')
     python = ROOT / '.venv' / ('Scripts/python.exe' if os.name == 'nt' else 'bin/python')
     if not python.is_file():
-        raise RuntimeError('Instale as dependências do Buttercup primeiro. Consulte o guia de instalação.')
-    directory = private_directory(state_directory())
+        raise RuntimeError('Install the Buttercup dependencies first. See the installation guide.')
+    directory = state_directory()
+    directories, keys = registration_options(directory, extra_directories, extra_registry_keys)
+    private_directory(directory)
     windows_file = directory / 'installation.windows.json'
     previous = json.loads(windows_file.read_text(encoding='utf-8')) if windows_file.exists() else {}
     config_file = directory / 'assistant.json'
@@ -67,8 +84,9 @@ def install(extension_id):
     ids = list(dict.fromkeys([*config.get('extension_ids', []), *([previous['extension_id']] if previous.get('extension_id') else []), extension_id]))
     tools = {name: previous.get(name) or shutil.which(name) for name in ('node', 'ffmpeg', 'ffprobe')}
     if not all(value and Path(value).is_file() for value in tools.values()):
-        raise RuntimeError('Faltam Node.js ou FFmpeg/FFprobe. Instale esses componentes e abra a configuração novamente.')
-    config = {'port': previous.get('port', 8767), 'extension_ids': ids, **tools}
+        raise RuntimeError('Node.js or FFmpeg/FFprobe is missing. Install these components and run setup again.')
+    config = {'port': config.get('port', previous.get('port', 8767)), 'extension_ids': ids, **tools,
+              'native_host_directories': [str(path) for path in directories], 'browser_registry_keys': keys}
     private_write(config_file, json.dumps(config, indent=2))
     if not (directory / 'token.private.json').exists():
         private_write(directory / 'token.private.json', json.dumps({'token': secrets.token_urlsafe(32)}))
@@ -86,12 +104,15 @@ def install(extension_id):
         import winreg
         manifest_path = directory / (HOST + '.json')
         private_write(manifest_path, json.dumps(manifest, indent=2))
-        for browser in ('Google\\Chrome', 'Microsoft\\Edge', 'Chromium'):
+        for location in directories:
+            location.mkdir(parents=True, exist_ok=True)
+            private_write(location / (HOST + '.json'), json.dumps(manifest, indent=2))
+        for browser in (*WINDOWS_BROWSER_KEYS, *keys):
             with winreg.CreateKey(winreg.HKEY_CURRENT_USER, 'Software\\' + browser + '\\NativeMessagingHosts\\' + HOST) as key:
                 winreg.SetValueEx(key, '', 0, winreg.REG_SZ, str(manifest_path))
     else:
         config_root = Path(os.environ.get('XDG_CONFIG_HOME', Path.home() / '.config'))
-        for location in linux_host_paths(config_root):
+        for location in linux_host_paths(config_root, directories):
             location.parent.mkdir(parents=True, exist_ok=True)
             private_write(location, json.dumps(manifest, indent=2))
     # A service that is already running only knows the extensions it started
@@ -100,17 +121,17 @@ def install(extension_id):
     return directory
 
 
-def wizard():
+def wizard(extra_directories=(), extra_registry_keys=()):
     import tkinter as tk
     from tkinter import messagebox
     window = tk.Tk()
-    window.title('Configurar assistente Buttercup')
+    window.title('Set up Buttercup assistant')
     window.resizable(False, False)
     frame = tk.Frame(window, padx=26, pady=22)
     frame.pack()
-    tk.Label(frame, text='Conecte o Buttercup ao computador', font=('Segoe UI', 15, 'bold')).pack(anchor='w')
-    tk.Label(frame, text='Uma única configuração. Depois, use “Iniciar e conectar” na extensão.\nNão é preciso deixar um terminal aberto.', justify='left', pady=12).pack(anchor='w')
-    tk.Label(frame, text='ID da extensão (aparece em “Como conectar”):').pack(anchor='w')
+    tk.Label(frame, text='Connect Buttercup to your computer', font=('Segoe UI', 15, 'bold')).pack(anchor='w')
+    tk.Label(frame, text='Set up once, then use “Start and connect” in the extension.\nYou do not need to leave a terminal open.', justify='left', pady=12).pack(anchor='w')
+    tk.Label(frame, text='Extension ID (shown under “How to connect”):').pack(anchor='w')
     entry = tk.Entry(frame, width=46)
     entry.pack(fill='x', pady=8)
     config_file = state_directory() / 'installation.windows.json'
@@ -120,12 +141,12 @@ def wizard():
         entry.insert(0, manifest_extension_id())
     def configure():
         try:
-            install(entry.get().strip())
-            messagebox.showinfo('Tudo pronto', 'Assistente configurado!\n\nAbra o Buttercup e clique em “Iniciar e conectar”.\nSua chave do provedor permanece na extensão.')
+            install(entry.get().strip(), extra_directories, extra_registry_keys)
+            messagebox.showinfo('Ready', 'Assistant configured!\n\nOpen Buttercup and click “Start and connect”.\nYour provider key stays in the extension.')
             window.destroy()
         except Exception as error:
-            messagebox.showerror('Não foi possível configurar', str(error))
-    tk.Button(frame, text='Concluir configuração', command=configure, padx=18, pady=8).pack(anchor='w', pady=10)
+            messagebox.showerror('Setup failed', str(error))
+    tk.Button(frame, text='Finish setup', command=configure, padx=18, pady=8).pack(anchor='w', pady=10)
     window.mainloop()
 
 
@@ -134,15 +155,19 @@ if __name__ == '__main__':
     parser.add_argument('--extension-id')
     parser.add_argument('--gui', action='store_true')
     parser.add_argument('--uninstall', action='store_true')
+    parser.add_argument('--native-host-dir', action='append', default=[], metavar='DIRECTORY',
+                        help='Additional native messaging manifest directory (absolute path; repeatable).')
+    parser.add_argument('--browser-registry-key', action='append', default=[], metavar='VENDOR\\BROWSER',
+                        help='Additional Windows browser key under HKCU\\Software (repeatable).')
     args = parser.parse_args()
     if args.gui:
-        wizard()
+        wizard(args.native_host_dir, args.browser_registry_key)
     elif args.uninstall:
-        print(f'Removed the browser registration and {uninstall()}')
+        print(f'Removed the browser registration and {uninstall(args.native_host_dir, args.browser_registry_key)}')
     else:
         # Without an explicit ID, authorise the extension shipped in this folder.
         extension_id = args.extension_id or manifest_extension_id()
         if not extension_id:
-            parser.error('Use --gui ou --extension-id ID')
-        install(extension_id)
+            parser.error('Use --gui or --extension-id ID')
+        install(extension_id, args.native_host_dir, args.browser_registry_key)
         print(f'Assistant registered for extension {extension_id}.')

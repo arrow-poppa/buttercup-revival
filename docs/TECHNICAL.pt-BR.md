@@ -16,7 +16,7 @@ Na versão **0.2.7**, o cartão **Assistente local** mostra a conexão no iníci
 
 A configuração inicial é feita uma vez por extensão/navegador, após instalar as dependências e carregar `dist/extension`:
 
-1. Na pasta do projeto, abra **Configurar assistente Buttercup.cmd** no Windows. No Linux, execute **Configurar assistente Buttercup.sh** (o assistente gráfico precisa de Tk; Debian/Ubuntu: pacote `python3-tk`).
+1. Na pasta do projeto, abra **Set up Buttercup assistant.cmd** no Windows. No Linux, execute **Set up Buttercup assistant.sh** (o assistente gráfico precisa de Tk; Debian/Ubuntu: pacote `python3-tk`).
 2. Confirme o ID mostrado em **Como conectar**, no popup, e conclua. Neste computador Windows, o assistente já foi registrado para a extensão instalada.
 3. Volte à extensão e clique em **Iniciar e conectar**. Use **Verificar conexão** para conferir o estado.
 
@@ -42,7 +42,7 @@ node --version
 
 `npm.cmd` evita o bloqueio de `npm.ps1` pela política de execução do PowerShell. Não é necessário ativar o ambiente virtual.
 
-Os inicializadores **Iniciar Buttercup.cmd** e **Parar Buttercup.cmd** continuam disponíveis como alternativa. Iniciar liga o serviço em segundo plano e mostra uma confirmação, sem abrir outro perfil de navegador. As configurações e o token ficam no diretório privado `%LOCALAPPDATA%\ButtercupRevival`; as chaves dos provedores são informadas diretamente na extensão. A instalação não ativa inicialização automática com o Windows.
+Os inicializadores **Start Buttercup.cmd** e **Stop Buttercup.cmd** continuam disponíveis como alternativa. Iniciar liga o serviço em segundo plano e mostra uma confirmação, sem abrir outro perfil de navegador. As configurações e o token ficam no diretório privado `%LOCALAPPDATA%\ButtercupRevival`; as chaves dos provedores são informadas diretamente na extensão. A instalação não ativa inicialização automática com o Windows.
 
 ## Instalação no Linux
 

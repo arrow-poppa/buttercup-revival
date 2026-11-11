@@ -23,19 +23,21 @@ test('messages are translated whole, by pattern with nested parts, or left as wr
     assert.equal(tr('Imported 2026-11-10 · enabled · session only · possibly expired / invalid'),
         'Importado em 2026-11-10 · ativado · somente nesta sessão · possivelmente expirado / inválido');
     assert.equal(tr('DeepInfra HTTP 429: provider detail'), 'DeepInfra HTTP 429: provider detail');
-    assert.equal(tr('Recarregar extensão'), 'Recarregar extensão');
+    assert.equal(tr('Reload extension'), 'Recarregar extensão');
     setLanguage('en');
-    assert.equal(tr('Recarregar extensão'), 'Reload extension');
-    assert.equal(tr('Endereço do asbplayer inválido. Informe um endereço completo, como http://127.0.0.1:8767.'),
+    assert.equal(tr('Reload extension'), 'Reload extension');
+    assert.equal(tr('asbplayer address is invalid. Enter a full address, such as http://127.0.0.1:8767.'),
         'asbplayer address is invalid. Enter a full address, such as http://127.0.0.1:8767.');
     assert.equal(tr('Settings saved.'), 'Settings saved.');
     setLanguage('es');
+    assert.equal(tr('Connect'), 'Conectar');
+    assert.equal(tr('Starting…'), 'Iniciando…');
     assert.equal(tr('Subtitles ready (transcription).'), 'Subtítulos listos (transcripción).');
-    assert.equal(tr('Recarregar extensão'), 'Recargar extensión');
+    assert.equal(tr('Reload extension'), 'Recargar extensión');
     setLanguage('ja');
-    assert.equal(tr('Recarregar extensão'), '拡張機能を再読み込み');
+    assert.equal(tr('Reload extension'), '拡張機能を再読み込み');
     assert.equal(tr('Transcribing part 2/5 (120–240s)…'), '分割 2/5 を文字起こし中 (120–240s)…');
-    assert.equal(tr('Endereço do asbplayer inválido. Informe um endereço completo, como http://127.0.0.1:8766.'),
+    assert.equal(tr('asbplayer address is invalid. Enter a full address, such as http://127.0.0.1:8766.'),
         'asbplayer のアドレスが正しくありません。http://127.0.0.1:8766 のような完全なアドレスを入力してください。');
     setLanguage('zh-CN');
     assert.equal(tr('Settings saved.'), '设置已保存。');
@@ -50,9 +52,9 @@ test('every translation keeps the slots and the markup of its source', () => {
             assert.equal(shape(target), shape(source), `${language}: ${source}`);
         }
     }
-    // Spanish covers both source languages; the other two cover each other's.
+    // Every translated source key is English; English itself needs no dictionary.
     for (const source of [...Object.keys(LANGUAGES.en), ...Object.keys(LANGUAGES['pt-BR']), ...Object.keys(LANGUAGES.es)]) {
         for (const language of ['ja', 'zh-CN']) assert.ok(Object.hasOwn(LANGUAGES[language], source), `${language} is missing: ${source}`);
-        if (!Object.hasOwn(LANGUAGES.es, source)) assert.ok(['Copiar ID', 'Geral', 'Conectado', 'Desconectado', 'Conectar', 'Reconectar', 'Iniciando…', 'General'].includes(source), `es is missing: ${source}`);
+        assert.ok(Object.hasOwn(LANGUAGES.es, source), `es is missing: ${source}`);
     }
 });

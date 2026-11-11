@@ -23,10 +23,10 @@ def health(directory, port):
         with build_opener(ProxyHandler({})).open(request, timeout=2) as response:
             payload = json.load(response)
         if payload.get('version') != '0.2.0' or 'yt_dlp' not in payload:
-            raise RuntimeError('A porta configurada está sendo usada por outro serviço.')
+            raise RuntimeError('The configured port is being used by another service.')
         return payload
     except HTTPError:
-        raise RuntimeError('A porta configurada está em uso com outro token. Verifique a instalação.') from None
+        raise RuntimeError('The configured port is in use with another token. Check the installation.') from None
     except (URLError, TimeoutError, OSError):
         return None
 
@@ -50,7 +50,7 @@ def main():
                 if health(directory, port) is None:
                     return
                 time.sleep(.25)
-            raise RuntimeError('O backend ainda está finalizando o trabalho atual. Aguarde alguns segundos.')
+            raise RuntimeError('The backend is still finishing its current job. Wait a few seconds.')
         return
     if health(directory, port) is None:
         environment = os.environ.copy()
@@ -65,7 +65,7 @@ def main():
                 break
             time.sleep(.2)
         else:
-            raise RuntimeError(f'O backend não iniciou. Consulte {directory / "backend.log"}.')
+            raise RuntimeError(f'The backend did not start. See {directory / "backend.log"}.')
     if args.settings and not args.backend_only and config.get('browser'):
         browser_args = [config['browser'], '--user-data-dir=' + config['browser_profile'], '--no-first-run']
         if config.get('browser_kind') == 'edge':
@@ -74,11 +74,11 @@ def main():
         # This is the interactive browser the user explicitly opens via the shortcut.
         subprocess.Popen(browser_args, cwd=ROOT)
     if args.console:
-        print(f'Buttercup ativo em http://127.0.0.1:{port}')
+        print(f'Buttercup running at http://127.0.0.1:{port}')
     elif not args.backend_only:
         ctypes.windll.user32.MessageBoxW(None,
-            'Assistente local ligado!\n\nAbra o Buttercup no seu navegador e gere as legendas.\n'
-            'Você pode fechar esta mensagem. O assistente continua funcionando.', 'Buttercup pronto', 0x40)
+            'Local assistant started!\n\nOpen Buttercup in your browser and generate subtitles.\n'
+            'You can close this message. The assistant will keep running.', 'Buttercup is ready', 0x40)
 
 
 if __name__ == '__main__':

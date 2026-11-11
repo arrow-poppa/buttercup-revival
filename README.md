@@ -13,7 +13,7 @@ or saves it as an `.srt` file.
 [![Tests](https://github.com/arrow-poppa/buttercup-revival/actions/workflows/test.yml/badge.svg)](https://github.com/arrow-poppa/buttercup-revival/actions/workflows/test.yml)
 [![Release](https://img.shields.io/github/v/release/arrow-poppa/buttercup-revival?color=d7476b)](https://github.com/arrow-poppa/buttercup-revival/releases/latest)
 ![Platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20Linux-342334)
-![Browsers](https://img.shields.io/badge/browsers-Chrome%20%7C%20Edge%20%7C%20Chromium-342334)
+![Browsers](https://img.shields.io/badge/browsers-Chromium%20based-342334)
 ![Manifest V3](https://img.shields.io/badge/manifest-v3-342334)
 
 [Install](#-installation) · [First subtitles](#-your-first-subtitles) · [asbplayer](#-using-it-with-asbplayer) · [Settings](#-settings) · [Troubleshooting](#-troubleshooting) · [Developers](#-for-developers)
@@ -60,7 +60,7 @@ The assistant only runs when you ask for it and only listens to your own compute
 ## 📋 What you need
 
 - **Windows 10 or 11**, or **Linux**.
-- **Chrome, Edge or Chromium** (version 120 or newer).
+- **A desktop Chromium-based browser** (Chromium 120 or newer): Chrome, Edge, Brave/Brave Origin, Vivaldi, Opera, Chromium and compatible forks. See [browser setup and limitations](docs/BROWSERS.md).
 - **An API key** from a speech provider. Creating one takes a couple of minutes; see [step 4](#step-4--add-your-api-key).
 - About **1 GB** of free disk space.
 
@@ -105,7 +105,7 @@ sh install.sh
 
 It uses your package manager (`apt`, `dnf`, `pacman` or `zypper`) and asks for your password only to install missing packages.
 
-Browsers installed as **Snap** or **Flatpak** are sandboxed and cannot reach the assistant. Use a regular `.deb` / `.rpm` browser.
+For automatic startup, use a native browser package (`.deb` / `.rpm`). **Snap** and **Flatpak** may block native messaging; see [manual pairing and custom browser registration](docs/BROWSERS.md).
 
 </details>
 
@@ -113,7 +113,7 @@ Browsers installed as **Snap** or **Flatpak** are sandboxed and cannot reach the
 
 Browsers only install extensions automatically from their store, so this one step is done by hand.
 
-1. Open Chrome or Edge and type **`chrome://extensions`** in the address bar, then press Enter.
+1. Open your Chromium-based browser and type **`chrome://extensions`** in the address bar, then press Enter.
 2. Turn on **Developer mode** (top right in Chrome, left side in Edge).
 3. Click **Load unpacked**.
 4. Choose the folder **`dist/extension`** inside the Buttercup folder. On Windows the installer already copied its address: press **Ctrl + V** in the folder window, then **Select Folder**.
@@ -243,7 +243,7 @@ Age-restricted or members-only videos need you to be signed in. Under **YouTube 
 
 The interface is available in **English, Português (Brasil), Español, 日本語 and 简体中文**. Pick one from the menu at the top of the popup.
 
-Translations live in [`locales/`](locales), one file per language, as `"original text": "translation"`. Text without a translation is shown as written, so a missing entry never breaks anything. To add a language, copy a file, translate the values, and register it in [`api/i18n.js`](api/i18n.js).
+Translations live in [`locales/`](locales), one file per language, as `"original text": "translation"`. All source strings and translation keys are English. The extension description and installers are always English. Text without a translation is shown as written, so a missing entry never breaks anything. To add a language, copy a file, translate the values, and register it in [`api/i18n.js`](api/i18n.js).
 
 ## 🔄 Updating
 
@@ -266,7 +266,7 @@ Python, Node.js and FFmpeg stay installed, since other programs may use them. Re
 | What you see | What to do |
 | --- | --- |
 | The assistant badge says **Disconnected** | Click **Start and connect**. This is normal after restarting the computer |
-| *"The assistant is not installed for this browser yet"* | Run the installer again, then reload the extension |
+| *"The assistant is not installed for this browser yet"* | Run the installer again, then reload the extension. For other forks or sandboxed packages, see [browser setup](docs/BROWSERS.md) |
 | No **BC** button on the player | Reload the YouTube page. Check that **Enable Buttercup** is on |
 | A **Reload extension** button appears in the popup | Click it. The extension was updated while it was open |
 | *"Set your … API key first"* | Paste the key of the provider selected under **Transcription** |
@@ -301,7 +301,7 @@ background/                    Service worker and offscreen document
 api/                           Settings, providers, transcription pipeline, i18n
 subtitles/, cache/             Cue formatting, SRT/VTT export, IndexedDB cache
 integrations/                  asbplayer
-locales/, _locales/            Interface translations
+locales/                      Interface translations (English source keys)
 backend/                       Local assistant (FastAPI, yt-dlp, pytubefix, FFmpeg)
 scripts/                       Installers, native-messaging bridge, build and browser tests
 tests/                         Node and pytest unit tests

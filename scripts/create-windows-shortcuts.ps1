@@ -15,9 +15,9 @@ function New-ButtercupShortcut([string]$Destination, [string]$Mode, [string]$Des
     $Shortcut.WindowStyle = 7
     $Shortcut.Save()
 }
-New-ButtercupShortcut (Join-Path $DesktopDirectory 'Buttercup Revival.lnk') '' 'Iniciar o backend local e abrir o Buttercup no navegador'
-New-ButtercupShortcut (Join-Path $DesktopDirectory 'Parar Buttercup.lnk') ' --stop' 'Encerrar o backend local do Buttercup'
-New-ButtercupShortcut (Join-Path $StartMenuDirectory 'Buttercup Revival.lnk') '' 'Iniciar o Buttercup'
-New-ButtercupShortcut (Join-Path $StartMenuDirectory 'Configurar Buttercup.lnk') ' --settings' 'Abrir as configurações do Buttercup'
-New-ButtercupShortcut (Join-Path $StartMenuDirectory 'Parar Buttercup.lnk') ' --stop' 'Encerrar o backend local'
-Write-Output 'Atalhos criados na Área de Trabalho e no menu Iniciar.'
+New-ButtercupShortcut (Join-Path $DesktopDirectory 'Buttercup Revival.lnk') '' 'Start the local backend and open Buttercup in the browser'
+New-ButtercupShortcut (Join-Path $DesktopDirectory 'Stop Buttercup.lnk') ' --stop' 'Stop the local Buttercup backend'
+New-ButtercupShortcut (Join-Path $StartMenuDirectory 'Buttercup Revival.lnk') '' 'Start Buttercup'
+New-ButtercupShortcut (Join-Path $StartMenuDirectory 'Configure Buttercup.lnk') ' --settings' 'Open Buttercup settings'
+New-ButtercupShortcut (Join-Path $StartMenuDirectory 'Stop Buttercup.lnk') ' --stop' 'Stop the local backend'
+Write-Output 'Shortcuts created on the Desktop and in the Start menu.'
