@@ -111,7 +111,7 @@ For automatic startup, use a native browser package (`.deb` / `.rpm`). **Snap** 
 
 ### Step 3 · Add the extension to your browser
 
-**Firefox, Zen and compatible Gecko browsers:** use the second build, `dist/firefox`. See the [Firefox setup and compatibility guide](docs/firefox.md) for temporary installation, signing requirements and tested browser versions. The steps below apply to Chromium.
+**Firefox, Zen and compatible Gecko browsers:** use the second build, `dist/firefox`. See the [Firefox setup and compatibility guide](docs/firefox.md) for temporary installation, signing requirements and tested browser versions. Flatpak users can use the guided manual connection in that guide. The steps below apply to Chromium.
 
 Browsers only install extensions automatically from their store, so this one step is done by hand.
 

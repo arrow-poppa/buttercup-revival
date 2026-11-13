@@ -2,7 +2,7 @@ import { protectSettings } from '../api/storage.js';
 import { getSettings, validateSettings, publicSettings, redact, isOpenRouter, validateTranscription } from '../api/config.js';
 import { popupSettings, saveDraft, saveSettings, applyDraft, commitDraft, persistDraft, DRAFT_PREFIX } from '../api/settings.js';
 import { backend } from '../api/backend.js';
-import { assistantStatus, startAssistant, localSettings } from '../api/assistant.js';
+import { assistantStatus, startAssistant, localSettings, importConnection } from '../api/assistant.js';
 import { listModels } from '../api/provider.js';
 import { cacheOperation } from '../cache/local.js';
 import { formatTranscript } from '../subtitles/formats.js';
@@ -109,8 +109,8 @@ async function handle(message, sender) {
     // Connecting the local helper must also work with an unfinished provider
     // draft. These actions neither validate a model nor upload audio.
     if (popup && message.type === 'BACKEND_STATUS') return assistantStatus((await popupSettings()).draft);
-    if (popup && message.type === 'START_BACKEND') {
-        const next = await startAssistant();
+    if (popup && ['START_BACKEND', 'IMPORT_BACKEND'].includes(message.type)) {
+        const next = message.type === 'IMPORT_BACKEND' ? importConnection(message.connection) : await startAssistant();
         await persistDraft(next);
         await applyDraft();
         return assistantStatus(next);

@@ -13,9 +13,9 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from backend.app.config import state_directory
+from backend.app.config import state_directory, GECKO_ORIGIN
 from backend.app.security import private_directory, private_write
-from native_assistant import HOST
+from native_assistant import HOST, handle as native_start, load_config, start_service
 from browser_registration import (WINDOWS_BROWSER_KEYS, browser_registry_keys,
                                   linux_host_paths as browser_host_paths, native_host_directories,
                                   GECKO_EXTENSION_ID, GECKO_WINDOWS_KEYS, gecko_host_paths,
@@ -161,9 +161,26 @@ def install(extension_id=None, extra_directories=(), extra_registry_keys=(), gec
     return directory
 
 
+def manual_connection(origin, destination):
+    """Explicitly authorize one profile and export a private local connection."""
+    origin = origin.strip()
+    if not GECKO_ORIGIN.fullmatch(origin) and not re.fullmatch(r'chrome-extension://[a-p]{32}', origin):
+        raise ValueError('Copy the connection origin from Buttercup, not the extension ID.')
+    directory = state_directory()
+    if not (directory / 'assistant.json').exists():
+        install()
+    if origin.startswith('moz-extension://'):
+        result = native_start({'action': 'start', 'origin': origin}, '', directory, GECKO_EXTENSION_ID)
+    else:
+        result = native_start({'action': 'start'}, origin + '/', directory)
+    private_write(Path(destination), json.dumps({'app': 'buttercup-connection', 'origin': origin,
+                                               'backendUrl': result['backendUrl'], 'backendToken': result['backendToken']}, indent=2))
+    return Path(destination)
+
+
 def wizard(extra_directories=(), extra_registry_keys=(), gecko_directories=(), gecko_registry_keys=()):
     import tkinter as tk
-    from tkinter import messagebox
+    from tkinter import messagebox, filedialog
     window = tk.Tk()
     window.title('Set up Buttercup assistant')
     window.resizable(False, False)
@@ -182,6 +199,21 @@ def wizard(extra_directories=(), extra_registry_keys=(), gecko_directories=(), g
         except Exception as error:
             messagebox.showerror('Setup failed', str(error))
     tk.Button(frame, text='Finish setup', command=configure, padx=18, pady=8).pack(anchor='w', pady=10)
+    tk.Label(frame, text='Flatpak / Snap: connect manually', font=('Segoe UI', 12, 'bold'), pady=12).pack(anchor='w')
+    tk.Label(frame, text='In Buttercup, open “Connect without native messaging” and copy the connection origin.\nPaste it below, then save a connection file and import it in that browser.', justify='left').pack(anchor='w')
+    origin_entry = tk.Entry(frame, width=65)
+    origin_entry.pack(fill='x', pady=8)
+    def connect_manual():
+        destination = filedialog.asksaveasfilename(parent=window, title='Save private Buttercup connection',
+                                                 initialfile='Buttercup-connection.private.json', defaultextension='.json')
+        if not destination:
+            return
+        try:
+            manual_connection(origin_entry.get(), destination)
+            messagebox.showinfo('Assistant started', 'Import this connection file in Buttercup.\nIt contains a private local token; delete the file after connecting.\nAfter restarting your computer, run “Start Buttercup assistant.sh” again.')
+        except Exception as error:
+            messagebox.showerror('Connection failed', str(error))
+    tk.Button(frame, text='Start assistant and save connection file', command=connect_manual, padx=12, pady=8).pack(anchor='w')
     window.mainloop()
 
 
@@ -198,8 +230,19 @@ if __name__ == '__main__':
                         help='Additional Gecko native messaging directory (absolute path; repeatable).')
     parser.add_argument('--gecko-registry-key', action='append', default=[], metavar='VENDOR',
                         help='Additional Gecko browser key under HKCU\\Software (repeatable).')
+    parser.add_argument('--manual-origin', help='Exact connection origin copied from the extension.')
+    parser.add_argument('--connection-file', type=Path, help='Private JSON connection file to create.')
+    parser.add_argument('--start-service', action='store_true', help='Start the installed assistant without native messaging.')
     args = parser.parse_args()
-    if args.gui:
+    if args.manual_origin:
+        if not args.connection_file:
+            parser.error('--manual-origin requires --connection-file')
+        print(f'Private connection saved to {manual_connection(args.manual_origin, args.connection_file)}')
+    elif args.start_service:
+        directory = state_directory()
+        start_service(directory, load_config(directory))
+        print('Buttercup assistant is running. Open the browser and click Check connection.')
+    elif args.gui:
         wizard(args.native_host_dir, args.browser_registry_key, args.gecko_host_dir, args.gecko_registry_key)
     elif args.uninstall:
         print(f'Removed the browser registration and {uninstall(args.native_host_dir, args.browser_registry_key, args.gecko_host_dir, args.gecko_registry_key)}')

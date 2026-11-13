@@ -25,6 +25,15 @@ document.body.classList.toggle('settings-tab', settingsTab);
 $('settings-file-picker').hidden = !settingsTab;
 $('settings-import-hint').hidden = settingsTab;
 if (settingsTab) $('backup-settings').open = true;
+const connectionTab = new URL(location.href).searchParams.get('view') === 'connection';
+if (connectionTab) {
+    document.body.classList.add('settings-tab');
+    $('manual-connection').open = true;
+    $('connection-file-picker').hidden = false;
+    $('import-connection').hidden = false;
+    $('open-connection-editor').hidden = true;
+}
+$('connection-origin').textContent = chrome.runtime.getURL('').replace(/\/$/, '');
 const status = text => {
     $('status').textContent = text;
     if (settingsTab) $('settings-import-status').textContent = text;
@@ -312,6 +321,26 @@ action('start-backend', async () => {
         showBackend({ state: 'offline', message: error.message });
         $('assistant-help').open = true;
     }
+});
+action('copy-connection-origin', async () => {
+    await navigator.clipboard.writeText($('connection-origin').textContent);
+    status('Connection origin copied. Paste it in the assistant setup.');
+});
+action('open-connection-editor', async () => {
+    await chrome.tabs.create({ url: chrome.runtime.getURL('popup.html?view=connection#manual-connection') });
+});
+action('import-connection', async () => {
+    const file = $('connection-file').files[0];
+    if (!file || file.size > 16384) throw new Error('Choose the private connection file created by the assistant setup.');
+    let connection;
+    try { connection = JSON.parse(await file.text()); }
+    catch { throw new Error('Invalid connection file.'); }
+    const value = await rpc({ type: 'IMPORT_BACKEND', connection });
+    restoreForm(await popupSettings());
+    $('connection-file').value = '';
+    showBackend(value);
+    $('connection-import-status').textContent = value.state === 'online' ? 'Assistant connected. You can close this tab and delete the connection file.' : value.message;
+    status($('connection-import-status').textContent);
 });
 action('check-backend', checkBackend);
 action('copy-extension-id', async () => {

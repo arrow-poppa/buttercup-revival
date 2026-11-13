@@ -15,6 +15,15 @@
 <ol><li>In the Buttercup folder, run <strong>Install Buttercup.cmd</strong> on Windows or <strong>install.sh</strong> on Linux. You only do this once.</li><li>Extension ID, for troubleshooting: <code id="assistant-extension-id"></code> <button type="button" id="copy-extension-id">Copy ID</button></li><li>Come back here and click <strong>Start and connect</strong>. Pairing is automatic.</li></ol>
 <p class="hint">One installation registers both Chromium and Firefox/Gecko. There is no need to open a terminal, type an address or copy a token for everyday use.</p>
 </details>
+<details id="manual-connection"><summary>Connect without native messaging</summary>
+<p>For Flatpak or Snap browsers that cannot start the assistant automatically.</p>
+<ol><li>Copy this connection origin: <code id="connection-origin"></code> <button type="button" id="copy-connection-origin">Copy origin</button></li><li>Run <strong>Set up Buttercup assistant.sh</strong> from the Buttercup folder. Under Flatpak / Snap, paste the origin and save a connection file.</li><li>Open the connection editor below and import that file. It contains a private local token; delete it after connecting.</li></ol>
+<p class="hint">After restarting your computer, run <strong>Start Buttercup assistant.sh</strong>, then click Check connection. No terminal needs to stay open.</p>
+<button type="button" id="open-connection-editor">Open connection editor</button>
+<label id="connection-file-picker" hidden>Private connection file<input type="file" id="connection-file" accept=".json,application/json"></label>
+<button type="button" id="import-connection" hidden>Import connection</button>
+<p id="connection-import-status" role="status"></p>
+</details>
 </section>
 <div class="actions"><button id="generate" class="primary">Generate captions</button><button id="cancel">Cancel</button></div>
 <label>Subtitle track<select id="track"><option value="">Current transcription</option></select></label>

@@ -2,7 +2,7 @@
 // traffic is synthetic; this test never uses accounts, cookies or paid APIs.
 // Linux test runner; BUTTERCUP_GECKO_BROWSER can point to Firefox, Zen or a fork.
 import assert from 'node:assert/strict';
-import { spawn } from 'node:child_process';
+import { spawn, execFileSync } from 'node:child_process';
 import { createServer } from 'node:http';
 import { mkdtemp, mkdir, cp, readFile, writeFile, rm } from 'node:fs/promises';
 import os from 'node:os';
@@ -26,7 +26,7 @@ const freePort = async () => {
     const server = createServer(); await new Promise(r => server.listen(0, '127.0.0.1', r));
     const port = server.address().port; await new Promise(r => server.close(r)); return port;
 };
-let browser, ws, fixture, call, nativeStarted = false;
+let browser, ws, fixture, call, flatpakInstance, nativeStarted = false;
 const registrations = [], errors = [], pending = new Map();
 const counts = { extracts: 0, transcriptions: 0, sends: 0, deletes: 0 };
 let providerDelay = Number(process.env.BUTTERCUP_GECKO_DELAY_MS || 65000);
@@ -63,11 +63,13 @@ try {
         'user_pref("browser.aboutwelcome.enabled", false);',
         'user_pref("zen.welcome-screen.seen", true);',
     ].join('\n'));
-    const binary = process.env.BUTTERCUP_GECKO_BROWSER || 'firefox';
+    const flatpak = process.env.BUTTERCUP_TEST_FLATPAK;
+    const binary = flatpak ? 'flatpak' : process.env.BUTTERCUP_GECKO_BROWSER || 'firefox';
     let browserLog = '';
-    browser = spawn(binary, ['--headless', '--no-remote', '--profile', profile, '--remote-debugging-port', String(debugPort), 'about:blank'], {
-        env: { ...process.env, MOZ_REMOTE_ALLOW_SYSTEM_ACCESS: '1' }, stdio: ['ignore', 'pipe', 'pipe'],
+    browser = spawn(binary, [...(flatpak ? ['run', '--instance-id-fd=3', '--filesystem=' + work, '--env=MOZ_REMOTE_ALLOW_SYSTEM_ACCESS=1', flatpak] : []), '--headless', '--no-remote', '--profile', profile, '--remote-debugging-port', String(debugPort), 'about:blank'], {
+        env: { ...process.env, MOZ_REMOTE_ALLOW_SYSTEM_ACCESS: '1' }, stdio: ['ignore', 'pipe', 'pipe', 'pipe'],
     });
+    browser.stdio[3].on('data', data => { const match = data.toString().match(/^(\d+)\n/); if (match) flatpakInstance = match[1]; });
     browser.on('error', error => { browserLog += error.message; });
     browser.stderr.on('data', data => { browserLog += data.toString(); });
     await until(() => { if (browser.exitCode !== null) throw new Error('Gecko failed to start: ' + browserLog.slice(-1500)); return browserLog.includes('WebDriver BiDi listening'); }, 20000);
@@ -117,19 +119,31 @@ try {
         const { context } = await call('browsingContext.create', { type: 'tab' });
         await call('browsingContext.navigate', { context, url, wait: 'complete' }); return context;
     };
-    let popup = await open(base + 'popup.html');
+    let popup = await open(base + (flatpak ? 'popup.html?view=connection' : 'popup.html'));
     await until(() => evaluate(popup, `!document.getElementById('settings-fields').disabled`));
     const send = message => evaluate(popup, `browser.runtime.sendMessage(${JSON.stringify(message)})`);
     const before = await evaluate(popup, `(async()=> (await browser.tabs.query({})).length)()`);
     nativeStarted = true; // Clean up even if pairing starts the service but its reply fails.
-    const paired = await send({ type: 'START_BACKEND' });
+    let paired;
+    if (flatpak) {
+        assert.equal((await send({ type: 'START_BACKEND' })).ok, false, 'Sandboxed native startup must fail in this fixture');
+        const file = path.join(work, 'connection.private.json');
+        execFileSync(path.join(root, '.venv/bin/python'), [path.join(root, 'scripts/setup-assistant.py'), '--manual-origin', base.slice(0,-1), '--connection-file', file], {env:{...process.env,XDG_STATE_HOME:path.join(work,'state')}});
+        const connection = await readFile(file, 'utf8');
+        // BiDi input.setFiles rejects privileged extension pages in Zen. Feed
+        // the generated fixture through a File; the real import handler runs.
+        await evaluate(popup, `(async()=>{const transfer=new DataTransfer();transfer.items.add(new File([${JSON.stringify(connection)}],'connection.private.json',{type:'application/json'}));document.getElementById('connection-file').files=transfer.files;return true})()`);
+        await evaluate(popup, `(document.getElementById('import-connection').click(), true)`);
+        await until(()=>evaluate(popup, `document.getElementById('connection-import-status').textContent.includes('Assistant connected')`));
+        paired = {ok:true};
+    } else paired = await send({ type: 'START_BACKEND' });
     assert.equal(paired.ok, true, JSON.stringify(paired));
     await until(async () => (await send({ type: 'BACKEND_STATUS' })).data?.state === 'online');
     assert.equal(await evaluate(popup, `(await import('./api/config.js')).getSettings().then(s=>s.backendToken===${JSON.stringify(token)})`), true);
     assert.equal((await fetch(`http://127.0.0.1:${nativePort}/health`, { headers: { Origin: base.slice(0, -1), Authorization: `Bearer ${token}` } })).status, 200);
     assert.equal((await fetch(`http://127.0.0.1:${nativePort}/health`, { headers: { Origin: 'moz-extension://00000000-0000-0000-0000-000000000000', Authorization: `Bearer ${token}` } })).status, 403);
     assert.equal((await fetch(`http://127.0.0.1:${nativePort}/health`, { headers: { Origin: base.slice(0, -1) } })).status, 401);
-    console.log('Native Python pairing and exact-origin/token enforcement passed');
+    console.log(`${flatpak ? 'Manual Flatpak' : 'Native Python'} pairing and exact-origin/token enforcement passed`);
 
     fixture = createServer(async (req, res) => {
         const chunks = []; for await (const chunk of req) chunks.push(chunk);
@@ -202,10 +216,12 @@ try {
     assert.deepEqual(errors, []);
     console.log('PASS: shared UI, private settings, native pairing, hidden long job, subtitles, cache, SRT export, asbplayer, legacy settings, cancellation, reload');
 } finally {
-    if (call && ws?.readyState === WebSocket.OPEN) await call('session.end').catch(() => {});
+    if (call && ws?.readyState === WebSocket.OPEN) await call('browser.close').catch(() => {});
     ws?.close();
+    if (flatpakInstance) { try { execFileSync('flatpak', ['kill', flatpakInstance], {stdio:'ignore'}); } catch {} }
     for (const item of pending.values()) { clearTimeout(item.timeout); item.reject(new Error('Test cleanup')); }
     if (browser && browser.exitCode === null) { browser.kill('SIGTERM'); await Promise.race([new Promise(r=>browser.once('exit',r)), pause(3000)]); if(browser.exitCode===null) browser.kill('SIGKILL'); }
+    browser?.stdout.destroy(); browser?.stderr.destroy(); browser?.stdio[3]?.destroy();
     if (fixture) { fixture.closeAllConnections(); await new Promise(r => fixture.close(r)); }
     if (nativeStarted) { await writeFile(path.join(state, 'stop.request'), 'stop\n'); await pause(1500); }
     for (const file of registrations) await rm(file, { force: true });

@@ -49,7 +49,7 @@ class Settings:
         if not match or not self.gecko_ids:
             return False
         # Firefox UUIDs belong to profiles, not to the stable add-on ID. Only the
-        # authenticated native bridge can bind one. Read on demand so pairing a
+        # native bridge or explicit local setup can bind one. Read on demand so pairing a
         # second browser never interrupts existing Chromium/Firefox jobs.
         path = self.state_dir / 'gecko-origins' / (match[1] + '.json')
         try:

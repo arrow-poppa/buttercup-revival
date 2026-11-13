@@ -163,3 +163,23 @@ def test_either_browser_id_automatically_registers_both(installation, identity):
     saved = json.loads((state / 'assistant.json').read_text())
     assert saved['extension_ids'] == [setup.CHROMIUM_EXTENSION_ID]
     assert saved['gecko_ids'] == [setup.GECKO_EXTENSION_ID, *setup.LEGACY_GECKO_IDS]
+
+
+def test_manual_pairing_binds_exact_origin_and_writes_private_connection(installation, monkeypatch):
+    from backend.app.config import Settings
+    state, config, project = installation
+    setup.install()
+    token = 'SYNTHETIC_LOCAL_CONNECTION_TOKEN_' * 2
+    monkeypatch.setitem(setup.native_start.__globals__, 'start_service', lambda *args: token)
+    destination = config / 'connection.private.json'
+    origin = 'moz-extension://12345678-1234-1234-1234-123456789abc'
+    settings = Settings(token=token, origins=('chrome-extension://' + setup.CHROMIUM_EXTENSION_ID,), state_dir=state, gecko_ids=(setup.GECKO_EXTENSION_ID,))
+    for bad in ('https://evil.example', 'moz-extension://*', setup.GECKO_EXTENSION_ID, origin+'/'):
+        with pytest.raises(ValueError):
+            setup.manual_connection(bad, destination)
+    assert not destination.exists() and not settings.allows_origin(origin)
+    setup.manual_connection(origin, destination)
+    assert settings.allows_origin(origin)
+    assert json.loads(destination.read_text()) == {'app':'buttercup-connection','origin':origin,'backendUrl':'http://127.0.0.1:8767','backendToken':token}
+    if os.name != 'nt':
+        assert destination.stat().st_mode & 0o777 == 0o600

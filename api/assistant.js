@@ -32,10 +32,17 @@ export async function startAssistant(send = message => chrome.runtime.sendNative
         result = await send({ action: 'start', ...(origin?.startsWith('moz-extension://') ? { origin } : {}) });
     }
     catch {
-        throw new Error('The assistant is not installed for this browser yet. Run “Install Buttercup” in the Buttercup folder, then try again.');
+        throw new Error('The browser could not reach the local assistant. Run “Install Buttercup” in the Buttercup folder, then try again. Flatpak or Snap users can use “Connect without native messaging”.');
     }
     if (!result?.ok) throw new Error(result?.error || "The assistant could not be started. Run the assistant setup in the project folder.");
     const settings = localSettings(result);
     if (settings.backendToken.length < 32 || settings.backendToken.length > 4096) throw new Error("The assistant returned an invalid connection. Run the setup again.");
+    return settings;
+}
+
+export function importConnection(data, origin = chrome.runtime.getURL('').replace(/\/$/, '')) {
+    if (data?.app !== 'buttercup-connection' || data.origin !== origin) throw new Error('This connection file belongs to a different browser profile. Create a new one using the connection origin shown here.');
+    const settings = localSettings(data);
+    if (settings.backendToken.length < 32 || settings.backendToken.length > 4096) throw new Error('Invalid connection file. Create it again with the assistant setup.');
     return settings;
 }

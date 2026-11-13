@@ -50,3 +50,13 @@ test('native startup accepts only a local connection and does not send credentia
     await assert.rejects(startAssistant(async () => ({ ok: true, backendToken: 'short' })), /invalid connection/);
     await assert.rejects(startAssistant(async () => { throw new Error('host missing'); }), /Install Buttercup/);
 });
+
+test('manual connection imports only an exact profile and a loopback connection', async () => {
+    const { importConnection } = await import('../api/assistant.js');
+    const origin = 'moz-extension://12345678-1234-1234-1234-123456789abc';
+    const data = { app: 'buttercup-connection', origin, backendUrl: DEFAULTS.backendUrl, backendToken: 'SYNTHETIC_LOCAL_TOKEN_'.repeat(2) };
+    assert.equal(importConnection(data, origin).backendToken, data.backendToken);
+    for (const changed of [{origin:'https://evil.example'}, {app:'other'}, {backendToken:'short'}, {backendUrl:'https://evil.example'}]) {
+        assert.throws(()=>importConnection({...data,...changed},origin));
+    }
+});

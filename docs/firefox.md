@@ -36,7 +36,7 @@ The manifest declares transmission of authentication information, website conten
 | Native Zen | Shares Mozilla locations; portable Linux Zen 1.24.2b tested with the real Python native host |
 | LibreWolf | Mozilla Windows registry; separate LibreWolf Linux locations registered; no live LibreWolf runtime test |
 | Other modern Gecko forks (including Waterfox) | Same build when required WebExtension APIs are available; custom registration supported; not individually runtime-verified |
-| Flatpak / Snap | Native-process sandbox/portal support varies; not validated. Copying a host manifest alone cannot grant permission to execute the assistant |
+| Flatpak / Snap | Manual connection supported without native messaging; Linux Flatpak Zen 1.24b tested. Snap remains unverified |
 | Android, macOS installers, old non-WebExtension forks | Unsupported by the existing assistant installation flow |
 
 The installer writes separate manifests because Chromium uses `allowed_origins`, while Firefox uses `allowed_extensions`. Linux defaults include `~/.mozilla/native-messaging-hosts`, `~/.librewolf/native-messaging-hosts`, and the `mozilla/native-messaging-hosts` and `librewolf/native-messaging-hosts` directories under `$XDG_CONFIG_HOME` (default `~/.config`). Windows uses `HKCU\Software\Mozilla\NativeMessagingHosts`, alongside the unchanged Chromium registrations. Zen's [native-host lookup discussion](https://github.com/zen-browser/desktop/issues/10622) and [LibreWolf's native messaging notes](https://librewolf.net/docs/faq/#how-do-i-get-native-messaging-to-work) explain why browser profile-folder names are not sufficient to determine these paths.
@@ -49,15 +49,27 @@ For forks or portable packages with a different **verified** location:
 
 On Windows, use `.venv\Scripts\python.exe` and, when needed, `--gecko-registry-key "Vendor\Browser"`. These Gecko-specific options are repeatable, remembered across reinstalls, and removed by uninstall. Keep them separate from Chromium's `--native-host-dir` / `--browser-registry-key`: using the same host manifest location for both formats is rejected.
 
-### Manual connection when native startup is unavailable
+### Manual connection for Flatpak / Snap
 
-If a sandboxed browser permits loopback HTTP but cannot launch native programs, the existing manual backend can explicitly authorize its profile origin. In `about:debugging`, inspect Buttercup and evaluate `browser.runtime.getURL('').slice(0, -1)` in the extension console. This yields `moz-extension://<UUID>`; it is **not** the logical add-on ID displayed in the popup.
+Native browsers keep using **Start and connect**. Sandboxed browsers can pair explicitly without a native-messaging portal or extra Flatpak permissions:
+
+1. In Buttercup, expand **Connect without native messaging** and click **Copy origin**. This is the exact profile URL, not the logical extension ID.
+2. From the installed project folder, run **Set up Buttercup assistant.sh**. In its Flatpak / Snap section, paste the origin and click **Start assistant and save connection file**.
+3. Back in Buttercup, click **Open connection editor**. Select the private JSON file and click **Import connection**. The editor uses a tab so closing the popup/file picker cannot interrupt import.
+4. Delete the connection file after import: it contains the local assistant token. Existing provider keys and settings are preserved.
+
+The helper authorizes only the pasted origin and starts the existing Python assistant. No wildcard CORS, new HTTP pairing endpoint, browser sandbox overrides or additional service is introduced. Connection files are rejected in a different browser profile and are excluded from settings backups. The browser's normal file-selection portal grants access to the selected file.
+
+After restarting the computer, run **Start Buttercup assistant.sh** and click **Check connection** in the extension. The helper starts the assistant detached; it does not keep a terminal open. The connection survives ordinary browser restarts. A new browser profile requires a new connection file.
+
+CLI equivalents (no secrets are printed):
 
 ```sh
-.venv/bin/python -m backend.app --firefox-origin moz-extension://YOUR-PROFILE-UUID --show-token
+.venv/bin/python scripts/setup-assistant.py --manual-origin moz-extension://YOUR-PROFILE-UUID --connection-file /private/path/Buttercup-connection.private.json
+.venv/bin/python scripts/setup-assistant.py --start-service
 ```
 
-Copy the resulting local token into Buttercup's advanced connection fields. Keep it private. Repeat `--firefox-origin` or `--extension-id` for additional explicitly authorized profiles. Profile recreation can change the UUID and require pairing again. This fallback does not bypass the browser's sandbox or networking restrictions.
+Flatpak Zen 1.24b was tested in a disposable profile against a host assistant with separate state. The test uses a temporary filesystem grant only for its generated profile/extension fixtures; no overrides are added to the installed application or normal profile. Zen's BiDi automation cannot choose a file in privileged extension pages, so the test feeds the helper-generated file through the browser's `File` API and exercises the actual import handler. Interactive file-picker/portal selection and the Tk save dialog were not automated. Run this test with `BUTTERCUP_TEST_FLATPAK=app.zen_browser.zen BUTTERCUP_GECKO_DELAY_MS=1000 npm run test:gecko-browser`.
 
 ## Compatibility and security details
 
@@ -75,9 +87,9 @@ Validation on Linux, 2026-11-13:
 
 - Actual Firefox **159.0** and Zen **1.24.2b**: shared settings UI, real Python native startup/pairing, exact-origin/token denial, content-script settings isolation, a **65-second** simulated provider request with the popup closed, no processing tab, YouTube fixture subtitle delivery, cache reuse without another request, SRT download, asbplayer fixture delivery, legacy settings schema/pairing preservation, and cancellation. Final short runs also verified content-script IndexedDB isolation, rejection of injected public-storage settings, and settings persistence across a real extension reload.
 - Chromium: existing full MV3 smoke, settings import, five-language UI, assistant popup, DeepInfra and Groq browser suites passed after the shared compatibility changes.
-- **109 JavaScript tests and 76 Python tests passed.** They include build invariants, credential isolation, exact-origin CORS/authentication, atomic native pairing and separate Chromium/Gecko installer lifecycles. Windows registry installation is tested with a fake registry; no live Windows Gecko test has been performed.
+- **110 JavaScript tests and 77 Python tests passed.** They include build invariants, credential isolation, exact-origin CORS/authentication, atomic native pairing and separate Chromium/Gecko installer lifecycles. Windows registry installation is tested with a fake registry; no live Windows Gecko test has been performed.
 - Mozilla `web-ext` 10.8.0 reported **0 errors and 1 warning** for the generated manifest/package. The shared localization code's existing assignment of bundled translations to `innerHTML` produces a warning; no remote HTML is introduced by the Gecko target.
-- Audio extraction, YouTube responses, transcription providers and asbplayer traffic in browser tests are fixtures. Real external extraction, paid model calls, Windows Gecko, LibreWolf/Waterfox runtimes, Flatpak/Snap and store signing are not claimed as verified.
+- Audio extraction, YouTube responses, transcription providers and asbplayer traffic in browser tests are fixtures. Real external extraction, paid model calls, Windows Gecko, LibreWolf/Waterfox runtimes, Snap and store signing are not claimed as verified.
 
 Reproduce the native Linux runtime checks after installing the project's development dependencies and building:
 
