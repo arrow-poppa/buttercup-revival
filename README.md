@@ -111,6 +111,8 @@ For automatic startup, use a native browser package (`.deb` / `.rpm`). **Snap** 
 
 ### Step 3 · Add the extension to your browser
 
+**Firefox, Zen and compatible Gecko browsers:** use the second build, `dist/firefox`. See the [Firefox setup and compatibility guide](docs/firefox.md) for temporary installation, signing requirements and tested browser versions. The steps below apply to Chromium.
+
 Browsers only install extensions automatically from their store, so this one step is done by hand.
 
 1. Open your Chromium-based browser and type **`chrome://extensions`** in the address bar, then press Enter.
@@ -322,21 +324,21 @@ python -m venv .venv
 .venv/bin/python -m pip install -r backend/requirements-dev.txt   # Windows: .venv\Scripts\python.exe
 npm ci
 
-npm run build                       # copies the extension to dist/extension
+npm run build                       # generates dist/extension (Chromium) and dist/firefox (Gecko)
 npm run package                     # builds the release archive, dist/Buttercup-Revival.zip
 npm test                            # JavaScript unit tests
 .venv/bin/python -m pytest tests/backend -q
 ```
 
-The extension has no bundler: `npm run build` only copies files, so `node scripts/build.mjs` is all the installer needs.
+The extension has no bundler: `npm run build` copies shared files and applies the small Gecko manifest/API/storage adaptations. `node scripts/build.mjs` is all the installer needs. See [Gecko architecture and runtime validation](docs/firefox.md).
 
 </details>
 
 <details>
 <summary><b>Design notes</b></summary>
 
-- **Manifest V3**, no remote code, no page-world scripts. Captions use the video's native `TextTrack`.
-- **Fixed extension ID.** The manifest carries a public key, so every installation has the same ID and the installer can authorise it for native messaging without asking the user for anything.
+- **Chromium Manifest V3; Gecko Manifest V2 with a hidden persistent background page.** No remote code. Captions use the video's native `TextTrack`.
+- **Stable extension identities.** Chromium derives its ID from the manifest public key; Gecko uses an explicit add-on ID. The installer registers both automatically.
 - **Native messaging bridge** with a single allow-listed action: start the local service and return its pairing token.
 - **Provider requests are never retried or re-routed** after a failure, so a paid request is not silently repeated.
 - More detail (in Portuguese): [technical notes](docs/TECHNICAL.pt-BR.md), [changes from upstream](docs/CHANGES.md), [validation log](docs/VALIDATION.md).

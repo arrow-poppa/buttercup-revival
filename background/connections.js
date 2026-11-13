@@ -8,12 +8,24 @@ export function connections(api = chrome) {
     const attaching = new Map();
     const version = api.runtime.getManifest().version;
 
+    function hasOffscreen() {
+        return api.offscreen ? api.offscreen.hasDocument() : Promise.resolve(!!document.getElementById('buttercup-processing'));
+    }
+
     function offscreen() {
         if (!starting) starting = (async () => {
-            if (!await api.offscreen.hasDocument()) await api.offscreen.createDocument({
+            if (api.offscreen && !await hasOffscreen()) await api.offscreen.createDocument({
                 url: 'background/offscreen.html', reasons: ['BLOBS'],
                 justification: 'Process audio blobs and subtitle exports across long transcription requests.',
             });
+            if (!api.offscreen && !await hasOffscreen()) {
+                // Gecko uses an MV2 persistent background page. The same runner
+                // lives in a private iframe, never a visible or pinned tab.
+                const frame = document.createElement('iframe');
+                frame.id = 'buttercup-processing';
+                frame.src = api.runtime.getURL('background/offscreen.html');
+                document.body.append(frame);
+            }
             // A document may exist while its module imports are still loading.
             // Only readiness probes are retried, never transcription commands.
             const deadline = Date.now() + 5000;
@@ -62,7 +74,7 @@ export function connections(api = chrome) {
                         if (reply?.ready && reply.version === version) break;
                     } while (Date.now() < deadline);
                 } else {
-                    await api.scripting.executeScript({ target: { tabId }, files: ['buttercup.js', 'content.js'] });
+                    await api.scripting.executeScript({ target: { tabId }, files: [...(api.offscreen ? [] : ['gecko/compat.js']), 'buttercup.js', 'content.js'] });
                     reply = await probe();
                 }
             }
@@ -86,5 +98,5 @@ export function connections(api = chrome) {
             return api.tabs.sendMessage(tabId, message, { frameId: 0 });
         }
     }
-    return { offscreen, sendOffscreen, content, deliver };
+    return { offscreen, hasOffscreen, sendOffscreen, content, deliver };
 }

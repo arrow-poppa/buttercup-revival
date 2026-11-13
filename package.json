@@ -15,7 +15,8 @@
     "test:deepinfra-browser": "node scripts/browser-deepinfra.mjs",
     "test:groq-browser": "node scripts/browser-deepinfra.mjs --groq",
     "test:assistant-browser": "node scripts/browser-assistant.mjs",
-    "test:youtube": "node scripts/browser-youtube.mjs"
+    "test:youtube": "node scripts/browser-youtube.mjs",
+    "test:gecko-browser": "node scripts/browser-gecko.mjs"
   },
   "engines": {
     "node": ">=22"

@@ -1,6 +1,6 @@
 # Buttercup Revival - one-step setup for Windows.
 # Installs what is missing (Python, Node.js, FFmpeg), prepares the local
-# assistant inside this folder and registers it for Chromium-based browsers.
+# assistant inside this folder and registers it for Chromium and Gecko browsers.
 # Everything is per user; only the Node.js installer may ask for permission.
 $ErrorActionPreference = 'Stop'
 $Root = Split-Path -Parent $PSScriptRoot
@@ -101,6 +101,8 @@ try {
     Write-Host ('         ' + $Extension) -ForegroundColor Yellow
     Note '   (its address is already copied: paste it into the folder window with Ctrl+V)'
     Note '4. Click the Buttercup icon, then "Start and connect".'
+    Note 'Firefox / Zen: open about:debugging#/runtime/this-firefox, choose Load Temporary Add-on, then dist/firefox/manifest.json.'
+    Note 'Temporary Firefox installs last until browser exit. See docs/firefox.md for signing and setup.'
     Write-Host ''
     Note 'Do not move or delete this folder afterwards: the extension runs from it.'
     Note 'The full guide, with pictures, is in README.md.'

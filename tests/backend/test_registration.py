@@ -50,6 +50,7 @@ def installation(tmp_path, monkeypatch):
     python.touch()
     state = tmp_path / 'state'
     config = tmp_path / 'config'
+    monkeypatch.setattr(setup.Path, 'home', lambda: tmp_path / 'home')
     monkeypatch.setattr(setup, 'ROOT', project)
     monkeypatch.setattr(setup, 'state_directory', lambda: state)
     monkeypatch.setattr(setup.shutil, 'which', lambda name: str(python))
@@ -116,11 +117,40 @@ def test_windows_registration_and_uninstall_use_same_default_and_custom_keys(ins
     setup.install('a' * 32, [custom], ['Example\\Browser'])
     expected = {'Software\\' + browser + '\\NativeMessagingHosts\\' + setup.HOST
                 for browser in ('Google\\Chrome', 'Microsoft\\Edge', 'Chromium', 'Example\\Browser')}
-    assert set(registry) == expected
-    assert set(registry.values()) == {str(state / (setup.HOST + '.json'))}
+    assert set(registry) == expected | {'Software\\Mozilla\\NativeMessagingHosts\\' + setup.HOST}
+    assert set(registry.values()) == {str(state / (setup.HOST + '.json')), str(state / (setup.HOST + '.gecko.json'))}
+    gecko = json.loads((state / (setup.HOST + '.gecko.json')).read_text())
+    assert gecko['allowed_extensions'] == [setup.GECKO_EXTENSION_ID]
+    assert 'allowed_origins' not in gecko
     assert (custom / (setup.HOST + '.json')).exists()
     setup.install('b' * 32)
-    assert set(registry) == expected
+    assert set(registry) == expected | {'Software\\Mozilla\\NativeMessagingHosts\\' + setup.HOST}
     setup.uninstall()
     assert not registry
     assert not (custom / (setup.HOST + '.json')).exists()
+
+
+@pytest.mark.skipif(os.name == 'nt', reason='Linux native messaging filesystem layout')
+def test_gecko_registration_preserves_separate_manifests_and_custom_paths(installation):
+    state, config, project = installation
+    custom = config / 'another-gecko/native-messaging-hosts'
+    setup.install('a' * 32, gecko_directories=[custom])
+    setup.install('a' * 32)
+    paths = setup.gecko_host_paths(Path.home(), config, setup.HOST, [custom])
+    for path in paths:
+        manifest = json.loads(path.read_text())
+        assert manifest['allowed_extensions'] == [setup.GECKO_EXTENSION_ID]
+        assert 'allowed_origins' not in manifest
+        assert path.stat().st_mode & 0o777 == 0o600
+    chromium = json.loads(setup.linux_host_paths(config)[0].read_text())
+    assert 'allowed_extensions' not in chromium
+    assert json.loads((state / 'assistant.json').read_text())['gecko_host_directories'] == [str(custom)]
+    setup.uninstall()
+    assert all(not path.exists() for path in paths)
+
+
+def test_registration_rejects_cross_engine_manifest_collisions(installation):
+    state, config, project = installation
+    with pytest.raises(ValueError, match='separate'):
+        setup.install('a' * 32, extra_directories=[config / 'shared'], gecko_directories=[config / 'shared'])
+    assert not state.exists()

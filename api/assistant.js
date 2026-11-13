@@ -27,7 +27,10 @@ export async function assistantStatus(draft) {
 
 export async function startAssistant(send = message => chrome.runtime.sendNativeMessage(NATIVE_HOST, message)) {
     let result;
-    try { result = await send({ action: 'start' }); }
+    try {
+        const origin = globalThis.chrome?.runtime?.getURL?.('')?.replace(/\/$/, '');
+        result = await send({ action: 'start', ...(origin?.startsWith('moz-extension://') ? { origin } : {}) });
+    }
     catch {
         throw new Error('The assistant is not installed for this browser yet. Run “Install Buttercup” in the Buttercup folder, then try again.');
     }

@@ -17,7 +17,7 @@ def main():
     config = load_config(directory)
     token = json.loads((directory / 'token.private.json').read_text(encoding='utf-8'))['token']
     settings = Settings(token=token, origins=tuple('chrome-extension://' + item for item in config['extension_ids']),
-                        state_dir=directory, ffmpeg=config['ffmpeg'], ffprobe=config['ffprobe'])
+                        state_dir=directory, gecko_ids=tuple(config.get('gecko_ids', [])), ffmpeg=config['ffmpeg'], ffprobe=config['ffprobe'])
     server = uvicorn.Server(uvicorn.Config(create_app(settings), host='127.0.0.1', port=config['port'],
                                           access_log=False, log_level='warning'))
     done = threading.Event()

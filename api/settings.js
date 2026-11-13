@@ -1,3 +1,4 @@
+import { settingsStorage } from './storage.js';
 import { DEFAULTS, validateSettings, redact } from './config.js';
 
 export const DRAFT_PREFIX = 'draftSetting:';
@@ -40,7 +41,7 @@ export function draftSettings(draft) {
 async function storedSettings() {
     // Editing must work even when older saved settings fail today's validation.
     // Transcription still uses getSettings(), which validates before any request.
-    const stored = await chrome.storage.local.get(['settings', 'settingsDraft', ...Object.keys(DEFAULTS).map(key => DRAFT_PREFIX + key)]);
+    const stored = await settingsStorage.get(['settings', 'settingsDraft', ...Object.keys(DEFAULTS).map(key => DRAFT_PREFIX + key)]);
     const settings = { ...DEFAULTS, ...stored.settings };
     const draft = { ...formDraft(settings), ...stored.settingsDraft };
     for (const key of Object.keys(DEFAULTS)) if (stored[DRAFT_PREFIX + key] !== undefined) draft[key] = stored[DRAFT_PREFIX + key];
@@ -86,7 +87,7 @@ export function persistDraft(patch) {
     }
     // Start the browser storage operation synchronously, before messaging a worker.
     // Separate keys prevent an older form from replacing another field's choice.
-    return chrome.storage.local.set(changes);
+    return settingsStorage.set(changes);
 }
 
 async function applyStoredDraft(strict = false) {
@@ -98,7 +99,7 @@ async function applyStoredDraft(strict = false) {
         return { saved: false, error: redact(cause.message, current) };
     }
     // Never replace the draft here: a newer edit may already be in storage.
-    if (JSON.stringify(settings) !== JSON.stringify(current)) await chrome.storage.local.set({ settings });
+    if (JSON.stringify(settings) !== JSON.stringify(current)) await settingsStorage.set({ settings });
     return { saved: true, settings };
 }
 
@@ -122,7 +123,7 @@ export function saveSettings(input) {
         const settings = validateSettings(input);
         const draft = formDraft(settings);
         const fields = Object.fromEntries(Object.entries(draft).map(([key, value]) => [DRAFT_PREFIX + key, value]));
-        await chrome.storage.local.set({ settings, settingsDraft: draft, ...fields });
+        await settingsStorage.set({ settings, settingsDraft: draft, ...fields });
         return settings;
     });
 }

@@ -1,5 +1,7 @@
 # Chromium browser setup
 
+For Firefox, Zen, LibreWolf and other Gecko browsers, use `dist/firefox` and the [Gecko setup guide](firefox.md). This page covers Chromium.
+
 Buttercup targets desktop Chromium browsers on Windows and Linux that support unpacked Manifest V3 extensions, offscreen documents, and native messaging (Chromium 120 or newer). A fork can disable these APIs or restrict extensions; a shared rendering engine alone does not guarantee compatibility. Mobile browsers and macOS installers are not supported.
 
 ## Automatic registration

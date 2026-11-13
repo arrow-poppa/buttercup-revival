@@ -73,7 +73,11 @@ def create_app(settings: Settings):
                     app.state.cookies.remove()
 
     app = FastAPI(title="Buttercup Revival", lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None)
-    app.add_middleware(CORSMiddleware, allow_origins=list(settings.origins),
+    class PairedCORSMiddleware(CORSMiddleware):
+        def is_allowed_origin(self, origin):
+            return settings.allows_origin(origin)
+
+    app.add_middleware(PairedCORSMiddleware, allow_origins=list(settings.origins),
                        allow_methods=["GET", "POST", "DELETE", "PATCH"],
                        allow_headers=["Authorization", "Content-Type"], max_age=600)
     requests = {}
@@ -82,7 +86,7 @@ def create_app(settings: Settings):
     async def secure(request: Request, call_next):
         host = request.headers.get("host", "").split(":")[0]
         origin = request.headers.get("origin")
-        if host != "127.0.0.1" or (origin is not None and origin not in settings.origins):
+        if host != "127.0.0.1" or (origin is not None and not settings.allows_origin(origin)):
             return JSONResponse({"detail": "Host or origin denied"}, status_code=403)
         if request.method == "OPTIONS":
             return await call_next(request)

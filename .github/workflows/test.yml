@@ -38,3 +38,26 @@ jobs:
       - run: npm run test:assistant-browser
       - run: npm run test:i18n-browser
       - run: npm run test:import-browser
+  gecko:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: browser-actions/setup-firefox@v1
+        id: firefox
+        with:
+          firefox-version: latest
+      - run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - run: python -m venv .venv
+      - run: .venv/bin/python -m pip install -r backend/requirements-dev.txt
+      - run: npm ci
+      - run: npm run build
+      - run: npx --yes web-ext@10.8.0 lint --source-dir dist/firefox
+      - run: npm run test:gecko-browser
+        env:
+          BUTTERCUP_GECKO_BROWSER: ${{ steps.firefox.outputs.firefox-path }}

@@ -1,3 +1,4 @@
+import { settingsStorage } from './storage.js';
 import en from '../locales/en.js';
 import ptBR from '../locales/pt-BR.js';
 import es from '../locales/es.js';
@@ -48,7 +49,7 @@ export function tr(text) {
 }
 
 export async function storedLanguage() {
-    const stored = await chrome.storage.local.get(['settings', 'draftSetting:uiLanguage']);
+    const stored = await settingsStorage.get(['settings', 'draftSetting:uiLanguage']);
     return stored['draftSetting:uiLanguage'] ?? stored.settings?.uiLanguage ?? 'auto';
 }
 

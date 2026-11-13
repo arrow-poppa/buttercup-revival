@@ -1,3 +1,4 @@
+import { settingsStorage } from './storage.js';
 export const DEEPINFRA_BASE_URL = 'https://api.deepinfra.com/v1/inference';
 export const DEEPINFRA_DEFAULT_MODEL = 'openai/whisper-large-v3-turbo';
 export const GROQ_BASE_URL = 'https://api.groq.com/openai/v1';
@@ -152,7 +153,7 @@ export function validateSettings(input) {
 }
 
 export async function getSettings() {
-    const stored = await chrome.storage.local.get('settings');
+    const stored = await settingsStorage.get('settings');
     return validateSettings({ ...DEFAULTS, ...stored.settings });
 }
 

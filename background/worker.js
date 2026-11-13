@@ -1,3 +1,4 @@
+import { protectSettings } from '../api/storage.js';
 import { getSettings, validateSettings, publicSettings, redact, isOpenRouter, validateTranscription } from '../api/config.js';
 import { popupSettings, saveDraft, saveSettings, applyDraft, commitDraft, persistDraft, DRAFT_PREFIX } from '../api/settings.js';
 import { backend } from '../api/backend.js';
@@ -153,7 +154,7 @@ async function handle(message, sender) {
         return connection.sendOffscreen({ type: 'RUN', tabId, videoId, title: info.title });
     }
     if (message.type === 'CANCEL') {
-        if (!await chrome.offscreen.hasDocument()) return {};
+        if (!await connection.hasOffscreen()) return {};
         return connection.sendOffscreen({ type: 'CANCEL', tabId: content ? sender.tab.id : message.tabId });
     }
     if (message.type === 'STATUS') {
@@ -196,10 +197,7 @@ async function handle(message, sender) {
 }
 
 // Content scripts need only public settings; keys remain in trusted extension contexts.
-const ready = Promise.all([
-    chrome.storage.local.setAccessLevel({ accessLevel: 'TRUSTED_CONTEXTS' }),
-    chrome.storage.sync.setAccessLevel({ accessLevel: 'TRUSTED_CONTEXTS' }),
-]);
+const ready = protectSettings();
 chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== 'local' || !Object.keys(changes).some(key => key.startsWith(DRAFT_PREFIX))) return;
     // Storage events wake the worker even if the popup has already closed.
@@ -218,7 +216,7 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
 });
 
 chrome.tabs.onRemoved.addListener(async tabId => {
-    if (await chrome.offscreen.hasDocument()) connection.sendOffscreen({ type: 'CANCEL', tabId, forget: true }).catch(() => {});
+    if (await connection.hasOffscreen()) connection.sendOffscreen({ type: 'CANCEL', tabId, forget: true }).catch(() => {});
     chrome.storage.session.remove(`status-${tabId}`);
 });
 

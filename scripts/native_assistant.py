@@ -16,7 +16,7 @@ from urllib.request import Request, build_opener, ProxyHandler
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from backend.app.config import state_directory
+from backend.app.config import state_directory, GECKO_ORIGIN, GECKO_ID
 
 HOST = 'app.buttercup.assistant'
 
@@ -26,6 +26,9 @@ def load_config(directory):
     ids = config.get('extension_ids', [])
     if not ids or any(not re.fullmatch(r'[a-p]{32}', item) for item in ids):
         raise ValueError('Set up the assistant again with the extension ID.')
+    gecko_ids = config.get('gecko_ids', [])
+    if not isinstance(gecko_ids, list) or any(not isinstance(item, str) or not GECKO_ID.fullmatch(item) for item in gecko_ids):
+        raise ValueError('Invalid Gecko registration. Set up the assistant again.')
     if type(config.get('port')) is not int or not 1 <= config['port'] <= 65535:
         raise ValueError('Invalid port. Set up the assistant again.')
     return config
@@ -89,12 +92,34 @@ def start_service(directory, config):
     raise RuntimeError('The assistant could not start. Run “Set up Buttercup assistant” to check the installation.')
 
 
-def handle(message, origin, directory):
+def handle(message, origin, directory, gecko_id=None):
     config = load_config(directory)
-    if origin not in [f'chrome-extension://{item}/' for item in config['extension_ids']]:
-        raise ValueError('Unauthorized extension. Set up the assistant for this browser.')
-    if message != {'action': 'start'}:
-        raise ValueError('Action not allowed.')
+    if gecko_id is not None:
+        # Firefox passes the native manifest path first and the logical add-on ID
+        # second. Never mistake the user-provided UUID for browser identity.
+        if gecko_id not in config.get('gecko_ids', []):
+            raise ValueError('Unauthorized extension. Set up the assistant for this browser.')
+        if not isinstance(message, dict) or set(message) != {'action', 'origin'} or message['action'] != 'start':
+            raise ValueError('Action not allowed.')
+        match = GECKO_ORIGIN.fullmatch(message['origin']) if isinstance(message['origin'], str) else None
+        if not match:
+            raise ValueError('Invalid Firefox origin.')
+        from backend.app.security import private_directory, private_write
+        bindings = private_directory(directory / 'gecko-origins')
+        # Atomic replacement keeps in-flight requests authorized while another
+        # popup re-pairs this profile. Different profiles use separate files.
+        import uuid
+        temporary = bindings / (uuid.uuid4().hex + '.tmp')
+        try:
+            private_write(temporary, json.dumps({'extension_id': gecko_id}))
+            os.replace(temporary, bindings / (match[1] + '.json'))
+        finally:
+            temporary.unlink(missing_ok=True)
+    else:
+        if origin not in [f'chrome-extension://{item}/' for item in config['extension_ids']]:
+            raise ValueError('Unauthorized extension. Set up the assistant for this browser.')
+        if message != {'action': 'start'}:
+            raise ValueError('Action not allowed.')
     token = start_service(directory, config)
     return {'ok': True, 'backendUrl': f'http://127.0.0.1:{config["port"]}', 'backendToken': token}
 
@@ -105,7 +130,11 @@ def main():
         msvcrt.setmode(sys.stdin.fileno(), os.O_BINARY)
         msvcrt.setmode(sys.stdout.fileno(), os.O_BINARY)
     try:
-        result = handle(read_message(sys.stdin.buffer), sys.argv[1] if len(sys.argv) > 1 else '', state_directory())
+        origin = sys.argv[1] if len(sys.argv) > 1 else ''
+        # Chrome may append --parent-window on Windows. Only a non-Chromium
+        # invocation uses Firefox's manifest-path / add-on-ID argument layout.
+        gecko_id = sys.argv[2] if not origin.startswith('chrome-extension://') and len(sys.argv) > 2 else None
+        result = handle(read_message(sys.stdin.buffer), origin, state_directory(), gecko_id)
     except (FileNotFoundError, PermissionError):
         result = {'ok': False, 'error': 'Incomplete installation. Run “Set up Buttercup assistant” again.'}
     except Exception as error:
