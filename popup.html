@@ -13,7 +13,7 @@
 <details id="assistant-help"><summary>How to connect</summary>
 <p>After the initial setup, just click <strong>Start and connect</strong>. You can close the window; the assistant keeps running while the computer is on.</p>
 <ol><li>In the Buttercup folder, run <strong>Install Buttercup.cmd</strong> on Windows or <strong>install.sh</strong> on Linux. You only do this once.</li><li>Extension ID, for troubleshooting: <code id="assistant-extension-id"></code> <button type="button" id="copy-extension-id">Copy ID</button></li><li>Come back here and click <strong>Start and connect</strong>. Pairing is automatic.</li></ol>
-<p class="hint">You only need to install once per browser. There is no need to open a terminal, type an address or copy a token for everyday use.</p>
+<p class="hint">One installation registers both Chromium and Firefox/Gecko. There is no need to open a terminal, type an address or copy a token for everyday use.</p>
 </details>
 </section>
 <div class="actions"><button id="generate" class="primary">Generate captions</button><button id="cancel">Cancel</button></div>
@@ -24,6 +24,7 @@
 <button type="button" id="reload-settings" hidden>Retry loading saved settings</button>
 <fieldset id="settings-fields">
 <details open><summary>General</summary>
+<label>Appearance<select data-setting="theme"><option value="auto">Auto (system)</option><option value="light">Light</option><option value="dark">Dark</option></select></label>
 <label>Audio track for transcription<select data-setting="audioTrack"><option value="default">Default audio</option><option value="original">Original audio (avoid dubbing)</option></select></label>
 <p class="hint">Original audio uses the track identified as original by YouTube. Select the same track in the YouTube player for matching playback.</p>
 <label class="check"><input type="checkbox" data-setting="enabled">Enable Buttercup</label>

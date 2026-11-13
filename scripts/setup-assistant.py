@@ -18,7 +18,8 @@ from backend.app.security import private_directory, private_write
 from native_assistant import HOST
 from browser_registration import (WINDOWS_BROWSER_KEYS, browser_registry_keys,
                                   linux_host_paths as browser_host_paths, native_host_directories,
-                                  GECKO_EXTENSION_ID, GECKO_WINDOWS_KEYS, gecko_host_paths)
+                                  GECKO_EXTENSION_ID, GECKO_WINDOWS_KEYS, gecko_host_paths,
+                                  CHROMIUM_EXTENSION_ID, LEGACY_GECKO_IDS)
 
 
 def linux_host_paths(config_root, extra_directories=()):
@@ -80,9 +81,13 @@ def uninstall(extra_directories=(), extra_registry_keys=(), gecko_directories=()
     return directory
 
 
-def install(extension_id, extra_directories=(), extra_registry_keys=(), gecko_directories=(), gecko_registry_keys=()):
+def install(extension_id=None, extra_directories=(), extra_registry_keys=(), gecko_directories=(), gecko_registry_keys=()):
+    # Both shipped identities are always registered. Accept either ID from the
+    # popup, or no ID at all; keep custom Chromium IDs as an advanced option.
+    if not extension_id or extension_id in (GECKO_EXTENSION_ID, *LEGACY_GECKO_IDS):
+        extension_id = CHROMIUM_EXTENSION_ID
     if not re.fullmatch(r'[a-p]{32}', extension_id):
-        raise ValueError('Copy the 32-letter ID shown under “How to connect” in the extension.')
+        raise ValueError('Use the ID shown by either Buttercup build, or leave it blank for automatic setup.')
     python = ROOT / '.venv' / ('Scripts/python.exe' if os.name == 'nt' else 'bin/python')
     if not python.is_file():
         raise RuntimeError('Install the Buttercup dependencies first. See the installation guide.')
@@ -99,13 +104,13 @@ def install(extension_id, extra_directories=(), extra_registry_keys=(), gecko_di
     previous = json.loads(windows_file.read_text(encoding='utf-8')) if windows_file.exists() else {}
     config_file = directory / 'assistant.json'
     config = json.loads(config_file.read_text(encoding='utf-8')) if config_file.exists() else {}
-    ids = list(dict.fromkeys([*config.get('extension_ids', []), *([previous['extension_id']] if previous.get('extension_id') else []), extension_id]))
+    ids = list(dict.fromkeys([item for item in [*config.get('extension_ids', []), previous.get('extension_id', ''), extension_id, CHROMIUM_EXTENSION_ID] if re.fullmatch(r'[a-p]{32}', item)]))
     tools = {name: previous.get(name) or shutil.which(name) for name in ('node', 'ffmpeg', 'ffprobe')}
     if not all(value and Path(value).is_file() for value in tools.values()):
         raise RuntimeError('Node.js or FFmpeg/FFprobe is missing. Install these components and run setup again.')
     config = {'port': config.get('port', previous.get('port', 8767)), 'extension_ids': ids, **tools,
               'native_host_directories': [str(path) for path in directories], 'browser_registry_keys': keys,
-              'gecko_ids': [GECKO_EXTENSION_ID], 'gecko_host_directories': [str(path) for path in gecko_directories],
+              'gecko_ids': [GECKO_EXTENSION_ID, *LEGACY_GECKO_IDS], 'gecko_host_directories': [str(path) for path in gecko_directories],
               'gecko_registry_keys': gecko_keys}
     private_write(config_file, json.dumps(config, indent=2))
     if not (directory / 'token.private.json').exists():
@@ -136,7 +141,7 @@ def install(extension_id, extra_directories=(), extra_registry_keys=(), gecko_di
             location.parent.mkdir(parents=True, exist_ok=True)
             private_write(location, json.dumps(manifest, indent=2))
     gecko_manifest = {key: value for key, value in manifest.items() if key != 'allowed_origins'}
-    gecko_manifest['allowed_extensions'] = [GECKO_EXTENSION_ID]
+    gecko_manifest['allowed_extensions'] = [GECKO_EXTENSION_ID, *LEGACY_GECKO_IDS]
     if os.name == 'nt':
         gecko_manifest_path = directory / (HOST + '.gecko.json')
         private_write(gecko_manifest_path, json.dumps(gecko_manifest, indent=2))
@@ -166,14 +171,9 @@ def wizard(extra_directories=(), extra_registry_keys=(), gecko_directories=(), g
     frame.pack()
     tk.Label(frame, text='Connect Buttercup to your computer', font=('Segoe UI', 15, 'bold')).pack(anchor='w')
     tk.Label(frame, text='Set up once, then use “Start and connect” in the extension.\nYou do not need to leave a terminal open.', justify='left', pady=12).pack(anchor='w')
-    tk.Label(frame, text='Chromium extension ID (Firefox/Gecko is registered automatically):').pack(anchor='w')
+    tk.Label(frame, text='Both Chromium and Firefox/Gecko are registered automatically.\nOptional extension ID override (either browser):').pack(anchor='w')
     entry = tk.Entry(frame, width=46)
     entry.pack(fill='x', pady=8)
-    config_file = state_directory() / 'installation.windows.json'
-    if config_file.exists():
-        entry.insert(0, json.loads(config_file.read_text(encoding='utf-8')).get('extension_id', ''))
-    if not entry.get():
-        entry.insert(0, manifest_extension_id())
     def configure():
         try:
             install(entry.get().strip(), extra_directories, extra_registry_keys, gecko_directories, gecko_registry_keys)
@@ -209,4 +209,5 @@ if __name__ == '__main__':
         if not extension_id:
             parser.error('Use --gui or --extension-id ID')
         install(extension_id, args.native_host_dir, args.browser_registry_key, args.gecko_host_dir, args.gecko_registry_key)
-        print(f'Assistant registered for Chromium {extension_id} and Gecko {GECKO_EXTENSION_ID}.')
+        chromium_id = extension_id if re.fullmatch(r'[a-p]{32}', extension_id) else CHROMIUM_EXTENSION_ID
+        print(f'Assistant registered for Chromium {chromium_id} and Gecko {GECKO_EXTENSION_ID}.')

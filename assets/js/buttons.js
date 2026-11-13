@@ -1,3 +1,8 @@
+function applyTheme(value = 'auto') {
+    document.documentElement.dataset.theme = value;
+    try { localStorage.setItem('buttercup-theme', value); } catch {}
+}
+try { applyTheme(localStorage.getItem('buttercup-theme') || 'auto'); } catch { applyTheme(); }
 import { DEFAULTS, DEEPINFRA_DEFAULT_MODEL, GROQ_DEFAULT_MODEL, validateTranscription, providerRouting, providerBaseUrl } from '../../api/config.js';
 import { draftSettings, popupSettings, persistDraft, exportDraft, importDraft } from '../../api/settings.js';
 import { request, saveDraftWithWorker } from '../../api/messaging.js';
@@ -116,6 +121,7 @@ function autosave(event) {
     try { pending = persistChanges(); }
     catch (error) { $('settings-status').textContent = `Could not save changes: ${error.message}`; return; }
     if (!pending) return;
+    if (key === 'theme') applyTheme(event.target.value);
     if (key === 'uiLanguage') { pending.then(() => useLanguage(event.target.value)).catch(() => {}); return; }
     const revision = ++editRevision;
     $('settings-status').textContent = 'Saving changes…';
@@ -234,6 +240,7 @@ async function initialize() {
 }
 function restoreForm(stored) {
     settings = stored.settings;
+    applyTheme(stored.draft.theme || 'auto');
     for (const input of document.querySelectorAll('[data-setting]')) {
         const key = input.dataset.setting;
         if (input.type === 'checkbox') input.checked = stored.draft[key];

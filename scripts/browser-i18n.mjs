@@ -44,6 +44,23 @@ for (const [locale, language, badge, heading] of cases) {
         const left = await first.boundingBox(), right = await second.boundingBox();
         assert.ok(Math.abs(left.y - right.y) < 1, `${language}: subtitle inputs must align`);
         assert.deepEqual(errors, []);
+        if (language === 'en') {
+            const appearance = popup.locator('[data-setting="theme"]');
+            const pageColor = () => popup.evaluate(() => getComputedStyle(document.body).backgroundColor);
+            await appearance.selectOption('dark');
+            await popup.waitForFunction(() => document.documentElement.dataset.theme === 'dark');
+            assert.equal(await pageColor(), 'rgb(28, 25, 32)');
+            await popup.reload();
+            await popup.locator('#assistant-card[data-state="pair"]').waitFor();
+            assert.equal(await appearance.inputValue(), 'dark');
+            await appearance.selectOption('light');
+            assert.equal(await pageColor(), 'rgb(255, 248, 244)');
+            await appearance.selectOption('auto');
+            await popup.emulateMedia({ colorScheme: 'dark' });
+            assert.equal(await pageColor(), 'rgb(28, 25, 32)');
+            await popup.emulateMedia({ colorScheme: 'light' });
+            assert.equal(await pageColor(), 'rgb(255, 248, 244)');
+        }
         if (language === 'en') await popup.locator('details').filter({ has: first }).screenshot({ path: path.join(workspace, 'subtitle-layout.png') });
         console.log(`PASS ${language}: localized popup, English extension description, aligned subtitle inputs`);
     } finally {

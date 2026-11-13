@@ -3,6 +3,8 @@
 Forks choose their own Linux configuration directory. Windows browsers commonly
 reuse Chrome's registry entry; custom locations cover portable and new forks.
 """
+import base64
+import hashlib
 import json
 from pathlib import Path
 import re
@@ -65,3 +67,11 @@ def gecko_host_paths(home, config_root, host, extra_directories=()):
                    Path(config_root) / 'librewolf' / 'native-messaging-hosts']
     return list(dict.fromkeys(directory / (host + '.json')
                              for directory in [*directories, *native_host_directories(extra_directories)]))
+
+
+# Preserve compatibility with the first unsigned Gecko test build. New builds
+# display only the UUID above; the legacy alias is accepted during migration.
+LEGACY_GECKO_IDS = ('buttercup-revival@arrow-poppa',)
+_manifest = json.loads((Path(__file__).resolve().parents[1] / 'manifest.json').read_text(encoding='utf-8'))
+_digest = hashlib.sha256(base64.b64decode(_manifest['key'])).hexdigest()[:32]
+CHROMIUM_EXTENSION_ID = ''.join(chr(ord('a') + int(digit, 16)) for digit in _digest)

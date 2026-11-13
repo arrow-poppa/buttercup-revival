@@ -5,7 +5,7 @@ export const GROQ_BASE_URL = 'https://api.groq.com/openai/v1';
 export const GROQ_DEFAULT_MODEL = 'whisper-large-v3-turbo';
 
 export const DEFAULTS = Object.freeze({
-    uiLanguage: 'auto', enabled: true, language: '', translate: false, preferHuman: true, showOnPlayer: true, audioTrack: 'default',
+    theme: 'auto', uiLanguage: 'auto', enabled: true, language: '', translate: false, preferHuman: true, showOnPlayer: true, audioTrack: 'default',
     provider: 'openrouter', baseUrl: 'https://openrouter.ai/api/v1',
     apiKey: '', model: 'openai/whisper-large-v3', extraHeaders: {},
     openrouterMode: 'transcriptions', openrouterProvider: '', openrouterNoFallback: false,
@@ -116,6 +116,7 @@ export function validateSettings(input) {
     if (!['default', 'original'].includes(value.audioTrack)) throw new Error('Invalid audio track');
     if (!['chunks', 'whole'].includes(value.audioMode)) throw new Error('Invalid audio sending mode');
     if (!['speech', 'words'].includes(value.cueBreaks)) throw new Error('Invalid subtitle break mode');
+    if (!['auto', 'light', 'dark'].includes(value.theme)) throw new Error('Invalid appearance');
     if (!['auto', 'en', 'pt-BR', 'es', 'ja', 'zh-CN'].includes(value.uiLanguage)) throw new Error('Invalid interface language');
     if (!['transcriptions', 'chat'].includes(value.openrouterMode)) throw new Error('Invalid OpenRouter API mode');
     if (!['transcriptions', 'chat'].includes(value.customMode)) throw new Error('Invalid custom API mode');
