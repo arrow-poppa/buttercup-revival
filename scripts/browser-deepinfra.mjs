@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 // Real MV3 lifecycle and UI, simulated DeepInfra/YouTube/local extraction.
 import { chromium } from '@playwright/test';
 import { createServer } from 'node:http';
@@ -44,9 +45,9 @@ await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
 const local = `http://127.0.0.1:${server.address().port}`;
 try {
     context = await chromium.launchPersistentContext(profile, { locale: 'en-US',
-        headless: true,
+        headless: !process.env.BUTTERCUP_TEST_SHORTCUTS,
         ...(process.env.BUTTERCUP_BROWSER ? { executablePath: process.env.BUTTERCUP_BROWSER } : { channel: 'chromium' }),
-        args: [`--disable-extensions-except=${path.join(root, 'dist', 'chromium')}`, `--load-extension=${path.join(root, 'dist', 'chromium')}`],
+        args: [...(process.env.BUTTERCUP_TEST_SHORTCUTS ? ['--ozone-platform=x11'] : []), `--disable-extensions-except=${path.join(root, 'dist', 'chromium')}`, `--load-extension=${path.join(root, 'dist', 'chromium')}`],
     });
     const worker = context.serviceWorkers()[0] || await context.waitForEvent('serviceworker');
     const id = new URL(worker.url()).host;
@@ -85,7 +86,7 @@ try {
                 segments: [{ start: .1, end: 1.5, text: 'Olá mundo hoje' }] }) });
     });
     await context.route('https://www.youtube.com/**', route => route.fulfill({ contentType: 'text/html', body: `
-        <div id="movie_player"><video></video><div class="ytp-right-controls"></div></div><script>
+        <title>Buttercup shortcut fixture</title><div id="movie_player"><video></video><div class="ytp-right-controls"></div></div><script>
         document.getElementById('movie_player').getPlayerResponse = () => ({videoDetails:{videoId:'abcdefghijk'}});
         </script>` }));
     const youtube = await context.newPage();
@@ -185,6 +186,33 @@ try {
     assert.equal(await popup.locator('[data-setting="wordsPerLine"]').isEnabled(),true);
     await popup.locator('.save').click();
     await popup.waitForFunction(()=>document.getElementById('status').textContent==='Settings saved.');
+    if (process.env.BUTTERCUP_TEST_SHORTCUTS) {
+        const commands=await worker.evaluate(()=>chrome.commands.getAll());
+        assert.equal(commands.find(c=>c.name==='generate-subtitles').shortcut,'Alt+Shift+G');
+        assert.equal(commands.find(c=>c.name==='regenerate-subtitles').shortcut,'Alt+Shift+U');
+        const keys=async key=>{
+            await youtube.bringToFront();
+            const windows=execFileSync('xdotool',['search','--onlyvisible','--name','Buttercup shortcut fixture'],{encoding:'utf8'}).trim().split('\n');
+            execFileSync('xdotool',['windowfocus','--sync',windows[0]]);
+            execFileSync('xdotool',['key','--clearmodifiers',key]);
+        };
+        const snapshot={...counts};
+        await popup.evaluate(tabId=>chrome.storage.session.remove(`status-${tabId}`),tabId);
+        await keys('alt+shift+g');
+        await popup.waitForFunction(async tabId=>(await chrome.storage.session.get(`status-${tabId}`))[`status-${tabId}`]?.source==='cache',tabId);
+        assert.deepEqual(counts,snapshot,'Generate shortcut must reuse the cache');
+        await popup.evaluate(tabId=>chrome.storage.session.remove(`status-${tabId}`),tabId);
+        await keys('alt+shift+u');
+        for(let attempt=0;attempt<100;attempt++) {
+            const state=await popup.evaluate(async tabId=>(await chrome.storage.session.get(`status-${tabId}`))[`status-${tabId}`],tabId);
+            if(counts.transcriptions===snapshot.transcriptions+2&&state?.stage==='ready')break;
+            await new Promise(resolve=>setTimeout(resolve,100));
+        }
+        assert.equal(counts.extracts,snapshot.extracts+1);
+        assert.equal(counts.transcriptions,snapshot.transcriptions+2,'Regenerate shortcut must bypass cache');
+        await popup.bringToFront();
+        console.log('Physical Generate and Regenerate shortcuts passed');
+    }
     // This test opens popup.html in a tab. Model the active YouTube tab that
     // a real browser-action popup sees before exercising the actual button.
     await popup.evaluate(tabId => {
@@ -224,6 +252,11 @@ try {
         assert.equal(counts.transcriptions, beforeWhole.transcriptions + 1, 'Whole-audio mode must make one request, including Qwen/Voxtral');
         assert.equal(await youtube.evaluate(() => document.querySelector('video').textTracks[0].cues.length), 3);
     }
+    const openedShortcuts=context.waitForEvent('page');
+    await popup.locator('#configure-shortcuts').click();
+    const shortcutPage=await openedShortcuts;
+    await shortcutPage.waitForURL('chrome://extensions/shortcuts');
+    await shortcutPage.close();
     await writeFile(path.join(workspace, `browser-${provider}.json`), JSON.stringify({ passed: true, browser: await context.browser()?.version(), counts, externalServices: 'simulated' }, null, 2));
     console.log(`${label} passed: native ASR models, one-request whole audio, panels/keys, mixed timestamps, cache reformatting and failure without fallback.`);
 } finally {

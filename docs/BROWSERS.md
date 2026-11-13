@@ -61,3 +61,8 @@ Use a native browser package for automatic startup, or run the backend on the ho
 3. In **Local connection — advanced options**, enter `http://127.0.0.1:8767` (or the selected port) and the displayed pairing token. Click **Check assistant**. Keep the terminal running. Use **Check connection** for subsequent checks; **Start and connect** invokes native messaging again.
 
 Copy the pairing token only into Buttercup's password field; do not include it in screenshots, issue reports or URLs. This manual path still enforces the same loopback binding, token authentication and extension-origin allowlist. It cannot restore extension APIs disabled by a browser.
+
+
+## Helium
+
+Use `dist/chromium` with native Linux Helium. Helium's [native-messaging compatibility patch](https://github.com/imputnet/helium/blob/main/patches/helium/core/scan-chrome-native-messaging-hosts.patch) searches Chrome's per-user host directory as a fallback. Buttercup registers that Chrome location and Helium's own `$XDG_CONFIG_HOME/net.imput.helium/NativeMessagingHosts` directory, so assistant startup is expected to work without another registration format. This is source-verified compatibility, not a live Helium runtime result. Windows Helium has not been validated; macOS assistant installation remains unsupported. Third-party sandboxed packages may still need manual connection.

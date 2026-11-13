@@ -24,7 +24,7 @@ Mozilla [continues to support MV2 alongside MV3](https://blog.mozilla.org/en/fir
 3. In Firefox or Zen, open `about:debugging#/runtime/this-firefox`, choose **Load Temporary Add-on**, and select `dist/firefox/manifest.json`.
 4. Open Buttercup and click **Start and connect**. Import an existing Buttercup settings backup if desired; provider keys/settings are separate for each browser profile. The local pairing is intentionally excluded from backups.
 
-**This is an unsigned development build.** Temporary add-ons are unloaded when the browser exits. Normal permanent installation in release Firefox/Zen needs Mozilla signing (listed or self-distributed XPI). No signing, store submission or release publication is performed by this change. Do not disable browser security settings to install it. See Mozilla's [extension distribution guide](https://extensionworkshop.com/documentation/publish/distribute-sideloading/).
+**This is an unsigned development build.** Temporary add-ons are unloaded when the browser exits. Standard release Firefox needs Mozilla signing for permanent installation. Zen can permit permanent unsigned installation when `xpinstall.signatures.required` is `false`: open `about:addons`, choose the gear menu → Install Add-on From File, and select `dist/firefox-unsigned.zip`. The stable ID is already included. This disables signature enforcement for that Zen profile; install extensions you trust. No signing, store submission or release publication is performed by this change. See Mozilla's [extension distribution guide](https://extensionworkshop.com/documentation/publish/distribute-sideloading/).
 
 The manifest declares transmission of authentication information, website content and browsing activity: selected provider credentials, requested video/audio/subtitles, and explicitly imported YouTube cookies go only to their configured destinations. This is not telemetry. The minimum desktop version is 140 to support the declaration; the Android metadata minimum only satisfies manifest compatibility checks and does **not** add mobile/Android assistant support.
 
@@ -48,6 +48,14 @@ For forks or portable packages with a different **verified** location:
 ```
 
 On Windows, use `.venv\Scripts\python.exe` and, when needed, `--gecko-registry-key "Vendor\Browser"`. These Gecko-specific options are repeatable, remembered across reinstalls, and removed by uninstall. Keep them separate from Chromium's `--native-host-dir` / `--browser-registry-key`: using the same host manifest location for both formats is rejected.
+
+### Optional automatic connection with Flatseal (Zen Flatpak)
+
+Run the normal installer, then `.venv/bin/python scripts/setup-assistant.py --flatpak-bridge app.zen_browser.zen` from the project folder. This creates an app-specific native host launcher without changing Flatpak permissions. In **Flatseal → Zen**, add **Session Bus → Talks → `org.freedesktop.Flatpak`** and **Persistent → Files → `.mozilla`**. Restart Zen completely, then use **Start and connect** as with a native browser.
+
+The launcher calls `flatpak-spawn --host --watch-bus` to the existing host assistant. `.mozilla` persistence exposes the app's own Gecko host manifest; the installer also registers its XDG Mozilla location. No home-wide or entire-bus access is required. The command permission applies to the browser generally, so this path is explicitly opt-in. It is tested with Zen's default filesystem permissions; custom home/filesystem overrides can interfere with persistence mapping. The manual path below requires neither setting.
+
+Uninstall removes Buttercup's app-specific launcher/manifests. Remove the two entries in Flatseal yourself if you no longer need them, preserving any settings required by other extensions. Tests used runtime flags rather than permanent overrides, so the installed Zen application's permissions were left unchanged. Reproduce with `BUTTERCUP_TEST_FLATPAK=app.zen_browser.zen BUTTERCUP_TEST_FLATPAK_BRIDGE=1 BUTTERCUP_GECKO_DELAY_MS=1000 npm run test:gecko-browser`.
 
 ### Manual connection for Flatpak / Snap
 
@@ -105,3 +113,7 @@ The first unsigned test build used an older ID. Export settings from that build 
 Subtitle fallback and regeneration update: 116 JavaScript tests pass, including cached DeepInfra segment-only formatting without network requests, estimated internal timing notices, Japanese/Chinese cue caps, and explicit cache bypass with retention of the prior result on provider failure. The DeepInfra and Groq browser suites exercise the Regenerate button using simulated services.
 
 Original segmentation: “Keep provider segments (original timing)” preserves cached provider segment boundaries (including overlaps) and bypasses the cue word cap. Line wrapping remains independent; 0 preserves the returned text layout. Both layouts are available without a provider request.
+
+Keyboard commands: Generate uses Alt+Shift+G and Regenerate uses Alt+Shift+U by default. Remap or disable them using the popup's Configure shortcuts button. Assignments are managed by the browser rather than exported with Buttercup settings. Commands share the same configuration checks, cache behavior and one-job-per-tab guard as the popup/player actions. Physical remapped Firefox key events and Chromium defaults were tested in isolated X11 windows.
+
+Shortcut/bridge validation update: 118 JavaScript tests and 84 Python tests passed. Actual Chromium default-key events, Firefox custom-key events, and Flatpak Zen 1.24b native pairing through the optional host bridge were tested in disposable profiles. Helium Linux native-host registration is source/path-verified; no live Helium runtime test is claimed.

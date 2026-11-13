@@ -72,6 +72,11 @@ def uninstall(extra_directories=(), extra_registry_keys=(), gecko_directories=()
     if os.name == 'nt':
         for location in [*directories, *gecko_directories]:
             (location / (HOST + '.json')).unlink(missing_ok=True)
+    config_file = directory / 'assistant.json'
+    if config_file.exists():
+        for app_id in json.loads(config_file.read_text(encoding='utf-8')).get('flatpak_apps', []):
+            for location in flatpak_bridge_paths(app_id):
+                location.unlink(missing_ok=True)
     if directory.is_dir():
         # A running service watches for this file and exits; then its data can go.
         private_write(directory / 'stop.request', 'stop\n')
@@ -111,7 +116,7 @@ def install(extension_id=None, extra_directories=(), extra_registry_keys=(), gec
     config = {'port': config.get('port', previous.get('port', 8767)), 'extension_ids': ids, **tools,
               'native_host_directories': [str(path) for path in directories], 'browser_registry_keys': keys,
               'gecko_ids': [GECKO_EXTENSION_ID, *LEGACY_GECKO_IDS], 'gecko_host_directories': [str(path) for path in gecko_directories],
-              'gecko_registry_keys': gecko_keys}
+              'gecko_registry_keys': gecko_keys, 'flatpak_apps': config.get('flatpak_apps', [])}
     private_write(config_file, json.dumps(config, indent=2))
     if not (directory / 'token.private.json').exists():
         private_write(directory / 'token.private.json', json.dumps({'token': secrets.token_urlsafe(32)}))
@@ -159,6 +164,44 @@ def install(extension_id=None, extra_directories=(), extra_registry_keys=(), gec
     # with. Ask it to stop; “Start and connect” opens it again with this list.
     private_write(directory / 'stop.request', 'stop\n')
     return directory
+
+
+def flatpak_app_id(value):
+    if not isinstance(value, str) or not re.fullmatch(r'[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+){2,}', value):
+        raise ValueError('Use a Flatpak application ID such as app.zen_browser.zen.')
+    return value
+
+
+def flatpak_bridge_paths(app_id):
+    root = Path.home() / '.var' / 'app' / flatpak_app_id(app_id)
+    return (root / 'config' / 'buttercup-revival' / 'assistant-host',
+            root / '.mozilla' / 'native-messaging-hosts' / (HOST + '.json'),
+            root / 'config' / 'mozilla' / 'native-messaging-hosts' / (HOST + '.json'))
+
+
+def configure_flatpak_bridge(app_id):
+    """Prepare an opt-in Gecko bridge; never change Flatpak permissions."""
+    if os.name == 'nt':
+        raise ValueError('Flatpak bridge setup is available only on Linux.')
+    app_id = flatpak_app_id(app_id)
+    directory = state_directory()
+    if not (directory / 'assistant.json').is_file():
+        raise RuntimeError('Run the Buttercup installer before preparing the Flatpak bridge.')
+    config = load_config(directory)
+    if GECKO_EXTENSION_ID not in config.get('gecko_ids', []):
+        raise RuntimeError('Run the current Buttercup installer to register the Gecko ID first.')
+    wrapper, *locations = flatpak_bridge_paths(app_id)
+    private_directory(wrapper.parent)
+    private_write(wrapper, '#!/bin/sh\nexec /usr/bin/flatpak-spawn --host --watch-bus ' + shlex.quote(str(directory / 'assistant-host')) + ' "$@"\n')
+    wrapper.chmod(0o700)
+    manifest = {'name': HOST, 'description': 'Buttercup Flatpak host bridge', 'path': str(wrapper),
+                'type': 'stdio', 'allowed_extensions': config['gecko_ids']}
+    for location in locations:
+        location.parent.mkdir(parents=True, exist_ok=True)
+        private_write(location, json.dumps(manifest, indent=2))
+    config['flatpak_apps'] = list(dict.fromkeys([*(flatpak_app_id(item) for item in config.get('flatpak_apps', [])), app_id]))
+    private_write(directory / 'assistant.json', json.dumps(config, indent=2))
+    return wrapper
 
 
 def manual_connection(origin, destination):
@@ -233,8 +276,13 @@ if __name__ == '__main__':
     parser.add_argument('--manual-origin', help='Exact connection origin copied from the extension.')
     parser.add_argument('--connection-file', type=Path, help='Private JSON connection file to create.')
     parser.add_argument('--start-service', action='store_true', help='Start the installed assistant without native messaging.')
+    parser.add_argument('--flatpak-bridge', metavar='APP_ID', help='Prepare an optional Gecko Flatpak launcher; permissions must be enabled separately.')
     args = parser.parse_args()
-    if args.manual_origin:
+    if args.flatpak_bridge:
+        print(f'Flatpak launcher prepared: {configure_flatpak_bridge(args.flatpak_bridge)}')
+        print('In Flatseal for this browser: Session Bus > Talks: org.freedesktop.Flatpak; Persistent > Files: .mozilla.')
+        print('This allows host command execution for the browser. Restart it, then click Start and connect.')
+    elif args.manual_origin:
         if not args.connection_file:
             parser.error('--manual-origin requires --connection-file')
         print(f'Private connection saved to {manual_connection(args.manual_origin, args.connection_file)}')

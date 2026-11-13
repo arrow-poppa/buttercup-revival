@@ -17,7 +17,7 @@ LINUX_BROWSER_DIRS = (
     'BraveSoftware/Brave-Browser-Nightly', 'BraveSoftware/Brave-Origin',
     'BraveSoftware/Brave-Origin-Beta', 'BraveSoftware/Brave-Origin-Nightly',
     'vivaldi', 'vivaldi-snapshot', 'opera', 'opera-beta', 'opera-developer',
-    'ungoogled-chromium', 'thorium',
+    'ungoogled-chromium', 'thorium', 'net.imput.helium',
 )
 # Brave, Vivaldi, Opera and many other Chromium forks also read Chrome's key.
 WINDOWS_BROWSER_KEYS = ('Google\\Chrome', 'Microsoft\\Edge', 'Chromium')

@@ -25,7 +25,7 @@ def test_linux_browser_families_and_channels(tmp_path):
                     'BraveSoftware/Brave-Browser', 'BraveSoftware/Brave-Browser-Nightly',
                     'BraveSoftware/Brave-Origin', 'BraveSoftware/Brave-Origin-Beta',
                     'vivaldi', 'vivaldi-snapshot', 'opera', 'opera-developer',
-                    'ungoogled-chromium', 'thorium'):
+                    'ungoogled-chromium', 'thorium', 'net.imput.helium'):
         assert tmp_path / browser / 'NativeMessagingHosts' / (setup.HOST + '.json') in paths
     assert len(paths) == len(set(paths))
 
@@ -183,3 +183,30 @@ def test_manual_pairing_binds_exact_origin_and_writes_private_connection(install
     assert json.loads(destination.read_text()) == {'app':'buttercup-connection','origin':origin,'backendUrl':'http://127.0.0.1:8767','backendToken':token}
     if os.name != 'nt':
         assert destination.stat().st_mode & 0o777 == 0o600
+
+
+@pytest.mark.skipif(os.name == 'nt', reason='Flatpak is Linux-only')
+def test_optional_flatpak_bridge_is_separate_persists_on_reinstall_and_uninstalls(installation):
+    state, config, project = installation
+    setup.install()
+    bridge = setup.configure_flatpak_bridge('app.zen_browser.zen')
+    token = (state / 'token.private.json').read_bytes()
+    for location in setup.flatpak_bridge_paths('app.zen_browser.zen')[1:]:
+        manifest = json.loads(location.read_text())
+        assert manifest['path'] == str(bridge)
+        assert manifest['allowed_extensions'] == [setup.GECKO_EXTENSION_ID, *setup.LEGACY_GECKO_IDS]
+        assert 'allowed_origins' not in manifest
+    assert 'flatpak-spawn --host --watch-bus' in bridge.read_text()
+    assert bridge.stat().st_mode & 0o777 == 0o700
+    assert json.loads(setup.linux_host_paths(config)[0].read_text())['path'] == str(state / 'assistant-host')
+    setup.install()
+    assert (state / 'token.private.json').read_bytes() == token
+    assert json.loads((state / 'assistant.json').read_text())['flatpak_apps'] == ['app.zen_browser.zen']
+    setup.uninstall()
+    assert all(not path.exists() for path in setup.flatpak_bridge_paths('app.zen_browser.zen'))
+
+
+@pytest.mark.parametrize('app_id', ['../evil', '/tmp/app', 'app/zen/browser', '..', 'app..browser', ''])
+def test_flatpak_bridge_rejects_non_application_paths(app_id):
+    with pytest.raises(ValueError):
+        setup.flatpak_bridge_paths(app_id)

@@ -270,6 +270,20 @@ $('settings-form').addEventListener('submit', async event => {
     event.preventDefault();
     try { await save(); status('Settings saved.'); } catch (error) { status(error.message); }
 });
+async function showShortcuts() {
+    const commands = await chrome.commands.getAll();
+    for (const [id, name] of [['shortcut-generate', 'generate-subtitles'], ['shortcut-regenerate', 'regenerate-subtitles']]) {
+        $(id).textContent = commands.find(command => command.name === name)?.shortcut || 'Not assigned';
+    }
+}
+action('configure-shortcuts', async () => {
+    if (chrome.commands.openShortcutSettings) await chrome.commands.openShortcutSettings();
+    else if (chrome.runtime.getURL('').startsWith('moz-extension://')) {
+        await chrome.tabs.create({ url: 'about:addons' });
+        status('In the Add-ons menu, choose Manage Extension Shortcuts.');
+    } else await chrome.tabs.create({ url: 'chrome://extensions/shortcuts' });
+});
+showShortcuts().catch(() => {});
 action('generate', async () => { await save(); await rpc({ type: 'GENERATE', tabId }); status('Starting…'); });
 action('regenerate', async () => { await save(); await rpc({ type: 'GENERATE', tabId, ignoreCache: true }); status('Starting a fresh transcription…'); });
 action('reload-settings', initialize);

@@ -27,6 +27,12 @@
 </section>
 <div class="actions"><button id="generate" class="primary">Generate captions</button><button id="regenerate">Regenerate subtitles</button><button id="cancel">Cancel</button></div>
 <p class="hint">Generate reuses saved subtitles when available. Regenerate ignores local and community caches and sends a fresh request to the selected provider; provider charges may apply.</p>
+<details id="keyboard-shortcuts"><summary>Keyboard shortcuts</summary>
+<p>Use these shortcuts on the active YouTube video with the popup closed.</p>
+<ul><li>Generate: <code id="shortcut-generate">Not assigned</code></li><li>Regenerate: <code id="shortcut-regenerate">Not assigned</code></li></ul>
+<button type="button" id="configure-shortcuts">Configure shortcuts</button>
+<p class="hint">The browser lets you remap or disable each shortcut. Regenerate bypasses the cache and may incur provider charges. Shortcuts are stored by each browser, separately from Buttercup settings backups.</p>
+</details>
 <label>Subtitle track<select id="track"><option value="">Current transcription</option></select></label>
 <div class="actions"><button id="srt">Download SRT</button><button id="vtt">Download VTT</button><button id="send">Send to asbplayer</button></div>
 <form id="settings-form" novalidate>

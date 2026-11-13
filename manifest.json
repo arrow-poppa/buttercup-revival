@@ -12,5 +12,19 @@
   "content_scripts": [{ "matches": ["https://www.youtube.com/*"], "js": ["buttercup.js", "content.js"], "run_at": "document_idle" }],
   "action": { "default_popup": "popup.html", "default_icon": { "16": "icons/icon16.png", "32": "icons/icon32.png", "48": "icons/icon48.png", "128": "icons/icon128.png" } },
   "icons": { "16": "icons/icon16.png", "32": "icons/icon32.png", "48": "icons/icon48.png", "128": "icons/icon128.png" },
-  "content_security_policy": { "extension_pages": "script-src 'self'; object-src 'none'; base-uri 'none'" }
+  "content_security_policy": { "extension_pages": "script-src 'self'; object-src 'none'; base-uri 'none'" },
+  "commands": {
+    "generate-subtitles": {
+      "suggested_key": {
+        "default": "Alt+Shift+G"
+      },
+      "description": "Generate captions (reuse cached subtitles when available)"
+    },
+    "regenerate-subtitles": {
+      "suggested_key": {
+        "default": "Alt+Shift+U"
+      },
+      "description": "Regenerate captions (fresh provider request; charges may apply)"
+    }
+  }
 }

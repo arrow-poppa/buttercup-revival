@@ -111,7 +111,24 @@ For automatic startup, use a native browser package (`.deb` / `.rpm`). **Snap** 
 
 ### Step 3 · Add the extension to your browser
 
-**Firefox, Zen and compatible Gecko browsers:** use the second build, `dist/firefox`. See the [Firefox setup and compatibility guide](docs/firefox.md) for temporary installation, signing requirements and tested browser versions. Flatpak users can use the guided manual connection in that guide. The steps below apply to Chromium.
+**Firefox, Zen and compatible Gecko browsers:** use the second build, `dist/firefox`. See the [Firefox setup and compatibility guide](docs/firefox.md) for temporary installation, signing requirements and tested browser versions. Flatpak users can use the guided manual connection in that guide. Helium uses the Chromium build; [Linux registration is supported, while live Helium runtime validation remains pending](docs/BROWSERS.md#helium). The steps below apply to Chromium.
+
+**Zen: keep an unsigned test build installed.** In `about:config`, set `xpinstall.signatures.required` to `false`. Then open `about:addons`, choose the gear menu → **Install Add-on From File**, and select `dist/firefox-unsigned.zip`. Buttercup already includes the required stable Gecko ID. Zen can keep this installation across browser restarts. This disables signature enforcement for that Zen profile, so install extensions you trust. Standard Firefox release builds still require Mozilla signing for permanent installation. This setting affects add-on installation; Flatpak assistant connections still use the manual connection flow described above.
+
+**Zen Flatpak: optional automatic connection with Flatseal.** After running the installer, prepare the host launcher once from the Buttercup folder:
+
+```sh
+.venv/bin/python scripts/setup-assistant.py --flatpak-bridge app.zen_browser.zen
+```
+
+In **Flatseal → Zen**:
+
+1. Under **Session Bus → Talks**, add `org.freedesktop.Flatpak`.
+2. Under **Persistent → Files**, add `.mozilla`.
+3. Fully quit Zen, reopen it, and click **Start and connect** in Buttercup.
+
+The launcher and both settings are needed together. No “All user files”, “All filesystem files”, or entire-session-bus toggle is needed. These are the fields described in [Flatseal's permission documentation](https://github.com/tchx84/Flatseal/blob/master/DOCUMENTATION.md). This route was tested with Flatpak Zen 1.24b and its default filesystem permissions, using equivalent per-launch permissions and a disposable profile. The host-execution permission lets the browser run host programs generally, not only Buttercup. If you prefer to keep that permission disabled, use the guided manual connection instead. Standard Firefox/Chromium native installations need neither Flatseal setting.
+
 
 Browsers only install extensions automatically from their store, so this one step is done by hand.
 
@@ -219,7 +236,10 @@ The popup is organised in sections. The ones you are most likely to touch:
 | | Max words per subtitle | The cap on how much text is on screen at once |
 | | Line break every N words | Wraps a subtitle into lines |
 | **Audio upload (advanced)** | Audio sending | *In parts* works with any length; *Whole audio* is a single request |
+| **Keyboard shortcuts** | Configure shortcuts | Customize Generate and Regenerate in the browser's shortcut settings |
 | **Backup** | Export / Import settings | Save your settings to a file and load them later |
+
+Keyboard shortcuts work on the active YouTube video with the popup closed. Defaults: **Alt+Shift+G** generates using the cache when available; **Alt+Shift+U** regenerates with a fresh provider request (charges may apply). Open **Keyboard shortcuts → Configure shortcuts** in Buttercup to remap or disable them. Chromium opens its extension shortcut page; Firefox/Zen opens Manage Extension Shortcuts. The browser stores assignments separately from settings backups, and reserved or conflicting combinations may remain unassigned or be intercepted by the browser. Physical key events were tested under Xvfb in Chromium and Firefox, including custom Firefox assignments; run the browser suites with `BUTTERCUP_TEST_SHORTCUTS=1` on an isolated X11 display to reproduce.
 
 In Buttercup segmentation modes, subtitle word limits also apply when a provider returns only segment timestamps or puts a whole phrase in one word entry. In those cases, internal cue boundaries are estimated within the original segment and the completion message explains this; real word timestamps are preserved. Japanese/Chinese use text characters while keeping Latin words and Unicode graphemes intact. Choose **Start a new subtitle → Keep provider segments (original timing)** to use the returned segment boundaries instead. This bypasses the word cap; set **Line break** to **0** to preserve the returned text layout. When no segments were returned, the original timestamped word entries are used. Changing layout reformats cached subtitles without calling a provider. **Regenerate subtitles** explicitly bypasses local and community caches and requests a fresh transcription (provider charges may apply); a failed request preserves the last cached result.
 

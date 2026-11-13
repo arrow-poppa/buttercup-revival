@@ -55,6 +55,20 @@ try {
         await writeFile(file, JSON.stringify({ name: host, description: 'Disposable Buttercup runtime test', path: wrapper, type: 'stdio', allowed_extensions: [addonId] }), { flag: 'wx', mode: 0o600 });
         registrations.push(file);
     }
+    const bridgeTest = process.env.BUTTERCUP_TEST_FLATPAK_BRIDGE;
+    if (bridgeTest) {
+        const appRoot=path.join(os.homedir(),'.var/app',process.env.BUTTERCUP_TEST_FLATPAK);
+        const bridge=path.join(appRoot,'config',host+'-bridge');
+        await mkdir(path.dirname(bridge),{recursive:true});
+        await writeFile(bridge,`#!/bin/sh\nexec /usr/bin/flatpak-spawn --host --watch-bus ${shellQuote(wrapper)} "$@"\n`,{mode:0o700});
+        registrations.push(bridge);
+        for(const dir of [path.join(appRoot,'.mozilla/native-messaging-hosts'),path.join(appRoot,'config/mozilla/native-messaging-hosts')]) {
+            await mkdir(dir,{recursive:true});
+            const file=path.join(dir,host+'.json');
+            await writeFile(file,JSON.stringify({name:host,description:'Disposable Flatpak bridge',path:bridge,type:'stdio',allowed_extensions:[addonId]}),{flag:'wx',mode:0o600});
+            registrations.push(file);
+        }
+    }
     await writeFile(path.join(profile, 'user.js'), [
         'user_pref("browser.shell.checkDefaultBrowser", false);',
         'user_pref("browser.download.folderList", 2);',
@@ -66,7 +80,7 @@ try {
     const flatpak = process.env.BUTTERCUP_TEST_FLATPAK;
     const binary = flatpak ? 'flatpak' : process.env.BUTTERCUP_GECKO_BROWSER || 'firefox';
     let browserLog = '';
-    browser = spawn(binary, [...(flatpak ? ['run', '--instance-id-fd=3', '--filesystem=' + work, '--env=MOZ_REMOTE_ALLOW_SYSTEM_ACCESS=1', flatpak] : []), '--headless', '--no-remote', '--profile', profile, '--remote-debugging-port', String(debugPort), 'about:blank'], {
+    browser = spawn(binary, [...(flatpak ? ['run', '--instance-id-fd=3', '--filesystem=' + work, '--env=MOZ_REMOTE_ALLOW_SYSTEM_ACCESS=1', ...(bridgeTest ? ['--persist=.mozilla','--talk-name=org.freedesktop.Flatpak'] : []), flatpak] : []), ...(process.env.BUTTERCUP_TEST_SHORTCUTS ? [] : ['--headless']), '--no-remote', '--profile', profile, '--remote-debugging-port', String(debugPort), 'about:blank'], {
         env: { ...process.env, MOZ_REMOTE_ALLOW_SYSTEM_ACCESS: '1' }, stdio: ['ignore', 'pipe', 'pipe', 'pipe'],
     });
     browser.stdio[3].on('data', data => { const match = data.toString().match(/^(\d+)\n/); if (match) flatpakInstance = match[1]; });
@@ -81,7 +95,7 @@ try {
         const timeout = setTimeout(() => { pending.delete(id); reject(new Error(`BiDi timed out: ${method}`)); }, 20000);
         pending.set(id, { resolve, reject, timeout }); ws.send(JSON.stringify({ id, method, params }));
     });
-    const html = `<!doctype html><div id="movie_player"><video></video><div class="ytp-right-controls"><button class="ytp-subtitles-button">CC</button></div></div><script>
+    const html = `<!doctype html><title>Buttercup Gecko shortcut fixture</title><div id="movie_player"><video></video><div class="ytp-right-controls"><button class="ytp-subtitles-button">CC</button></div></div><script>
       const p = document.getElementById('movie_player');
       p.getPlayerResponse = () => ({videoDetails:{videoId:'abcdefghijk',title:'Gecko fixture'},captions:{playerCaptionsTracklistRenderer:{captionTracks:[{kind:'asr'}],audioTracks:[{}]}}});
       p.unloadModule = () => {}; p.loadModule = () => {};
@@ -125,7 +139,7 @@ try {
     const before = await evaluate(popup, `(async()=> (await browser.tabs.query({})).length)()`);
     nativeStarted = true; // Clean up even if pairing starts the service but its reply fails.
     let paired;
-    if (flatpak) {
+    if (flatpak && !bridgeTest) {
         assert.equal((await send({ type: 'START_BACKEND' })).ok, false, 'Sandboxed native startup must fail in this fixture');
         const file = path.join(work, 'connection.private.json');
         execFileSync(path.join(root, '.venv/bin/python'), [path.join(root, 'scripts/setup-assistant.py'), '--manual-origin', base.slice(0,-1), '--connection-file', file], {env:{...process.env,XDG_STATE_HOME:path.join(work,'state')}});
@@ -143,7 +157,7 @@ try {
     assert.equal((await fetch(`http://127.0.0.1:${nativePort}/health`, { headers: { Origin: base.slice(0, -1), Authorization: `Bearer ${token}` } })).status, 200);
     assert.equal((await fetch(`http://127.0.0.1:${nativePort}/health`, { headers: { Origin: 'moz-extension://00000000-0000-0000-0000-000000000000', Authorization: `Bearer ${token}` } })).status, 403);
     assert.equal((await fetch(`http://127.0.0.1:${nativePort}/health`, { headers: { Origin: base.slice(0, -1) } })).status, 401);
-    console.log(`${flatpak ? 'Manual Flatpak' : 'Native Python'} pairing and exact-origin/token enforcement passed`);
+    console.log(`${bridgeTest ? 'Flatpak host bridge' : flatpak ? 'Manual Flatpak' : 'Native Python'} pairing and exact-origin/token enforcement passed`);
 
     fixture = createServer(async (req, res) => {
         const chunks = []; for await (const chunk of req) chunks.push(chunk);
@@ -193,6 +207,31 @@ try {
     await send({ type: 'GENERATE', tabId });
     await until(async () => (await send({ type: 'STATUS', tabId })).data?.stage === 'ready');
     assert.equal(counts.transcriptions, 1, 'Cached subtitles must not call the provider again');
+    if (process.env.BUTTERCUP_TEST_SHORTCUTS) {
+        // Firefox supports custom assignments through commands.update. Exercise
+        // the remapped keys through actual X11 events, not a runtime message.
+        await evaluate(popup, `(async()=>{await browser.commands.update({name:'generate-subtitles',shortcut:'Alt+Shift+Y'});await browser.commands.update({name:'regenerate-subtitles',shortcut:'Ctrl+Shift+9'});return true})()`);
+        await evaluate(popup, `(globalThis.shortcutEvents=[],browser.commands.onCommand.addListener(name=>globalThis.shortcutEvents.push(name)),true)`);
+        await pause(200);
+        const commands=await evaluate(popup, `browser.commands.getAll()`);
+        assert.equal(commands.find(c=>c.name==='generate-subtitles').shortcut,'Alt+Shift+Y');
+        const keys=async key=>{
+            await call('browsingContext.activate',{context:youtube});
+            const windows=execFileSync('xdotool',['search','--onlyvisible','--name','Buttercup Gecko shortcut fixture'],{encoding:'utf8'}).trim().split('\n');
+            execFileSync('xdotool',['windowfocus','--sync',windows[0]]);
+            execFileSync('xdotool',['key','--clearmodifiers',key]);
+        };
+        await evaluate(popup, `browser.storage.session.remove('status-${tabId}').then(()=>true)`);
+        await keys('alt+shift+y');
+        await until(async()=>(await send({type:'STATUS',tabId})).data?.source==='cache');
+        assert.equal(counts.transcriptions,1,'Custom Generate key must reuse the cache');
+        providerDelay=0;
+        await evaluate(popup, `browser.storage.session.remove('status-${tabId}').then(()=>true)`);
+        await keys('ctrl+shift+9');
+        try { await until(async()=>counts.transcriptions===2&&(await send({type:'STATUS',tabId})).data?.stage==='ready'); } catch(error) { throw new Error(error.message+'; events='+JSON.stringify(await evaluate(popup,'globalThis.shortcutEvents'))+'; state='+JSON.stringify(await send({type:'STATUS',tabId}))); }
+        assert.equal(counts.transcriptions,2,'Custom Regenerate key must request fresh subtitles');
+        console.log('Physical customized Gecko shortcuts passed');
+    }
     // Settings import uses the same schema and preserves the local pairing.
     await evaluate(popup, `(async()=>{const m=await import('./api/settings.js');await m.persistDraft(m.importDraft({app:'buttercup-revival',version:'0.5.0',settings:{language:'zh',maxLineLength:'6',backendToken:'IGNORED'}}));await m.commitDraft();return true})()`);
     await call('browsingContext.close', { context: popup });
@@ -201,10 +240,11 @@ try {
     assert.deepEqual(saved, { language: 'zh', maxLineLength: 6, paired: true });
     await evaluate(popup, `(await import('./api/settings.js')).persistDraft({cache:false}).then(()=>true)`);
     providerDelay = 2000;
-    await send({ type: 'GENERATE', tabId }); await until(() => counts.transcriptions === 2);
+    const cancellationCount=counts.transcriptions+1;
+    await send({ type: 'GENERATE', tabId }); await until(() => counts.transcriptions === cancellationCount);
     await send({ type: 'CANCEL', tabId });
     await until(async () => (await send({ type: 'STATUS', tabId })).data?.stage === 'cancelled');
-    assert.equal(counts.transcriptions, 2);
+    assert.equal(counts.transcriptions, cancellationCount);
     await pause(providerDelay + 100);
     await evaluate(popup, `(setTimeout(()=>browser.runtime.reload(), 100), true)`);
     await pause(1000);

@@ -1,3 +1,4 @@
+import { shortcutHandler } from './shortcuts.js';
 import { protectSettings } from '../api/storage.js';
 import { getSettings, validateSettings, publicSettings, redact, isOpenRouter, validateTranscription } from '../api/config.js';
 import { popupSettings, saveDraft, saveSettings, applyDraft, commitDraft, persistDraft, DRAFT_PREFIX } from '../api/settings.js';
@@ -77,6 +78,18 @@ async function runtimeSettings() {
     return result.saved ? result.settings : getSettings();
 }
 
+async function generateForTab(tabId, settings, ignoreCache = false) {
+    validateTranscription(settings);
+    const videoId = await tabVideo(tabId);
+    if (!settings.enabled) throw new Error('Buttercup is disabled.');
+    const info = await playerInfo(tabId);
+    if (!info) throw new Error('The YouTube player is still loading. Try again.');
+    if (settings.preferHuman && info.hasHuman) throw new Error('Human captions are available. Turn off “Prefer human captions” to replace them.');
+    if (info.multipleAudio && settings.audioTrack !== 'original') throw new Error('Multiple audio tracks detected. Select Original audio in General to transcribe the original track.');
+    await connection.content(tabId, videoId);
+    return connection.sendOffscreen({ type: 'RUN', tabId, videoId, title: info.title, ignoreCache });
+}
+
 async function handle(message, sender) {
     // The same trusted editor can run in a tab with view parameters or an anchor.
     // Keep the full extension origin and exact page path in the allowlist.
@@ -141,18 +154,7 @@ async function handle(message, sender) {
     if (content && message.type === 'METADATA') return playerInfo(sender.tab.id);
     if (content && message.type === 'RESTORE') { await toggleYouTubeCaptions(sender.tab.id, true); return {}; }
     if (content && message.type === 'HIDE_YOUTUBE_CAPTIONS') { await toggleYouTubeCaptions(sender.tab.id, false); return {}; }
-    if (message.type === 'GENERATE') {
-        validateTranscription(settings);
-        const tabId = content ? sender.tab.id : message.tabId;
-        const videoId = await tabVideo(tabId);
-        if (!settings.enabled) throw new Error('Buttercup is disabled.');
-        const info = await playerInfo(tabId);
-        if (!info) throw new Error('The YouTube player is still loading. Try again.');
-        if (settings.preferHuman && info.hasHuman) throw new Error('Human captions are available. Turn off “Prefer human captions” to replace them.');
-        if (info.multipleAudio && settings.audioTrack !== 'original') throw new Error('Multiple audio tracks detected. Select Original audio in General to transcribe the original track.');
-        await connection.content(tabId, videoId);
-        return connection.sendOffscreen({ type: 'RUN', tabId, videoId, title: info.title, ignoreCache: popup && message.ignoreCache === true });
-    }
+    if (message.type === 'GENERATE') return generateForTab(content ? sender.tab.id : message.tabId, settings, popup && message.ignoreCache === true);
     if (message.type === 'CANCEL') {
         if (!await connection.hasOffscreen()) return {};
         return connection.sendOffscreen({ type: 'CANCEL', tabId: content ? sender.tab.id : message.tabId });
@@ -198,6 +200,18 @@ async function handle(message, sender) {
 
 // Content scripts need only public settings; keys remain in trusted extension contexts.
 const ready = protectSettings();
+const onShortcut = shortcutHandler({
+    api: chrome, ready,
+    generate: async (tabId, ignoreCache) => generateForTab(tabId, await runtimeSettings(), ignoreCache),
+    reportError: async (tabId, error) => {
+        const settings = await getSettings().catch(() => ({}));
+        const value = { stage: 'error', message: redact(error.message, settings) };
+        await chrome.storage.session.set({ [`status-${tabId}`]: value });
+        await chrome.tabs.sendMessage(tabId, { type: 'PROGRESS', status: await localStatus(value) }).catch(() => {});
+    },
+});
+chrome.commands.onCommand.addListener((command, tab) => { onShortcut(command, tab).catch(() => {}); });
+
 chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== 'local' || !Object.keys(changes).some(key => key.startsWith(DRAFT_PREFIX))) return;
     // Storage events wake the worker even if the popup has already closed.
