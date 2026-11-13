@@ -130,6 +130,13 @@ function limitCue(item, limit, warnings) {
 }
 
 export function formatTranscript(transcript, options, warnings = []) {
+    if (options.cueBreaks === 'provider') {
+        const source = transcript.segments.length ? transcript.segments : transcript.words;
+        if (!source.length) throw new Error('This model returned text without usable timestamps. Choose a timestamp-capable model.');
+        // Preserve original segment boundaries, including deliberate overlaps.
+        // Line wrapping is independent and can be disabled with a zero limit.
+        return cleanSegments(source).map(item => ({ ...item, text: wrapText(item.text, options.maxLineLength) }));
+    }
     let segments;
     if ((options.wordTimestamps || !transcript.segments.length) && transcript.words.length) {
         segments = []; let group = [], size = 0;

@@ -172,6 +172,19 @@ try {
     assert.match(mixed.message, /Invalid word timestamps/);
     assert.match(mixed.message, /boundaries were estimated/);
     assert.deepEqual(await youtube.evaluate(() => Array.from(document.querySelector('video').textTracks[0].cues).map(cue => cue.text)), ['Olá', 'mundo', 'hoje', 'fallback', 'speech']);
+    const beforeProviderLayout={...counts};
+    await popup.locator('[data-setting="cueBreaks"]').selectOption('provider');
+    assert.equal(await popup.locator('[data-setting="wordsPerLine"]').isDisabled(),true);
+    await popup.locator('.save').click();
+    await popup.waitForFunction(()=>document.getElementById('status').textContent==='Settings saved.');
+    const providerLayout=await generate('ready');
+    assert.equal(providerLayout.source,'cache');assert.doesNotMatch(providerLayout.message,/boundaries were estimated/);
+    assert.deepEqual(await youtube.evaluate(()=>Array.from(document.querySelector('video').textTracks[0].cues).map(cue=>cue.text)),['Olá mundo hoje','fallback speech']);
+    assert.deepEqual(counts,beforeProviderLayout);
+    await popup.locator('[data-setting="cueBreaks"]').selectOption('words');
+    assert.equal(await popup.locator('[data-setting="wordsPerLine"]').isEnabled(),true);
+    await popup.locator('.save').click();
+    await popup.waitForFunction(()=>document.getElementById('status').textContent==='Settings saved.');
     // This test opens popup.html in a tab. Model the active YouTube tab that
     // a real browser-action popup sees before exercising the actual button.
     await popup.evaluate(tabId => {

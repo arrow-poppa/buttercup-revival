@@ -102,4 +102,6 @@ The harness launches a disposable profile, registers a uniquely named temporary 
 
 The first unsigned test build used an older ID. Export settings from that build before loading the UUID build: browsers treat a changed add-on ID as a separate extension. The installer accepts the legacy ID for migration and automatically registers both current browser identities. Appearance supports Auto (system), Light and Dark; it is saved and included in settings backups.
 
-Subtitle fallback and regeneration update: 115 JavaScript tests pass, including cached DeepInfra segment-only formatting without network requests, estimated internal timing notices, Japanese/Chinese cue caps, and explicit cache bypass with retention of the prior result on provider failure. The DeepInfra and Groq browser suites exercise the Regenerate button using simulated services.
+Subtitle fallback and regeneration update: 116 JavaScript tests pass, including cached DeepInfra segment-only formatting without network requests, estimated internal timing notices, Japanese/Chinese cue caps, and explicit cache bypass with retention of the prior result on provider failure. The DeepInfra and Groq browser suites exercise the Regenerate button using simulated services.
+
+Original segmentation: “Keep provider segments (original timing)” preserves cached provider segment boundaries (including overlaps) and bypasses the cue word cap. Line wrapping remains independent; 0 preserves the returned text layout. Both layouts are available without a provider request.

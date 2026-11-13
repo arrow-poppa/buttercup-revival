@@ -39,6 +39,7 @@ const status = text => {
     if (settingsTab) $('settings-import-status').textContent = text;
 };
 function updateProviderDetails() {
+    document.querySelector('[data-setting="wordsPerLine"]').disabled = document.querySelector('[data-setting="cueBreaks"]').value === 'provider';
     const whole = document.querySelector('[data-setting="audioMode"]').value === 'whole';
     $('whole-audio-hint').hidden = !whole;
     $('chunk-options').hidden = whole;

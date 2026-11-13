@@ -279,3 +279,14 @@ test('fallback limits preserve Japanese, Chinese, mixed Latin words, brackets an
 test('very short fallback timings fail explicitly rather than dropping text', () => {
     assert.throws(()=>formatTranscript(normalize({segments:[{start:0,end:.002,text:'one two three'}]}),{...DEFAULTS,wordsPerLine:1}),/shorter than one millisecond/);
 });
+
+test('provider layout preserves original segments and overlaps regardless of word cap', () => {
+    const transcript=normalize({segments:[{start:1,end:8,text:'one two three four five'},{start:7,end:10,text:'second segment'}],words:[{start:1,end:2,word:'one'}]});
+    const warnings=[];
+    const settings=validateSettings({...DEFAULTS,cueBreaks:'provider',wordsPerLine:1,maxLineLength:0});
+    assert.deepEqual(formatTranscript(transcript,settings,warnings),transcript.segments);
+    assert.deepEqual(warnings,[]);
+    assert.equal(formatTranscript(transcript,{...settings,maxLineLength:2})[0].text,'one two\nthree four\nfive');
+    assert.deepEqual(formatTranscript({...transcript,segments:[]},settings),transcript.words);
+    assert.throws(()=>formatTranscript({segments:[],words:[]},settings),/without usable timestamps/);
+});

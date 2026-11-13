@@ -115,7 +115,7 @@ export function validateSettings(input) {
     if (!['openrouter', 'custom', 'deepinfra', 'groq'].includes(value.provider)) throw new Error('Invalid provider');
     if (!['default', 'original'].includes(value.audioTrack)) throw new Error('Invalid audio track');
     if (!['chunks', 'whole'].includes(value.audioMode)) throw new Error('Invalid audio sending mode');
-    if (!['speech', 'words'].includes(value.cueBreaks)) throw new Error('Invalid subtitle break mode');
+    if (!['speech', 'words', 'provider'].includes(value.cueBreaks)) throw new Error('Invalid subtitle break mode');
     if (!['auto', 'light', 'dark'].includes(value.theme)) throw new Error('Invalid appearance');
     if (!['auto', 'en', 'pt-BR', 'es', 'ja', 'zh-CN'].includes(value.uiLanguage)) throw new Error('Invalid interface language');
     if (!['transcriptions', 'chat'].includes(value.openrouterMode)) throw new Error('Invalid OpenRouter API mode');

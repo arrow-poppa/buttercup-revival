@@ -126,6 +126,8 @@ test('DeepInfra segment-only cached subtitles obey a new word limit without netw
     assert.match(result.formatWarnings[0],/estimated/);
     const restored=await processVideo('I14AJ40Jlzs',{...settings,wordsPerLine:12},new AbortController().signal,()=>{});
     assert.equal(restored.segments.length,1);assert.deepEqual(restored.formatWarnings,[]);
+    const original=await processVideo('I14AJ40Jlzs',{...settings,cueBreaks:'provider'},new AbortController().signal,()=>{});
+    assert.deepEqual(original.segments,record.transcript.segments);assert.deepEqual(original.formatWarnings,[]);
     assert.deepEqual((await cacheOperation('get',key)).transcript,record.transcript);
     await cacheOperation('clear');
 });
