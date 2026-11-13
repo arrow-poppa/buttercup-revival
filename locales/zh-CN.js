@@ -1,5 +1,6 @@
 // English source string -> translation. See api/i18n.js.
 export default {
+    "Import opens in a tab so the file picker stays available.": "导入会在标签页中打开，避免选择文件时弹窗关闭。",
     "Japanese, Chinese and other supported scripts without spaces use character counts for these limits. Latin words and numbers remain intact. Provider timestamps determine where a subtitle can split.": "日语、中文及其他受支持的不使用空格分词的文字按字符数计算这些上限。拉丁字母单词和数字串保持完整。字幕分割位置由服务商返回的时间戳决定。",
     "Better YouTube captions · Revival": "更好的 YouTube 字幕 · Revival",
     "Ready": "就绪",

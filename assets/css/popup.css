@@ -4,3 +4,5 @@ fieldset{border:0;margin:0;padding:0;min-width:0}
 [hidden]{display:none!important}
 .provider-picker{padding:12px;border:1px solid var(--line);border-radius:12px;background:#f3e5f0;font-size:14px}
 .assistant-card{padding:12px;border:1px solid var(--line);border-radius:12px;background:#fffdfb;margin:12px 0}.assistant-title{display:flex;align-items:center;justify-content:space-between;gap:8px}.assistant-title span{border-radius:20px;padding:3px 9px;background:#f5eaf0;font-size:11px;font-weight:600}.assistant-card[data-state=online] .assistant-title span{background:#e0f2e6;color:#245535}.assistant-card>p,.assistant-card li{font-size:12px}.assistant-card details{margin-bottom:0;padding:8px}.assistant-card ol{padding-left:19px}.assistant-card li{margin:10px 0}
+
+body.settings-tab{width:min(100%,640px);max-height:none;margin:0 auto}

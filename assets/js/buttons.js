@@ -13,7 +13,17 @@ document.documentElement.lang = setLanguage(uiLanguage);
 localize(document.body); watch(document.body);
 storedLanguage().then(value => { if (value !== uiLanguage) useLanguage(value); }).catch(() => {});
 const $ = id => document.getElementById(id);
-const status = text => { $('status').textContent = text; };
+// Browser action popups may close when a native file picker takes focus.
+// Keep the same settings editor in a tab for the complete import operation.
+const settingsTab = new URL(location.href).searchParams.get('view') === 'settings';
+document.body.classList.toggle('settings-tab', settingsTab);
+$('settings-file-picker').hidden = !settingsTab;
+$('settings-import-hint').hidden = settingsTab;
+if (settingsTab) $('backup-settings').open = true;
+const status = text => {
+    $('status').textContent = text;
+    if (settingsTab) $('settings-import-status').textContent = text;
+};
 function updateProviderDetails() {
     const whole = document.querySelector('[data-setting="audioMode"]').value === 'whole';
     $('whole-audio-hint').hidden = !whole;
@@ -344,6 +354,12 @@ action('export-settings', async () => {
     status('Settings exported.');
 });
 action('import-settings', async () => {
+    if (!settingsTab) {
+        const pending = persistChanges();
+        if (pending) await pending;
+        await chrome.tabs.create({ url: chrome.runtime.getURL('popup.html?view=settings#backup-settings') });
+        return;
+    }
     const file = $('settings-file').files[0];
     if (!file || file.size > 1048576) throw new Error('Choose a Buttercup settings file.');
     let data;
@@ -356,11 +372,22 @@ action('import-settings', async () => {
     ++editRevision;
     // Unfinished fields stay as a draft, exactly as when they are typed.
     await activateDraft().catch(() => {});
-    if (patch.uiLanguage && patch.uiLanguage !== uiLanguage) { useLanguage(patch.uiLanguage); return; }
+    if (patch.uiLanguage && patch.uiLanguage !== uiLanguage) {
+        sessionStorage.setItem('settings-imported', 'true');
+        useLanguage(patch.uiLanguage); return;
+    }
     status('Settings imported.');
 });
 action('asb-status', async () => { await save(); $('asb-result').textContent = JSON.stringify(await rpc({ type: 'ASB_STATUS' }), null, 2); status('asbplayer server reachable.'); });
 $('settings-form').addEventListener('input', autosave);
 $('settings-form').addEventListener('change', autosave);
 document.querySelector('[data-setting="uiLanguage"]').addEventListener('change', autosave);
-initialize().catch(error => status(error.message));
+initialize().then(() => {
+    if (settingsTab) {
+        $('backup-settings').scrollIntoView();
+        if (sessionStorage.getItem('settings-imported')) {
+            sessionStorage.removeItem('settings-imported');
+            status('Settings imported.');
+        }
+    }
+}).catch(error => status(error.message));

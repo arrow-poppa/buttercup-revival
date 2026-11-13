@@ -1,5 +1,6 @@
 // English source string -> translation. See api/i18n.js.
 export default {
+    "Import opens in a tab so the file picker stays available.": "La importación se abre en una pestaña para que el selector de archivos siga disponible.",
     "Japanese, Chinese and other supported scripts without spaces use character counts for these limits. Latin words and numbers remain intact. Provider timestamps determine where a subtitle can split.": "El japonés, el chino y otras escrituras compatibles sin espacios usan caracteres para estos límites. Las palabras en alfabeto latino y los números se mantienen completos. Las marcas de tiempo del proveedor determinan dónde se puede dividir un subtítulo.",
     "Better YouTube captions · Revival": "Mejores subtítulos para YouTube · Revival",
     "Ready": "Listo",

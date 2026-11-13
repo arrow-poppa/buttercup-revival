@@ -37,3 +37,4 @@ jobs:
       - run: npm run test:groq-browser
       - run: npm run test:assistant-browser
       - run: npm run test:i18n-browser
+      - run: npm run test:import-browser

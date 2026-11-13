@@ -77,7 +77,9 @@ async function runtimeSettings() {
 }
 
 async function handle(message, sender) {
-    const popup = sender.url === popupUrl;
+    // The same trusted editor can run in a tab with view parameters or an anchor.
+    // Keep the full extension origin and exact page path in the allowlist.
+    const popup = typeof sender.url === 'string' && sender.url.split(/[?#]/, 1)[0] === popupUrl;
     const runner = sender.url === offscreenUrl;
     const content = !!sender.tab && sender.frameId === 0 && sender.url?.startsWith('https://www.youtube.com/');
     if (message.target === 'offscreen') return;

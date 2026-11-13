@@ -136,11 +136,13 @@
 <label>Optional mediaId<input data-setting="mediaId" placeholder="ID from bound media"></label>
 <button type="button" id="asb-status">Check connected media</button><pre id="asb-result"></pre>
 </details>
-<details><summary>Backup</summary>
+<details id="backup-settings"><summary>Backup</summary>
 <p class="hint">Save your settings to a file and load them again later, for example after reinstalling. The file contains your API keys, so keep it private. The local connection and the subtitle cache are not included.</p>
 <button type="button" id="export-settings">Export settings</button>
-<label>Settings file to import<input type="file" id="settings-file" accept=".json,application/json"></label>
+<p class="hint" id="settings-import-hint">Import opens in a tab so the file picker stays available.</p>
+<label id="settings-file-picker" hidden>Settings file to import<input type="file" id="settings-file" accept=".json,application/json"></label>
 <button type="button" id="import-settings">Import settings</button>
+<p id="settings-import-status" role="status"></p>
 </details>
 <button type="submit" class="primary save">Save settings</button>
 </fieldset>

@@ -253,7 +253,7 @@ Translations live in [`locales/`](locales), one file per language, as `"original
 2. Run the installer again.
 3. Open `chrome://extensions` and click the **reload** arrow on the Buttercup card.
 
-Your settings stay where they are. To be safe, use **Backup → Export settings** first.
+Your settings stay where they are. To be safe, use **Backup → Export settings** first. To restore a backup, choose **Backup → Import settings**. Buttercup opens a settings tab; select your JSON file there and click **Import settings**. Keep the tab open until the import completes.
 
 ## 🧹 Uninstalling
 
