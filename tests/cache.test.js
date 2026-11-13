@@ -114,3 +114,43 @@ test('Groq cache is separate and ignores inactive provider settings while retain
     assert.equal(result.source, 'cache'); assert.equal(result.segments.length, 2);
     await cacheOperation('clear');
 });
+
+test('DeepInfra segment-only cached subtitles obey a new word limit without network or cache mutation', async t => {
+    const settings={...DEFAULTS,provider:'deepinfra',wordsPerLine:2,maxLineLength:0};
+    const descriptor=cacheDescriptor('I14AJ40Jlzs',settings),key=await cacheKey(descriptor);
+    const record={key,descriptor,revision:1,transcript:{words:[],segments:[{start:0,end:8,text:'one two three four five six'}],warnings:['Invalid word timestamps; using the segment timestamps returned by the provider.']}};
+    await cacheOperation('put',record);
+    t.mock.method(globalThis,'fetch',()=>assert.fail('Reformatting a cache hit must not call any service'));
+    const result=await processVideo('I14AJ40Jlzs',settings,new AbortController().signal,()=>{});
+    assert.equal(result.source,'cache');assert.deepEqual(result.segments.map(c=>c.text),['one two','three four','five six']);
+    assert.match(result.formatWarnings[0],/estimated/);
+    const restored=await processVideo('I14AJ40Jlzs',{...settings,wordsPerLine:12},new AbortController().signal,()=>{});
+    assert.equal(restored.segments.length,1);assert.deepEqual(restored.formatWarnings,[]);
+    assert.deepEqual((await cacheOperation('get',key)).transcript,record.transcript);
+    await cacheOperation('clear');
+});
+
+test('explicit regeneration bypasses local and community caches, refreshes once, and preserves old cache on failure', async t => {
+    const settings={...DEFAULTS,provider:'deepinfra',deepinfraApiKey:'SYNTHETIC_KEY',backendToken:'SYNTHETIC_LOCAL',communityRead:true,communityUrl:'https://community.example'};
+    const descriptor=cacheDescriptor('abcdefghijk',settings),key=await cacheKey(descriptor);
+    const record={key,descriptor,revision:2,transcript:{words:[],segments:[{start:0,end:2,text:'old cached text'}]}};
+    await cacheOperation('put',record);
+    let paid=0,fail=false;
+    t.mock.method(globalThis,'fetch',async (url,options={})=>{
+        assert.ok(!url.startsWith(settings.communityUrl));
+        if(url.endsWith('/jobs/extract')) return Response.json({id:'fresh',state:'ready',chunks:[{index:0,offset:0,duration:5}]});
+        if(options.method==='DELETE') return Response.json({});
+        if(url.includes('/chunks/')) return new Response(new Blob(['synthetic-audio']));
+        assert.ok(url.startsWith('https://api.deepinfra.com/'));
+        paid++;
+        return fail ? Response.json({error:'fixture failure'},{status:503}) : Response.json({segments:[{start:0,end:2,text:'fresh transcript'}]});
+    });
+    const generate=options=>processVideo('abcdefghijk',settings,new AbortController().signal,()=>{},options);
+    assert.equal((await generate()).source,'cache');assert.equal(paid,0);
+    assert.equal((await generate({ignoreCache:true})).source,'transcription');assert.equal(paid,1);
+    assert.equal((await generate()).segments[0].text,'fresh transcript');assert.equal(paid,1);
+    fail=true;
+    await assert.rejects(generate({ignoreCache:true}),/503/);assert.equal(paid,2);
+    assert.equal((await generate()).segments[0].text,'fresh transcript');assert.equal(paid,2);
+    await cacheOperation('clear');
+});

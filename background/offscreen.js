@@ -35,11 +35,11 @@ async function download(settings, segments, record, format, title = record.title
     return {};
 }
 
-async function run(tabId, videoId, controller, title) {
+async function run(tabId, videoId, controller, title, ignoreCache = false) {
     let settings = {};
     try {
         settings = await getSettings();
-        const result = await processVideo(videoId, settings, controller.signal, value => status(tabId, value).catch(() => {}));
+        const result = await processVideo(videoId, settings, controller.signal, value => status(tabId, value).catch(() => {}), { ignoreCache });
         controller.signal.throwIfAborted();
         if (title && result.record.title !== title) {
             // Kept beside the transcript so later exports can name the file.
@@ -48,7 +48,7 @@ async function run(tabId, videoId, controller, title) {
         }
         results.set(tabId, result);
         // Each note is a message of its own, so the interface can translate it.
-        const notes = [...(result.record.transcript.warnings || [])];
+        const notes = [...(result.record.transcript.warnings || []), ...(result.formatWarnings || [])];
         // asbplayer receives its own copy first: it must not depend on whether
         // Buttercup's captions reach, or are shown in, the YouTube player.
         if (settings.autoSend) {
@@ -77,7 +77,7 @@ async function handle(message) {
     if (message.type === 'RUN') {
         if (running.has(tabId)) throw new Error('This tab already has a running transcription');
         const controller = new AbortController(); running.set(tabId, controller);
-        run(tabId, message.videoId, controller, message.title).catch(() => {});
+        run(tabId, message.videoId, controller, message.title, message.ignoreCache === true).catch(() => {});
         return { started: true };
     }
     // Cancelling stops work in progress; finished subtitles stay available to

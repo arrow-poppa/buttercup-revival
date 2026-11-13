@@ -77,3 +77,20 @@ export function wrapText(text, limit) {
         return result.join('\n');
     }).join('\n');
 }
+
+// Split cue text by the same units used for its size and display wrapping.
+// Preserve spacing and punctuation instead of reconstructing the transcript.
+export function splitCueText(text, limit) {
+    const tokens = UNSPACED.test(text) ? units(text) : text.match(/\s+|\S+/gu) || [];
+    const result = [];
+    let part = '', size = 0;
+    for (const token of tokens) {
+        const weight = textSize(token);
+        if (size && (size + weight > limit && canBreakBetween(part.trimEnd(), token) || size >= limit && OPENING.test(token))) {
+            result.push(part.trim()); part = ''; size = 0;
+        }
+        part += token; size += weight;
+    }
+    if (part.trim()) result.push(part.trim());
+    return result;
+}

@@ -170,11 +170,32 @@ try {
     fail = false; mixedTiming = true;
     const mixed = await generate('ready');
     assert.match(mixed.message, /Invalid word timestamps/);
-    assert.deepEqual(await youtube.evaluate(() => Array.from(document.querySelector('video').textTracks[0].cues).map(cue => cue.text)), ['Olá', 'mundo', 'hoje', 'fallback speech']);
+    assert.match(mixed.message, /boundaries were estimated/);
+    assert.deepEqual(await youtube.evaluate(() => Array.from(document.querySelector('video').textTracks[0].cues).map(cue => cue.text)), ['Olá', 'mundo', 'hoje', 'fallback', 'speech']);
+    // This test opens popup.html in a tab. Model the active YouTube tab that
+    // a real browser-action popup sees before exercising the actual button.
+    await popup.evaluate(tabId => {
+        const query=chrome.tabs.query.bind(chrome.tabs);
+        chrome.tabs.query=options=>options.active ? Promise.resolve([{id:tabId}]) : query(options);
+        document.getElementById('reload-settings').click();
+    },tabId);
+    await popup.locator('#settings-fields:not([disabled])').waitFor();
+    const beforeRegenerate = {...counts};
+    await popup.evaluate(tabId => chrome.storage.session.remove(`status-${tabId}`),tabId);
+    await popup.locator('#regenerate').click();
+    // The button first commits settings asynchronously. Do not mistake a late
+    // ready notification from the previous run for completion of this one.
+    for (let attempt=0;attempt<100;attempt++) {
+        const state=await popup.evaluate(async tabId=>(await chrome.storage.session.get(`status-${tabId}`))[`status-${tabId}`],tabId);
+        if (counts.extracts===beforeRegenerate.extracts+1 && counts.transcriptions===beforeRegenerate.transcriptions+2 && state?.stage==='ready') break;
+        await new Promise(resolve=>setTimeout(resolve,100));
+    }
+    assert.equal(counts.extracts,beforeRegenerate.extracts+1);
+    assert.equal(counts.transcriptions,beforeRegenerate.transcriptions+2,'Explicit regenerate must refresh each audio part once');
     const afterMixed = { ...counts };
     assert.equal((await generate('ready')).source, 'cache');
     assert.deepEqual(counts, afterMixed, 'Mixed timestamp recovery must survive cached playback without another provider request');
-    assert.equal(await youtube.evaluate(() => document.querySelector('video').textTracks[0].cues.length), 4);
+    assert.equal(await youtube.evaluate(() => document.querySelector('video').textTracks[0].cues.length), 5);
     await popup.locator('[data-setting="audioMode"]').selectOption('whole');
     assert.equal(await popup.locator('#chunk-options').isVisible(), false);
     assert.equal(await popup.locator('#whole-audio-hint').isVisible(), true);

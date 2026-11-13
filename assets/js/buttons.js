@@ -270,6 +270,7 @@ $('settings-form').addEventListener('submit', async event => {
     try { await save(); status('Settings saved.'); } catch (error) { status(error.message); }
 });
 action('generate', async () => { await save(); await rpc({ type: 'GENERATE', tabId }); status('Starting…'); });
+action('regenerate', async () => { await save(); await rpc({ type: 'GENERATE', tabId, ignoreCache: true }); status('Starting a fresh transcription…'); });
 action('reload-settings', initialize);
 
 action('use-openrouter-transcriptions', async () => {

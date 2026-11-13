@@ -25,7 +25,8 @@
 <p id="connection-import-status" role="status"></p>
 </details>
 </section>
-<div class="actions"><button id="generate" class="primary">Generate captions</button><button id="cancel">Cancel</button></div>
+<div class="actions"><button id="generate" class="primary">Generate captions</button><button id="regenerate">Regenerate subtitles</button><button id="cancel">Cancel</button></div>
+<p class="hint">Generate reuses saved subtitles when available. Regenerate ignores local and community caches and sends a fresh request to the selected provider; provider charges may apply.</p>
 <label>Subtitle track<select id="track"><option value="">Current transcription</option></select></label>
 <div class="actions"><button id="srt">Download SRT</button><button id="vtt">Download VTT</button><button id="send">Send to asbplayer</button></div>
 <form id="settings-form" novalidate>
@@ -105,7 +106,7 @@
 <p class="hint">Following the speaker ends each subtitle with the sentence, at a comma once it is fairly full, or at a breath, so subtitles appear and leave with the speech. The word limit below still caps their size.</p>
 <div class="grid"><label>Max words per subtitle<input type="number" data-setting="wordsPerLine" min="1" max="40"></label><label>Line break every N words (0 = one line)<input type="number" data-setting="maxLineLength" min="0" max="40"></label></div>
 <p class="hint">Japanese, Chinese and other supported scripts without spaces use character counts for these limits. Latin words and numbers remain intact. Provider timestamps determine where a subtitle can split.</p>
-<p class="hint"><strong>Max words per subtitle</strong>: how many words stay on screen together before the next subtitle starts (a pause longer than 1 s also starts a new one). Needs word timestamps (keep “Request word timestamps” on); a model that returns none keeps its own, often long, segments. <strong>Line break</strong>: only wraps that subtitle into lines. Neither changes what is sent to the API, so you can adjust them without paying for a new transcription.</p>
+<p class="hint"><strong>Max words per subtitle</strong>: how many words stay on screen together before the next subtitle starts (a pause longer than 1 s also starts a new one). Uses word timestamps when available. If the model returns only long segments, Buttercup splits them at this limit and estimates the internal cue times within each original segment. For Japanese/Chinese and other scripts without spaces, the limit counts text characters, keeping Latin words intact. <strong>Line break</strong>: only wraps that subtitle into lines. Neither changes what is sent to the API, so you can adjust them without paying for a new transcription.</p>
 </details>
 <details><summary>Audio upload (advanced)</summary>
 <p class="hint">How the audio is sent to the API. This does not change how subtitles look.</p>

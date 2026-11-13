@@ -221,6 +221,8 @@ The popup is organised in sections. The ones you are most likely to touch:
 | **Audio upload (advanced)** | Audio sending | *In parts* works with any length; *Whole audio* is a single request |
 | **Backup** | Export / Import settings | Save your settings to a file and load them later |
 
+Subtitle word limits also apply when a provider returns only segment timestamps or puts a whole phrase in one word entry. In those cases, internal cue boundaries are estimated within the original segment and the completion message explains this; real word timestamps are preserved. Japanese/Chinese use text characters while keeping Latin words and Unicode graphemes intact. Changing layout reformats cached subtitles without calling a provider. **Regenerate subtitles** explicitly bypasses local and community caches and requests a fresh transcription (provider charges may apply); a failed request preserves the last cached result.
+
 <img src="docs/images/subtitle-layout.png" width="380" alt="Subtitle layout settings">
 
 Changing **Subtitle layout** never costs anything: it rearranges the words that were already transcribed.

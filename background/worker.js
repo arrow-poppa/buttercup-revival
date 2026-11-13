@@ -151,7 +151,7 @@ async function handle(message, sender) {
         if (settings.preferHuman && info.hasHuman) throw new Error('Human captions are available. Turn off “Prefer human captions” to replace them.');
         if (info.multipleAudio && settings.audioTrack !== 'original') throw new Error('Multiple audio tracks detected. Select Original audio in General to transcribe the original track.');
         await connection.content(tabId, videoId);
-        return connection.sendOffscreen({ type: 'RUN', tabId, videoId, title: info.title });
+        return connection.sendOffscreen({ type: 'RUN', tabId, videoId, title: info.title, ignoreCache: popup && message.ignoreCache === true });
     }
     if (message.type === 'CANCEL') {
         if (!await connection.hasOffscreen()) return {};

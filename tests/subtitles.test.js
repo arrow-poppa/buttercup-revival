@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { normalize, mergeChunks, formatTranscript, exportSubtitles, timestamp, cleanSegments, youtubeFormat } from '../subtitles/formats.js';
+import { textSize } from '../subtitles/text.js';
 import { DEFAULTS, validateSettings, baseUrl, redact } from '../api/config.js';
 
 test('word grouping retains supplied timing and original Buttercup line breaks', () => {
@@ -40,8 +41,8 @@ test('mixed chunk word/segment timing preserves all speech, cached formatting an
         { offset: 118.5, duration: 120, transcript: middle }, { offset: 237, duration: 10, transcript: last }]);
     const cues = formatTranscript(merged, { ...DEFAULTS, wordsPerLine: 1 });
     assert.deepEqual(cues, [{ start: 0, end: .5, text: 'first' }, { start: .5, end: 1, text: 'words' },
-        { start: 119.5, end: 121.5, text: 'complete fallback phrase' }, { start: 239, end: 240, text: 'last' }]);
-    assert.deepEqual(formatTranscript(merged, { ...DEFAULTS, wordTimestamps: false }).map(item => item.text), cues.map(item => item.text));
+        { start: 119.5, end: 120.167, text: 'complete' }, { start: 120.167, end: 120.833, text: 'fallback' }, { start: 120.833, end: 121.5, text: 'phrase' }, { start: 239, end: 240, text: 'last' }]);
+    assert.deepEqual(formatTranscript(merged, { ...DEFAULTS, wordTimestamps: false, wordsPerLine: 1 }).map(item => item.text), cues.map(item => item.text));
     const legacy = structuredClone(merged); delete legacy.wordFallbacks;
     assert.deepEqual(formatTranscript(legacy, { ...DEFAULTS, wordsPerLine: 1 }), cues, 'Older cached fallback segments must also be recovered');
     assert.equal(formatTranscript(merged, { ...DEFAULTS, wordsPerLine: 2 })[0].text, 'first words');
@@ -232,9 +233,9 @@ test('English, Portuguese and Korean retain space-based subtitle formatting', ()
     }
 });
 
-test('a long CJK provider word stays at its supplied times while its display wraps', () => {
+test('a long CJK provider phrase respects the cue limit with estimated internal times', () => {
     const cues = formatTranscript(timedText(['今天我们一起学习中文。']), { ...DEFAULTS, wordsPerLine: 2, maxLineLength: 4 });
-    assert.deepEqual(cues, [{ start: 0, end: .15, text: '今天我们\n一起学习\n中文。' }]);
+    assert.deepEqual(cues, ['今天','我们','一起','学习','中文。'].map((text,index)=>({start:index*.03,end:Math.round((index+1)*30)/1000,text})));
 });
 
 
@@ -250,4 +251,31 @@ test('mixed text keeps contractions, hyphenated words, decimals and combining ma
 test('Japanese opening brackets do not add spaces before Latin words', () => {
     const cues = formatTranscript(timedText(['「', 'OpenAI', 'です。', '」']), { ...DEFAULTS, maxLineLength: 0 });
     assert.equal(cues[0].text, '「OpenAIです。」');
+});
+
+test('segment fallback honors the cue cap in word and speech modes without changing endpoints', () => {
+    const transcript = normalize({ words:[{start:2,end:2,word:'broken'}], segments:[{start:2,end:8,text:'one two three four five six seven'}] });
+    for (const cueBreaks of ['speech','words']) for (const wordTimestamps of [true,false]) {
+        const warnings=[];
+        const cues=formatTranscript(transcript,{...DEFAULTS,wordsPerLine:3,maxLineLength:0,cueBreaks,wordTimestamps},warnings);
+        assert.deepEqual(cues.map(c=>c.text),['one two three','four five six','seven']);
+        assert.equal(cues[0].start,2);assert.equal(cues.at(-1).end,8);
+        assert.ok(cues.every((c,i)=>c.end>c.start&&(!i||c.start===cues[i-1].end)));
+        assert.match(warnings[0],/estimated/);
+        assert.equal(transcript.segments[0].text,'one two three four five six seven');
+    }
+});
+
+test('fallback limits preserve Japanese, Chinese, mixed Latin words, brackets and graphemes', () => {
+    for (const text of ['今日は「日本語」を勉強します。','你好「世界」，今天学习中文。',"日本語OpenAI-compatible don't 1,234.56字幕",'か\u3099日本語👩‍💻字幕']) {
+        const original=normalize({segments:[{start:1,end:20,text}]});
+        const cues=formatTranscript(original,{...DEFAULTS,wordsPerLine:3,maxLineLength:0});
+        assert.equal(cues.map(c=>c.text).join('').replace(/\s/g,''),text.replace(/\s/g,''));
+        assert.ok(cues.every(c=>textSize(c.text)<=3&&!/[「（]$/.test(c.text)&&! /^[」，。]/.test(c.text)));
+        assert.equal(cues[0].start,1);assert.equal(cues.at(-1).end,20);
+    }
+});
+
+test('very short fallback timings fail explicitly rather than dropping text', () => {
+    assert.throws(()=>formatTranscript(normalize({segments:[{start:0,end:.002,text:'one two three'}]}),{...DEFAULTS,wordsPerLine:1}),/shorter than one millisecond/);
 });

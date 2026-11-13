@@ -1,4 +1,4 @@
-import { canBreakBetween, joinTimedWords, textSize, wrapText } from './text.js';
+import { canBreakBetween, joinTimedWords, textSize, wrapText, splitCueText } from './text.js';
 
 // Word grouping and line breaks preserve the original Buttercup preferences.
 export function cleanSegments(items) {
@@ -108,7 +108,28 @@ export function mergeChunks(parts) {
 const SENTENCE_END = /[.!?…。！？]+["'”’»)\]」』）】〉》〕］｝]*$/u, CLAUSE_END = /[,;:，、；：]["'”’»)\]」』）】〉》〕］｝]*$/u;
 const ABBREVIATION = /^(?:(?:mr|mrs|ms|dr|sr|sra|st|vs|etc|prof|jr|no)\.|(?:\p{L}\.)+)$/iu;
 
-export function formatTranscript(transcript, options) {
+const ESTIMATED_TIMING = 'Word timestamps are unavailable for some text. Subtitle boundaries were estimated within the original segment to respect the word limit.';
+
+function limitCue(item, limit, warnings) {
+    if (textSize(item.text) <= limit) return [item];
+    const parts = splitCueText(item.text, limit);
+    if (parts.length < 2) return [item];
+    // Original segment endpoints remain exact; only internal boundaries are
+    // estimated. Never invent timestamps when a provider returned no timing.
+    const start = Math.round(item.start * 1000), end = Math.round(item.end * 1000);
+    if (end - start < parts.length) throw new Error('The word limit would create subtitles shorter than one millisecond. Increase Max words per subtitle.');
+    if (!warnings.includes(ESTIMATED_TIMING)) warnings.push(ESTIMATED_TIMING);
+    const weights = parts.map(textSize), total = weights.reduce((a,b) => a+b,0);
+    let cursor = start, used = 0;
+    return parts.map((text,index) => {
+        used += weights[index];
+        const next = index === parts.length - 1 ? end : Math.max(cursor + 1, Math.min(end - (parts.length - index - 1), start + Math.round((end-start)*used/total)));
+        const cue = {start:cursor/1000,end:next/1000,text};
+        cursor = next; return cue;
+    });
+}
+
+export function formatTranscript(transcript, options, warnings = []) {
     let segments;
     if ((options.wordTimestamps || !transcript.segments.length) && transcript.words.length) {
         segments = []; let group = [], size = 0;
@@ -128,8 +149,8 @@ export function formatTranscript(transcript, options) {
                 return cursor === words.length || words[cursor].start >= segment.end;
             });
         }
-        const timeline = [...transcript.words.map(word => ({ ...word, isWord: true })),
-            ...cleanSegments(fallbacks)].sort((a, b) => a.start - b.start || a.end - b.end);
+        const timeline = [...transcript.words.flatMap(word => limitCue(word, options.wordsPerLine, warnings).map(part => ({ ...part, isWord: true }))),
+            ...cleanSegments(fallbacks).flatMap(item => limitCue(item, options.wordsPerLine, warnings))].sort((a, b) => a.start - b.start || a.end - b.end);
         // 'speech' follows the speaker: a subtitle ends with the sentence, at a
         // comma once it is fairly full, or at a breath. The word limit stays a cap.
         const speech = options.cueBreaks !== 'words', limit = options.wordsPerLine;
@@ -137,8 +158,8 @@ export function formatTranscript(transcript, options) {
             if (!word.isWord) { flush(); segments.push(word); continue; }
             const gap = group.length ? word.start - group.at(-1).end : 0;
             const weight = textSize(word.text);
-            // A timed provider entry is indivisible: never fabricate per-character
-            // times when a model returns a whole phrase as one "word".
+            // Oversized provider phrases were split above; actual per-word
+            // timestamps remain untouched.
             if (group.length && canBreakBetween(group.at(-1).text, word.text)
                 && (size + weight > limit || gap > 1 || speech && gap >= .35 && size * 2 >= limit)) flush();
             group.push(word); size += weight;
@@ -148,7 +169,7 @@ export function formatTranscript(transcript, options) {
             if (SENTENCE_END.test(text) ? !ABBREVIATION.test(word.text) : CLAUSE_END.test(text) && size >= limit * .6) flush();
         }
         flush();
-    } else segments = transcript.segments;
+    } else segments = transcript.segments.flatMap(item => limitCue(item, options.wordsPerLine, warnings));
     if (!segments.length) throw new Error('This model returned text without usable timestamps. Choose a timestamp-capable model.');
     return cleanSegments(segments).map((item, index, all) => ({ ...item,
         end: all[index + 1] ? Math.min(item.end, Math.max(item.start + .001, all[index + 1].start)) : item.end,

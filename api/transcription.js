@@ -23,15 +23,19 @@ async function community(settings, key, record) {
     return response.json();
 }
 
-export async function processVideo(videoId, settings, signal, progress) {
+function formatted(record, settings, source) {
+    const formatWarnings = [];
+    const segments = formatTranscript(record.transcript, settings, formatWarnings);
+    return { record, segments, source, formatWarnings };
+}
+
+export async function processVideo(videoId, settings, signal, progress, { ignoreCache = false } = {}) {
     validateTranscription(settings);
     const descriptor = cacheDescriptor(videoId, settings), key = await cacheKey(descriptor);
-    let record = settings.cache ? await cacheOperation('get', key) : null;
-    // Before revision 2 a single unfinished word discarded every word time,
-    // leaving only the provider's long segments. Transcribe those once more.
-    if (record && settings.wordTimestamps && (record.revision || 1) < 2 && !record.transcript.words?.length
-        && record.transcript.warnings?.some(warning => warning.startsWith('Invalid word timestamps'))) record = null;
-    if (!record && settings.communityRead && settings.communityUrl) {
+    let record = settings.cache && !ignoreCache ? await cacheOperation('get', key) : null;
+    // Cached segment-only records can be reformatted locally. A paid retry
+    // requires the user's explicit Regenerate action, including old records.
+    if (!record && !ignoreCache && settings.communityRead && settings.communityUrl) {
         try {
             const shared = await community(settings, key);
             if (shared) {
@@ -45,7 +49,7 @@ export async function processVideo(videoId, settings, signal, progress) {
             }
         } catch { progress({ stage: 'cache', message: 'Community cache unavailable; continuing locally.' }); }
     }
-    if (record) return { record, segments: formatTranscript(record.transcript, settings), source: 'cache' };
+    if (record) return formatted(record, settings, 'cache');
     signal.throwIfAborted();
     if (settings.provider === 'openrouter' && !settings.apiKey) throw new Error('Set your OpenRouter API key first.');
     if (settings.provider === 'deepinfra') requireDeepInfraKey(settings);
@@ -83,13 +87,13 @@ export async function processVideo(videoId, settings, signal, progress) {
         });
         progress({ stage: 'processing', message: 'Combining subtitle timestamps…' });
         record = { key, descriptor, transcript: mergeChunks(parts), createdAt: new Date().toISOString(), revision: 2 };
-        const segments = formatTranscript(record.transcript, settings);
+        const result = formatted(record, settings, 'transcription');
         if (settings.cache) await cacheOperation('put', record);
         if (settings.communityShare && settings.communityUrl) {
             try { await community(settings, key, record); }
             catch { progress({ stage: 'cache', message: 'Subtitles ready; community upload failed.' }); }
         }
-        return { record, segments, source: 'transcription' };
+        return result;
     } finally {
         if (job?.id) await backend(settings, `/jobs/${job.id}`, { method: 'DELETE' }).catch(() => {});
     }
