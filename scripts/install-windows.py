@@ -23,7 +23,7 @@ def main():
     required = {name: shutil.which(name) for name in ('node', 'ffmpeg', 'ffprobe')}
     if not all(required.values()):
         raise RuntimeError('Install Node.js, FFmpeg and FFprobe before running this installer')
-    if not args.executable.is_file() or not (ROOT / 'dist' / 'extension' / 'manifest.json').is_file():
+    if not args.executable.is_file() or not (ROOT / 'dist' / 'chromium' / 'manifest.json').is_file():
         raise RuntimeError('Browser executable or compiled extension is missing')
     directory = private_directory(state_directory())
     token_file = directory / 'token.private.json'

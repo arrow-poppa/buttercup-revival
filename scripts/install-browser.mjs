@@ -11,7 +11,7 @@ const state = path.join(process.env.LOCALAPPDATA, 'ButtercupRevival');
 const configPath = path.join(state, 'installation.windows.json');
 const config = JSON.parse(await readFile(configPath, 'utf8'));
 const { token } = JSON.parse(await readFile(path.join(state, 'token.private.json'), 'utf8'));
-const extension = path.join(root, 'dist', 'extension');
+const extension = path.join(root, 'dist', 'chromium');
 let context;
 try {
     const args = config.browser_kind === 'edge'

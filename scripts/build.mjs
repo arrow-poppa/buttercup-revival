@@ -1,9 +1,10 @@
 import { cp, mkdir, readFile, writeFile, rm, realpath } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { zipDirectory } from './zip-directory.mjs';
 const root = fileURLToPath(new URL('../', import.meta.url));
-const target = path.join(root, 'dist', 'extension');
-if (path.relative(root, target) !== path.join('dist', 'extension')) throw new Error('Unsafe build path');
+const target = path.join(root, 'dist', 'chromium');
+if (path.relative(root, target) !== path.join('dist', 'chromium')) throw new Error('Unsafe build path');
 await mkdir(path.join(root, 'dist'), { recursive: true });
 if (await realpath(path.join(root, 'dist')) !== path.join(await realpath(root), 'dist')) throw new Error('Build directory must stay inside the project');
 await rm(target, { recursive: true, force: true });
@@ -16,7 +17,7 @@ await mkdir(path.join(target, 'assets', 'js'), { recursive: true });
 await cp(path.join(root, 'assets', 'css', 'popup.css'), path.join(target, 'assets', 'css', 'popup.css'));
 await cp(path.join(root, 'assets', 'js', 'buttons.js'), path.join(target, 'assets', 'js', 'buttons.js'));
 const manifest = JSON.parse(await readFile(path.join(target, 'manifest.json'), 'utf8'));
-// The Chromium target retains its original manifest and directory. Gecko gets
+// The Chromium target retains its original manifest. Gecko gets
 // only a manifest conversion and the compatibility files it actually needs.
 const firefox = path.join(root, 'dist', 'firefox');
 await rm(firefox, { recursive: true, force: true });
@@ -41,6 +42,7 @@ for (const file of ['popup.html', 'background/offscreen.html']) {
     const compat = file.includes('/') ? '../gecko/compat.js' : 'gecko/compat.js';
     await writeFile(name, source.replace(/<script\b/, `<script src="${compat}"></script>\n<script`));
 }
-await writeFile(path.join(root, 'dist', 'BUILD.txt'), `Buttercup Revival ${manifest.version}\nChromium: extension/\nFirefox and compatible Gecko browsers: firefox/\nSee docs/firefox.md for installation and limitations.\n`);
+await zipDirectory(firefox, path.join(root, 'dist', 'firefox-unsigned.zip'));
+await writeFile(path.join(root, 'dist', 'BUILD.txt'), `Buttercup Revival ${manifest.version}\nChromium: chromium/\nFirefox: firefox/ and firefox-unsigned.zip\nSee docs/firefox.md for installation and limitations.\n`);
 console.log(`Built ${manifest.name} ${manifest.version}: ${firefox}`);
 console.log(`Built ${manifest.name} ${manifest.version}: ${target}`);

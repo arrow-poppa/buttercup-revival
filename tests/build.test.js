@@ -8,10 +8,10 @@ const read = file => readFile(new URL('../' + file, import.meta.url), 'utf8');
 
 test('one build produces a preserved Chromium manifest and a private persistent Gecko target', async () => {
     execFileSync(process.execPath, ['scripts/build.mjs'], { cwd: root });
-    const source = await read('manifest.json'), chromium = await read('dist/extension/manifest.json');
+    const source = await read('manifest.json'), chromium = await read('dist/chromium/manifest.json');
     assert.equal(chromium, source);
-    assert.equal(await read('dist/extension/api/storage.js'), await read('api/storage.js'));
-    assert.equal(await read('dist/extension/popup.html'), await read('popup.html'));
+    assert.equal(await read('dist/chromium/api/storage.js'), await read('api/storage.js'));
+    assert.equal(await read('dist/chromium/popup.html'), await read('popup.html'));
     const firefox = JSON.parse(await read('dist/firefox/manifest.json'));
     const identity = JSON.parse(await read('gecko/manifest.json')).browser_specific_settings;
     assert.deepEqual(firefox.browser_specific_settings, identity);

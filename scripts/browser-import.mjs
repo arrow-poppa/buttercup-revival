@@ -11,7 +11,7 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const workspace = path.join(root, 'test-results');
 await mkdir(workspace, { recursive: true });
 const profile = await mkdtemp(path.join(workspace, 'import-'));
-const extension = path.join(root, 'dist/extension');
+const extension = path.join(root, 'dist/chromium');
 let context;
 try {
     context = await chromium.launchPersistentContext(profile, {

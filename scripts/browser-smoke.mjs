@@ -14,7 +14,7 @@ if (await realpath(workspace) !== path.join(await realpath(root), 'test-results'
 const profile = await mkdtemp(path.join(workspace, 'browser-'));
 await mkdir(path.join(profile, 'Default'), { recursive: true });
 await writeFile(path.join(profile, 'Default', 'Preferences'), JSON.stringify({ download: { default_directory: workspace, prompt_for_download: false } }));
-const extension = path.join(root, 'dist', 'extension');
+const extension = path.join(root, 'dist', 'chromium');
 const counts = { extracts: 0, transcriptions: 0, deletes: 0, sends: 0 };
 let chatRequests = 0;
 let invalidChatTiming = false;

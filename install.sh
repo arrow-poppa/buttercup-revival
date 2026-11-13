@@ -77,7 +77,7 @@ step 4 'Connecting the assistant to your browsers'
 .venv/bin/python scripts/setup-assistant.py || fail 'Could not register the assistant.'
 
 step 5 'One last step, done by you in the browser'
-extension="$root/dist/extension"
+extension="$root/dist/chromium"
 printf '\n\033[32m  Installed! Now add the extension to your browser:\033[0m\n\n'
 note '1. Open your Chromium-based browser and go to:   chrome://extensions'
 note '2. Turn on "Developer mode" (a switch on that page).'

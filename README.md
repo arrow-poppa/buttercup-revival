@@ -118,7 +118,7 @@ Browsers only install extensions automatically from their store, so this one ste
 1. Open your Chromium-based browser and type **`chrome://extensions`** in the address bar, then press Enter.
 2. Turn on **Developer mode** (top right in Chrome, left side in Edge).
 3. Click **Load unpacked**.
-4. Choose the folder **`dist/extension`** inside the Buttercup folder. On Windows the installer already copied its address: press **Ctrl + V** in the folder window, then **Select Folder**.
+4. Choose the folder **`dist/chromium`** inside the Buttercup folder. On Windows the installer already copied its address: press **Ctrl + V** in the folder window, then **Select Folder**.
 
 <img src="docs/images/load-unpacked.png" width="760" alt="The extensions page with Developer mode on and the Load unpacked button">
 
@@ -317,14 +317,14 @@ docs/                          Technical notes, upstream analysis, validation lo
 <details>
 <summary><b>Building and testing</b></summary>
 
-Requires Python 3.11+, Node.js 22+ and FFmpeg.
+Requires Python 3.11+, Node.js 22+ and FFmpeg. Each installer run asks pip to upgrade yt-dlp and pytubefix to the latest stable versions compatible with the installed Python and dependency requirements.
 
 ```sh
 python -m venv .venv
 .venv/bin/python -m pip install -r backend/requirements-dev.txt   # Windows: .venv\Scripts\python.exe
 npm ci
 
-npm run build                       # generates dist/extension (Chromium) and dist/firefox (Gecko)
+npm run build                       # generates dist/chromium, dist/firefox and dist/firefox-unsigned.zip
 npm run package                     # builds the release archive, dist/Buttercup-Revival.zip
 npm test                            # JavaScript unit tests
 .venv/bin/python -m pytest tests/backend -q

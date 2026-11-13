@@ -69,7 +69,7 @@ def main():
     if args.settings and not args.backend_only and config.get('browser'):
         browser_args = [config['browser'], '--user-data-dir=' + config['browser_profile'], '--no-first-run']
         if config.get('browser_kind') == 'edge':
-            browser_args.append('--load-extension=' + str(ROOT / 'dist' / 'extension'))
+            browser_args.append('--load-extension=' + str(ROOT / 'dist' / 'chromium'))
         browser_args.append(f'chrome-extension://{config["extension_id"]}/popup.html' if args.settings else 'https://www.youtube.com/')
         # This is the interactive browser the user explicitly opens via the shortcut.
         subprocess.Popen(browser_args, cwd=ROOT)

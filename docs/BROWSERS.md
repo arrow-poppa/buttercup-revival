@@ -6,7 +6,7 @@ Buttercup targets desktop Chromium browsers on Windows and Linux that support un
 
 ## Automatic registration
 
-Run `Install Buttercup.cmd` on Windows or `sh install.sh` on Linux, then load `dist/extension` from your browser's extensions page (`chrome://extensions`, or its browser-specific equivalent). Click **Start and connect** in Buttercup.
+Run `Install Buttercup.cmd` on Windows or `sh install.sh` on Linux, then load `dist/chromium` from your browser's extensions page (`chrome://extensions`, or its browser-specific equivalent). Click **Start and connect** in Buttercup.
 
 On Linux the installer registers these configuration directories below `$XDG_CONFIG_HOME` (default: `~/.config`):
 

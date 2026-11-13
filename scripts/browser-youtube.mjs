@@ -8,7 +8,7 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const output = path.join(root, 'test-results'); await mkdir(output, { recursive: true });
 if (await realpath(output) !== path.join(await realpath(root), 'test-results')) throw new Error('Test artifacts must stay inside the project');
 const profile = await mkdtemp(path.join(output, 'youtube-browser-'));
-const extension = path.join(root, 'dist', 'extension');
+const extension = path.join(root, 'dist', 'chromium');
 let context;
 const report = { realYoutube: true, syntheticCues: true, transcriptionProviderUsed: false };
 try {

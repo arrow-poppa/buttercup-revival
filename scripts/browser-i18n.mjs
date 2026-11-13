@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const workspace = path.join(root, 'test-results');
 await mkdir(workspace, { recursive: true });
-const extension = path.join(root, 'dist/extension');
+const extension = path.join(root, 'dist/chromium');
 const cases = [
     ['en-US', 'en', 'Connect', 'Local assistant'],
     ['pt-BR', 'pt-BR', 'Conectar', 'Assistente local'],

@@ -42,7 +42,7 @@ try {
     context = await chromium.launchPersistentContext(profile, { locale: 'en-US',
         headless: true,
         ...(process.env.BUTTERCUP_BROWSER ? { executablePath: process.env.BUTTERCUP_BROWSER } : { channel: 'chromium' }),
-        args: [`--disable-extensions-except=${path.join(root, 'dist', 'extension')}`, `--load-extension=${path.join(root, 'dist', 'extension')}`],
+        args: [`--disable-extensions-except=${path.join(root, 'dist', 'chromium')}`, `--load-extension=${path.join(root, 'dist', 'chromium')}`],
     });
     let worker = context.serviceWorkers()[0] || await context.waitForEvent('serviceworker');
     const id = new URL(worker.url()).host;

@@ -11,7 +11,7 @@ const workspace = path.join(root, 'test-results');
 await mkdir(workspace, { recursive: true });
 if (await realpath(workspace) !== path.join(await realpath(root), 'test-results')) throw new Error('Test artifacts must stay inside the project');
 const profile = await mkdtemp(path.join(workspace, 'settings-browser-'));
-const extension = path.join(root, 'dist', 'extension');
+const extension = path.join(root, 'dist', 'chromium');
 const executablePath = process.env.BUTTERCUP_BROWSER || undefined;
 let context, browserVersion;
 try {

@@ -4,10 +4,10 @@ Buttercup builds two extensions from the same codebase:
 
 | Build | Runtime | Directory |
 | --- | --- | --- |
-| Chromium 120+ | Manifest V3 service worker + offscreen document | `dist/extension` |
+| Chromium 120+ | Manifest V3 service worker + offscreen document | `dist/chromium` |
 | Firefox/Gecko 140+ | Manifest V2 persistent background page + private processing frame | `dist/firefox` |
 
-Run `npm run build` to generate both. Chromium retains its manifest, public key, extension ID, permissions and offscreen behavior. The Python assistant, transcription pipeline, providers, subtitles, cache, popup, settings format and integrations are shared. `npm run package` includes both builds in the local ZIP; it packages **committed HEAD**, not uncommitted edits. Building or packaging does not publish a release.
+Run `npm run build` to generate both directories and `dist/firefox-unsigned.zip`, an extension-only archive with the manifest at its root for Mozilla submission. The ZIP is unsigned. Chromium retains its manifest, public key, extension ID, permissions and offscreen behavior. The Python assistant, transcription pipeline, providers, subtitles, cache, popup, settings format and integrations are shared. `npm run package` includes both builds in the local ZIP; it packages **committed HEAD**, not uncommitted edits. Building or packaging does not publish a release.
 
 ## No processing tab
 

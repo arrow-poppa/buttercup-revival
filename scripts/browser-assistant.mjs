@@ -31,7 +31,7 @@ const server = createServer((req, res) => {
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
 const local = `http://127.0.0.1:${server.address().port}`;
 try {
-    const extension = path.join(root, 'dist', 'extension');
+    const extension = path.join(root, 'dist', 'chromium');
     context = await chromium.launchPersistentContext(profile, { locale: 'en-US',
         headless: true,
         ...(process.env.BUTTERCUP_BROWSER ? { executablePath: process.env.BUTTERCUP_BROWSER } : { channel: 'chromium' }),

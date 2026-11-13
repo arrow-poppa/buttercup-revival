@@ -90,7 +90,7 @@ try {
     Invoke-Checked 'Could not register the assistant.' { & $Venv (Join-Path $Root 'scripts\setup-assistant.py') }
 
     Step 5 'One last step, done by you in the browser'
-    $Extension = Join-Path $Root 'dist\extension'
+    $Extension = Join-Path $Root 'dist\chromium'
     try { Set-Clipboard -Value $Extension } catch {}
     Write-Host ''
     Write-Host ('  ' + 'Installed! Now add the extension to your browser:') -ForegroundColor Green
