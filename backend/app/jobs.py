@@ -19,6 +19,7 @@ class Job:
     directory: Path
     audio_track: str = 'default'
     audio_mode: str = 'chunks'
+    audio_format: str = 'mp3'
     state: str = "queued"
     progress: dict = field(default_factory=dict)
     chunks: list = field(default_factory=list)
@@ -31,7 +32,7 @@ class Job:
     def public(self):
         return {"id": self.id, "video_id": self.video, "state": self.state,
                 "progress": self.progress, "chunks": self.chunks, "error": self.error, "audio_track": self.audio_track,
-                "audio_mode": self.audio_mode}
+                "audio_mode": self.audio_mode, "audio_format": self.audio_format}
 
 
 class Jobs:
@@ -54,14 +55,14 @@ class Jobs:
         if size > self.settings.max_storage_mb * 1024 * 1024:
             raise ValueError("Backend storage limit reached; delete completed jobs or increase the limit")
 
-    def create(self, video, chunk_seconds, max_upload, audio_track='default', audio_mode='chunks'):
+    def create(self, video, chunk_seconds, max_upload, audio_track='default', audio_mode='chunks', audio_format='mp3'):
         if len(self.items) >= self.settings.max_jobs:
             raise ValueError("Too many jobs; wait or delete existing jobs")
         self.guard()
         identifier = uuid.uuid4().hex
         directory = self.directory / identifier
         directory.mkdir(mode=0o700)
-        job = Job(identifier, video, directory, audio_track=audio_track, audio_mode=audio_mode)
+        job = Job(identifier, video, directory, audio_track=audio_track, audio_mode=audio_mode, audio_format=audio_format)
         self.items[identifier] = job
         # Capture explicitly imported cookies at submission; no cookies enter job metadata.
         cookiefile = self.cookies.snapshot(directory)
@@ -89,6 +90,8 @@ class Jobs:
                     raise ValueError("Extractor returned an invalid audio file")
                 job.state = "converting"
                 extra = {'mode': job.audio_mode} if job.audio_mode != 'chunks' else {}
+                if job.audio_format != 'mp3':
+                    extra['audio_format'] = job.audio_format
                 job.chunks = await prepare_audio(source, job.directory, self.settings, chunk_seconds,
                     max_upload, job.cancel, lambda value: setattr(job, "progress", value), self.guard, **extra)
                 job.progress = {"stage": "ready", "extractor": result.get("extractor"), "attempts": result.get("attempts", [])}

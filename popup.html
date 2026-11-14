@@ -117,13 +117,16 @@
 </details>
 <details><summary>Audio upload (advanced)</summary>
 <p class="hint">How the audio is sent to the API. This does not change how subtitles look.</p>
+<input type="hidden" data-setting="audioFormatProfiles" value="{}">
+<label>Audio format<select id="audio-format"><option value="mp3">MP3 — smaller uploads (default)</option><option value="flac">FLAC — lossless encoding, usually larger uploads</option></select></label>
+<p class="hint">Saved separately for each provider and model. Both formats use 16 kHz mono audio. FLAC avoids another lossy encoding step; model support varies. Cached subtitles are reused. Use Regenerate to request a new transcription with this format; API charges may apply. Sample tests send your selected file unchanged.</p>
 <label>Audio sending<select data-setting="audioMode"><option value="chunks">In parts (works with long videos)</option><option value="whole">Whole audio (a single request)</option></select></label>
 <p id="whole-audio-hint" class="hint" hidden>Sends the complete audio once, without cuts by Buttercup. It must fit the limit below and be accepted by the model. If the request fails there is no automatic resend; you may need to raise the timeout. The provider may still split the audio internally.</p>
 <div id="chunk-options"><label>Simultaneous requests<select data-setting="parallelRequests"><option value="1">1 — one at a time</option><option value="2">2 — faster</option><option value="3">3 — faster, needs a higher API limit</option></select></label>
 <p class="hint">Sends parts to the same provider in parallel and keeps the subtitle order. On an error it starts no more parts and tries no other provider. Requests already sent may be charged by the API.</p>
 <label>Part length (seconds)<input type="number" data-setting="chunkSeconds" min="5" max="1200"></label></div>
 <label>Max size of one upload (MB)<input type="number" data-setting="maxUploadMb" min="1" max="100"></label>
-<p class="hint">A limit per request, not per video: about 45 minutes of audio fit in 24 MB. Parts overlap by 1.5 s so no word is lost at a cut. Groq and OpenRouter reject uploaded files above 25 MB, also on paid plans; raise this only for an API that accepts more.</p>
+<p class="hint">A limit per request, not per video. MP3 at 64 kbps uses about 0.48 MB per minute; FLAC size varies with the audio. Parts overlap by 1.5 s. Keep this limit within your provider's upload allowance.</p>
 <label>Request timeout (seconds)<input type="number" data-setting="timeoutSeconds" min="10" max="600"></label>
 </details>
 <details id="backend-advanced"><summary>Local connection — advanced options</summary>

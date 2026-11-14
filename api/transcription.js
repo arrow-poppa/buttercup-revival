@@ -1,5 +1,5 @@
 import { backend } from './backend.js';
-import { validateTranscription, requireDeepInfraKey, requireGroqKey } from './config.js';
+import { validateTranscription, requireDeepInfraKey, requireGroqKey, audioFormat } from './config.js';
 import { transcribe } from './provider.js';
 import { cacheDescriptor, cacheKey, cacheOperation, publicRecord } from '../cache/local.js';
 import { normalize, mergeChunks, formatTranscript } from '../subtitles/formats.js';
@@ -56,10 +56,12 @@ export async function processVideo(videoId, settings, signal, progress, { ignore
     if (settings.provider === 'groq') requireGroqKey(settings);
     if (!settings.backendToken) throw new Error('Pair the local backend first.');
     const whole = settings.audioMode === 'whole';
-    if (settings.audioTrack === 'original' || whole) {
+    const format = audioFormat(settings);
+    if (settings.audioTrack === 'original' || whole || format === 'flac') {
         const health = await backend(settings, '/health', { signal });
         if (settings.audioTrack === 'original' && !health.audio_track_selection?.includes('original')) throw new Error('Restart the local Buttercup backend to enable original audio selection.');
         if (whole && !health.audio_modes?.includes('whole')) throw new Error('Restart the local Buttercup assistant to enable whole-audio uploads. No audio was sent.');
+        if (format === 'flac' && !health.audio_formats?.includes('flac')) throw new Error('Update the local Buttercup assistant by running the installer, then restart it to enable FLAC uploads. No audio was sent.');
     }
     let job;
     try {
@@ -67,6 +69,7 @@ export async function processVideo(videoId, settings, signal, progress, { ignore
         job = await backend(settings, '/jobs/extract', { method: 'POST', body: JSON.stringify({
             video: videoId, chunk_seconds: settings.chunkSeconds, max_upload_bytes: settings.maxUploadMb * 1000000,
             ...(whole ? { audio_mode: 'whole' } : {}),
+            ...(format === 'flac' ? { audio_format: 'flac' } : {}),
             ...(settings.audioTrack === 'original' ? { audio_track: 'original' } : {}) }), signal });
         while (!['ready', 'error', 'cancelled'].includes(job.state)) {
             await pause(700, signal);
@@ -76,10 +79,12 @@ export async function processVideo(videoId, settings, signal, progress, { ignore
         if (job.state !== 'ready') throw new Error(job.error?.message || 'Extraction cancelled');
         if (settings.audioTrack === 'original' && job.audio_track !== 'original') throw new Error('Backend did not confirm original audio selection. No audio was sent to the provider.');
         if (whole && (job.audio_mode !== 'whole' || job.chunks?.length !== 1 || job.chunks[0].offset !== 0)) throw new Error('Backend did not confirm a whole-audio upload. No audio was sent to the provider.');
+        if ((format === 'flac' && job.audio_format !== 'flac') || (job.audio_format && job.audio_format !== format)) throw new Error('The assistant did not confirm the selected audio format. No audio was sent to the provider.');
         const parts = await transcribeChunks(job.chunks, settings.parallelRequests || 1, signal, async (chunk, requestSignal, done) => {
             progress({ stage: 'transcribing', message: whole ? 'Transcribing the whole audio in one request…'
                 : `Transcribing part ${chunk.index + 1}/${job.chunks.length} (${Math.round(chunk.offset)}–${Math.round(chunk.offset + chunk.duration)}s${chunk.size ? `, ${(chunk.size / 1000000).toFixed(2)} MB` : ''})…`, progress: done / job.chunks.length });
             const audio = await backend(settings, `/jobs/${job.id}/chunks/${chunk.index}`, { blob: true, signal: requestSignal });
+            if (format === 'flac' && !['audio/flac', 'audio/x-flac'].includes(audio.type)) throw new Error('The assistant returned an unexpected audio format. No audio was sent for this part.');
             requestSignal.throwIfAborted();
             const transcript = normalize(await transcribe(settings, audio, requestSignal));
             if (!transcript.words.length && !transcript.segments.length) throw new Error('Provider returned text without timestamps; synchronized captions require another model.');

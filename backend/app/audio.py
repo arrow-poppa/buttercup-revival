@@ -28,7 +28,9 @@ def chunk_plan(duration: float, seconds: int, overlap: float = 1.5) -> list[Chun
     return result
 
 
-async def prepare_audio(source: Path, directory: Path, settings, seconds, max_upload, cancel, progress, guard, mode='chunks'):
+async def prepare_audio(source: Path, directory: Path, settings, seconds, max_upload, cancel, progress, guard, mode='chunks', audio_format='mp3'):
+    if audio_format not in ('mp3', 'flac'):
+        raise ValueError('Invalid audio format')
     result = await run([settings.ffprobe, "-v", "error", "-show_entries", "format=duration",
                         "-of", "json", str(source)], cancel, guard=guard)
     try:
@@ -39,27 +41,46 @@ async def prepare_audio(source: Path, directory: Path, settings, seconds, max_up
         raise ValueError("Audio exceeds the configured duration limit or is invalid")
     # 64 kbps mono MP3; retain headroom for metadata and multipart overhead.
     if mode == 'whole':
-        if duration * 8000 > max_upload * .9:
+        if audio_format == 'mp3' and duration * 8000 > max_upload * .9:
             raise ValueError('The whole audio exceeds the selected upload limit. Choose Parts or increase the upload limit within your API limits. No audio was sent to the provider.')
         chunks = [Chunk(0, 0.0, duration)]
     elif mode == 'chunks':
-        seconds = min(seconds, max(5, int(max_upload * 0.9 / 8000)))
+        # FLAC is variable-rate. Start with a conservative 16-bit PCM estimate,
+        # then enforce the actual encoded size before any provider upload.
+        bytes_per_second = 32000 if audio_format == 'flac' else 8000
+        seconds = min(seconds, max(5, int(max_upload * 0.9 / bytes_per_second)))
         chunks = chunk_plan(duration, seconds)
     else:
         raise ValueError('Invalid audio sending mode')
-    for chunk in chunks:
+    index = 0
+    while index < len(chunks):
+        chunk = chunks[index]
         if cancel.is_set():
             import asyncio
             raise asyncio.CancelledError
         progress({"stage": "converting", "progress": chunk.index / len(chunks)})
-        target = directory / f"chunk-{chunk.index}.mp3"
+        target = directory / f"chunk-{chunk.index}.{audio_format}"
+        encoding = ['-c:a', 'flac', '-sample_fmt', 's16'] if audio_format == 'flac' else ['-c:a', 'libmp3lame', '-b:a', '64k']
         await run([settings.ffmpeg, "-nostdin", "-hide_banner", "-loglevel", "error", "-y",
                    "-ss", str(chunk.offset), "-i", str(source), "-t", str(chunk.duration),
-                   "-vn", "-ac", "1", "-ar", "16000", "-c:a", "libmp3lame", "-b:a", "64k", str(target)],
+                   "-vn", "-ac", "1", "-ar", "16000", *encoding, str(target)],
                   cancel, timeout=max(120, chunk.duration * 2), guard=guard)
         chunk.size = target.stat().st_size
         if chunk.size > max_upload:
+            target.unlink(missing_ok=True)
+            if audio_format == 'flac' and mode == 'chunks':
+                if chunk.duration <= 5:
+                    raise ValueError('A five-second FLAC part exceeds the upload limit. Increase the limit within your API allowance or choose MP3; no audio was sent to the provider.')
+                shorter = max(5, chunk.duration / 2)
+                remaining = chunk_plan(duration - chunk.offset, shorter)
+                for position, part in enumerate(remaining, start=index):
+                    part.index = position
+                    part.offset += chunk.offset
+                chunks[index:] = remaining
+                guard()
+                continue
             raise ValueError("Converted audio exceeds the selected upload limit. Choose Parts or reduce chunk duration; no audio was sent to the provider.")
         guard()
+        index += 1
     source.unlink(missing_ok=True)
     return [asdict(chunk) for chunk in chunks]

@@ -1,5 +1,15 @@
 # Validação — 10/11/2026
 
+## MP3/FLAC provider profiles — 2026-11-14 (unreleased)
+
+- Linux validation: **125 JavaScript tests and 94 backend tests passed**, with no skipped tests. The backend suite reports an existing Starlette/httpx deprecation warning.
+- Real FFmpeg/FFprobe checks verify MP3 at 64 kbps and FLAC with 16-bit samples, both at 16 kHz mono, encoded from a generated 48 kHz stereo source. Tests cover offsets/overlap, actual file-size limits, highly compressible whole-audio FLAC, oversized minimum parts, adaptive splitting and cancellation. These are generated fixtures, not a transcription accuracy benchmark.
+- Chromium **151.0.7922.34** passed the settings suite across four complete browser restarts, including independent route/model format preferences. The disposable profile enables Developer mode because current Chromium disables unpacked extensions on runtime reload otherwise.
+- Chromium DeepInfra and Groq suites passed: selecting FLAC does not convert sample uploads or invalidate cached subtitles; explicit regeneration sends FLAC filenames and MIME types for every part. Provider requests, extraction and YouTube pages are simulated; no paid requests were made.
+- Firefox **159.0** passed the native-assistant runtime harness, including exact-origin/token checks, the real format selector, model switching, popup recreation, cache reuse and explicit FLAC regeneration. Its transcription/audio-transfer fixtures are synthetic; actual encoding is checked separately by the FFmpeg tests.
+- Both Chromium and Gecko build targets, including the Gecko ZIP, are generated and checked by the build test. Existing MP3 settings and older assistants retain the default path; FLAC requires advertised assistant support and matching job metadata/MIME before upload. Legacy settings imports reset format preferences to MP3.
+- Windows runtime, additional Gecko forks and live paid-provider FLAC acceptance were not retested for this change. Model-specific format support and any accuracy benefit remain unverified; rejected uploads are never automatically retried with another format/provider. No release was published.
+
 Ambiente local: Windows, Python 3.14.6, Node.js 26.4.0, FFmpeg/FFprobe 9.0.2, yt-dlp 2026.8.19, yt-dlp-ejs 0.8.0, pytubefix 11.2.1.
 
 ## Executado localmente

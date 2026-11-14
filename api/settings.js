@@ -1,5 +1,5 @@
 import { settingsStorage } from './storage.js';
-import { DEFAULTS, validateSettings, redact } from './config.js';
+import { DEFAULTS, validateSettings, validateAudioFormatProfiles, redact } from './config.js';
 
 export const DRAFT_PREFIX = 'draftSetting:';
 // The popup immediately persists individual fields. Only activation of a valid
@@ -15,7 +15,7 @@ export function formDraft(settings) {
     return Object.fromEntries(Object.entries(DEFAULTS).map(([key, fallback]) => {
         const raw = settings[key] ?? fallback;
         const value = typeof fallback === 'boolean' ? (typeof raw === 'boolean' ? raw : fallback)
-            : key === 'extraHeaders' ? (typeof raw === 'string' ? raw : JSON.stringify(raw))
+            : ['extraHeaders', 'audioFormatProfiles'].includes(key) ? (typeof raw === 'string' ? raw : JSON.stringify(raw))
             : typeof raw === 'string' || typeof raw === 'number' ? String(raw) : String(fallback);
         return [key, value];
     }));
@@ -27,7 +27,10 @@ export function draftSettings(draft) {
         const raw = draft[key];
         if (typeof fallback === 'boolean') value[key] = raw;
         else if (typeof fallback === 'number') value[key] = raw.trim() === '' ? NaN : Number(raw);
-        else if (key === 'extraHeaders') {
+        else if (key === 'audioFormatProfiles') {
+            try { value[key] = validateAudioFormatProfiles(JSON.parse(raw || '{}')); }
+            catch { throw new Error('Invalid audio format preferences'); }
+        } else if (key === 'extraHeaders') {
             try { value[key] = JSON.parse(raw || '{}'); }
             catch {
                 if (['deepinfra', 'groq'].includes(draft.provider)) value[key] = {};
@@ -63,12 +66,18 @@ export function importDraft(data) {
     if (settings && typeof settings === 'object' && !Array.isArray(settings)) {
         for (const [key, fallback] of Object.entries(DEFAULTS)) {
             const raw = settings[key];
+            if (key === 'audioFormatProfiles' && raw !== undefined) {
+                try { patch[key] = JSON.stringify(validateAudioFormatProfiles(typeof raw === 'string' ? JSON.parse(raw) : raw)); }
+                catch { throw new Error('Invalid audio format preferences'); }
+                continue;
+            }
             if (LOCAL_ONLY.includes(key) || typeof raw !== (typeof fallback === 'boolean' ? 'boolean' : 'string')
                 || typeof raw === 'string' && raw.length > 32768) continue;
             patch[key] = raw;
         }
     }
     if (!Object.keys(patch).length) throw new Error('This is not a Buttercup settings file.');
+    if (!Object.hasOwn(patch, 'audioFormatProfiles')) patch.audioFormatProfiles = '{}';
     return patch;
 }
 

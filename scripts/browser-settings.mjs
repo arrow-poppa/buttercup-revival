@@ -23,6 +23,15 @@ try {
         });
         const worker = context.serviceWorkers()[0] || await context.waitForEvent('serviceworker', { timeout: 30000 });
         const extensionId = new URL(worker.url()).host;
+        if (round === 0) {
+            // Current Chromium disables an unpacked extension on runtime.reload
+            // unless Developer mode is enabled, just as in the installation guide.
+            const manager = await context.newPage();
+            await manager.goto('chrome://extensions');
+            const developerMode = manager.locator('#devMode');
+            if (!await developerMode.evaluate(toggle => toggle.checked)) await developerMode.click();
+            await manager.close();
+        }
         let popup = await context.newPage();
         if (round === 0) await popup.addInitScript(() => {
             const sendMessage = chrome.runtime.sendMessage.bind(chrome.runtime);
@@ -80,16 +89,21 @@ try {
                 await popup.locator('[data-setting="baseUrl"]').fill('http://127.0.0.1:9876/v1');
                 await popup.locator('[data-setting="customMode"]').selectOption('chat');
                 await popup.locator('[data-setting="customProvider"]').fill('custom-provider');
+                await popup.locator('#audio-format').selectOption('flac');
                 // Close immediately after editing, without Save or waiting for a reply.
             } else if (round === 2) {
                 assert.equal(await popup.locator('[data-setting="provider"]').inputValue(), 'custom');
                 assert.equal(await popup.locator('[data-setting="customMode"]').inputValue(), 'chat');
                 assert.equal(await popup.locator('[data-setting="customProvider"]').inputValue(), 'custom-provider');
                 assert.equal(await popup.locator('[data-setting="baseUrl"]').inputValue(), 'http://127.0.0.1:9876/v1');
+                assert.equal(await popup.locator('#audio-format').inputValue(), 'flac');
                 await popup.locator('[data-setting="provider"]').selectOption('deepinfra');
+                assert.equal(await popup.locator('#audio-format').inputValue(), 'mp3');
                 await popup.locator('[data-setting="deepinfraApiKey"]').fill('DEEPINFRA_PERSISTENCE_KEY');
                 await popup.locator('[data-setting="deepinfraModel"]').fill('openai/whisper-large-v3');
+                await popup.locator('#audio-format').selectOption('flac');
                 await popup.locator('[data-setting="provider"]').selectOption('groq');
+                assert.equal(await popup.locator('#audio-format').inputValue(), 'mp3');
                 await popup.locator('[data-setting="groqApiKey"]').fill('GROQ_PERSISTENCE_KEY');
                 await popup.locator('[data-setting="groqModel"]').fill('whisper-large-v3');
             } else if (round === 3) {
@@ -99,6 +113,7 @@ try {
                 assert.equal(await popup.locator('#groq-settings').isVisible(), true);
                 assert.equal(await popup.locator('#deepinfra-settings').isVisible(), false);
                 await popup.locator('[data-setting="provider"]').selectOption('deepinfra');
+                assert.equal(await popup.locator('#audio-format').inputValue(), 'flac');
                 await popup.locator('[data-setting="parallelRequests"]').selectOption('2');
                 await popup.locator('[data-setting="audioMode"]').selectOption('whole');
             } else {
@@ -109,6 +124,11 @@ try {
                 assert.equal(await popup.locator('[data-setting="groqModel"]').inputValue(), 'whisper-large-v3');
                 assert.equal(await popup.locator('[data-setting="audioMode"]').inputValue(), 'whole');
                 assert.equal(await popup.locator('[data-setting="parallelRequests"]').inputValue(), '2');
+                assert.equal(await popup.locator('#audio-format').inputValue(), 'flac');
+                await popup.locator('[data-setting="deepinfraModel"]').fill('Qwen/Qwen3-ASR-1.7B');
+                assert.equal(await popup.locator('#audio-format').inputValue(), 'mp3');
+                await popup.locator('[data-setting="deepinfraModel"]').fill('openai/whisper-large-v3');
+                assert.equal(await popup.locator('#audio-format').inputValue(), 'flac');
                 assert.equal(await popup.locator('#chunk-options').isVisible(), false);
             }
         }
@@ -121,9 +141,10 @@ try {
         passed: true, browser: browserVersion, fullBrowserRestarts: 4,
         openrouter: { mode: 'chat', pinnedProvider: 'groq' },
         custom: { mode: 'chat', pinnedProvider: 'custom-provider' },
+        audioFormats: { custom: 'flac', deepinfra: 'flac', groq: 'mp3', unconfiguredModel: 'mp3' },
         transcriptionRequests: 0,
     }, null, 2));
-    console.log('Settings persistence passed: routes, pins, DeepInfra/Groq keys and models survive four complete browser restarts, including edits saved without a worker reply.');
+    console.log('Settings persistence passed: routes, pins, keys, models and per-model audio formats survive four complete browser restarts, including edits saved without a worker reply.');
 } finally {
     await context?.close();
     if (path.dirname(profile) === workspace) await rm(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });

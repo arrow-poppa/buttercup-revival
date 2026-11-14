@@ -15,7 +15,7 @@ export const DEFAULTS = Object.freeze({
     wordTimestamps: true, responseFormat: 'verbose_json', supportsTranslation: false,
     wordsPerLine: 12, maxLineLength: 8, cueBreaks: 'speech', prompt: '',
     backendUrl: 'http://127.0.0.1:8767', backendToken: '',
-    audioMode: 'chunks', parallelRequests: 1,
+    audioMode: 'chunks', parallelRequests: 1, audioFormatProfiles: Object.freeze({}),
     chunkSeconds: 120, maxUploadMb: 24, timeoutSeconds: 150,
     cache: true, downloadSrt: false, saveFolder: '',
     communityUrl: '', communityRead: false, communityShare: false,
@@ -40,6 +40,36 @@ export function isOpenRouter(settings) {
 
 export function providerModel(settings) { return settings.provider === 'groq' ? settings.groqModel : settings.provider === 'deepinfra' ? settings.deepinfraModel : settings.model; }
 export function providerBaseUrl(settings) { return settings.provider === 'groq' ? GROQ_BASE_URL : settings.provider === 'deepinfra' ? DEEPINFRA_BASE_URL : settings.baseUrl; }
+
+// A profile describes a route, never its credentials or subtitle formatting.
+export function audioProfileKey(settings) {
+    const { model, pin } = providerRouting(settings);
+    const endpoint = baseUrl(settings.provider === 'openrouter' ? DEFAULTS.baseUrl : providerBaseUrl(settings));
+    const key = JSON.stringify([settings.provider, endpoint, isChat(settings) ? 'chat' : 'transcriptions', model, pin]);
+    validateAudioFormatProfiles({ [key]: 'mp3' });
+    return key;
+}
+
+export function validateAudioFormatProfiles(profiles) {
+    if (!profiles || typeof profiles !== 'object' || Array.isArray(profiles)
+        || ![Object.prototype, null].includes(Object.getPrototypeOf(profiles))
+        || Object.keys(profiles).length > 128 || JSON.stringify(profiles).length > 32768) throw new Error('Invalid audio format preferences');
+    for (const [key, format] of Object.entries(profiles)) {
+        let route;
+        try { route = JSON.parse(key); } catch { throw new Error('Invalid audio format preferences'); }
+        if (!Array.isArray(route) || route.length !== 5 || route.some(value => typeof value !== 'string')) throw new Error('Invalid audio format preferences');
+        const [provider, endpoint, mode, model, pin] = route;
+        if (!['openrouter', 'custom', 'deepinfra', 'groq'].includes(provider) || baseUrl(endpoint) !== endpoint
+            || !['chat', 'transcriptions'].includes(mode) || !model.trim() || model !== model.trim() || model.length > 200
+            || pin.length > 100 || pin && !/^[a-z0-9][a-z0-9._-]*(?:\/[a-z0-9][a-z0-9._-]*)*$/.test(pin)
+            || !['mp3', 'flac'].includes(format) || JSON.stringify(route) !== key) throw new Error('Invalid audio format preferences');
+    }
+    return { ...profiles };
+}
+
+export function audioFormat(settings) {
+    return settings.audioFormatProfiles?.[audioProfileKey(settings)] || 'mp3';
+}
 
 export function requireDeepInfraKey(settings) {
     if (!settings.deepinfraApiKey?.trim()) throw new Error('Set your DeepInfra API key first. Your OpenRouter key is stored separately.');
@@ -115,6 +145,7 @@ export function validateSettings(input) {
     if (!['openrouter', 'custom', 'deepinfra', 'groq'].includes(value.provider)) throw new Error('Invalid provider');
     if (!['default', 'original'].includes(value.audioTrack)) throw new Error('Invalid audio track');
     if (!['chunks', 'whole'].includes(value.audioMode)) throw new Error('Invalid audio sending mode');
+    value.audioFormatProfiles = validateAudioFormatProfiles(value.audioFormatProfiles);
     if (!['speech', 'words', 'provider'].includes(value.cueBreaks)) throw new Error('Invalid subtitle break mode');
     if (!['auto', 'light', 'dark'].includes(value.theme)) throw new Error('Invalid appearance');
     if (!['auto', 'en', 'pt-BR', 'es', 'ja', 'zh-CN'].includes(value.uiLanguage)) throw new Error('Invalid interface language');

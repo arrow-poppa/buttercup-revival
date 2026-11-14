@@ -20,7 +20,8 @@ await mkdir(workspace, { recursive: true });
 assert.equal(await realpath(workspace), path.join(await realpath(root), 'test-results'));
 const profile = await mkdtemp(path.join(workspace, `${provider}-browser-`));
 const counts = { extracts: 0, transcriptions: 0, router: 0, catalog: 0 };
-let fail = false, mixedTiming = false, context;
+let fail = false, mixedTiming = false, context, audioFormat = 'mp3';
+const uploadedFormats = [];
 const server = createServer(async (req, res) => {
     const bytes = []; for await (const chunk of req) bytes.push(chunk);
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -28,16 +29,18 @@ const server = createServer(async (req, res) => {
     res.setHeader('Content-Type', 'application/json');
     if (req.method === 'OPTIONS') return res.end('{}');
     assert.equal(req.headers.authorization, 'Bearer LOCAL_TEST_TOKEN');
-    if (req.url === '/health') return res.end(JSON.stringify({ status: 'ok', version: '0.2.0', audio_modes: ['chunks', 'whole'] }));
+    if (req.url === '/health') return res.end(JSON.stringify({ status: 'ok', version: '0.2.0', audio_modes: ['chunks', 'whole'], audio_formats: ['mp3', 'flac'] }));
     if (req.url === '/jobs/extract') {
         counts.extracts++;
-        const whole = JSON.parse(Buffer.concat(bytes)).audio_mode === 'whole';
-        return res.end(JSON.stringify({ id: 'job', state: 'ready', audio_mode: whole ? 'whole' : 'chunks', chunks: whole
+        const payload = JSON.parse(Buffer.concat(bytes));
+        const whole = payload.audio_mode === 'whole';
+        audioFormat = payload.audio_format || 'mp3';
+        return res.end(JSON.stringify({ id: 'job', state: 'ready', audio_format: audioFormat, audio_mode: whole ? 'whole' : 'chunks', chunks: whole
             ? [{ index: 0, offset: 0, duration: 509.321 }] : [{ index: 0, offset: 0, duration: 3 },
             ...(mixedTiming ? [{ index: 1, offset: 1.5, duration: 3 }] : [])] }));
     }
-    if (req.url === '/jobs/job/chunks/0') { res.setHeader('Content-Type', 'audio/mpeg'); return res.end('test audio'); }
-    if (req.url === '/jobs/job/chunks/1') { res.setHeader('Content-Type', 'audio/mpeg'); return res.end('fallback audio'); }
+    if (req.url === '/jobs/job/chunks/0') { res.setHeader('Content-Type', audioFormat === 'flac' ? 'audio/flac' : 'audio/mpeg'); return res.end('test audio'); }
+    if (req.url === '/jobs/job/chunks/1') { res.setHeader('Content-Type', audioFormat === 'flac' ? 'audio/flac' : 'audio/mpeg'); return res.end('fallback audio'); }
     if (req.url === '/jobs/job' && req.method === 'DELETE') return res.end('{}');
     res.statusCode = 404; res.end('{}');
 });
@@ -70,6 +73,10 @@ try {
         assert.equal(headers.authorization, `Bearer ${key}`);
         assert.equal(headers['x-openrouter-title'], undefined);
         const body = request.postData();
+        const format = body.match(/filename="audio\.(mp3|flac)"/)?.[1];
+        assert.ok(format, 'Upload filename must describe the selected audio encoding');
+        assert.ok(body.includes(`Content-Type: ${format === 'flac' ? 'audio/flac' : 'audio/mpeg'}`));
+        uploadedFormats.push(format);
         if (groq) {
             assert.match(body, /name="file"/); assert.match(body, /name="timestamp_granularities\[\]"\r\n\r\nword/);
             assert.match(body, /name="response_format"\r\n\r\nverbose_json/);
@@ -127,11 +134,14 @@ try {
     await processing.goto(`chrome-extension://${id}/background/offscreen.html`);
     await worker.evaluate(() => { chrome.offscreen.hasDocument = async () => true; });
     await popup.locator('#sample').setInputFiles({ name: 'sample.mp3', mimeType: 'audio/mpeg', buffer: Buffer.from('test audio') });
+    await popup.locator('#audio-format').selectOption('flac');
     await popup.locator('#provider-test').click();
     await popup.waitForFunction(() => document.getElementById('status').textContent.startsWith('Compatible:'), null, { timeout: 10000 }).catch(async error => {
         throw new Error(`Provider test did not finish: ${await popup.locator('#status').textContent()}; requests=${JSON.stringify(counts)}`, { cause: error });
     });
     assert.match(await popup.locator('#status').textContent(), /3 timed words/);
+    assert.equal(uploadedFormats.at(-1), 'mp3', 'Sample tests must keep the original file format');
+    await popup.locator('#audio-format').selectOption('mp3');
     const tabId = await worker.evaluate(async () => (await chrome.tabs.query({ url: 'https://www.youtube.com/*' }))[0].id);
     async function generate(expected) {
         await popup.evaluate(tabId => chrome.storage.session.remove(`status-${tabId}`), tabId);
@@ -221,6 +231,12 @@ try {
         document.getElementById('reload-settings').click();
     },tabId);
     await popup.locator('#settings-fields:not([disabled])').waitFor();
+    await popup.locator('#audio-format').selectOption('flac');
+    await popup.locator('.save').click();
+    await popup.waitForFunction(() => document.getElementById('status').textContent === 'Settings saved.');
+    const beforeFormatChange = { ...counts };
+    assert.equal((await generate('ready')).source, 'cache');
+    assert.deepEqual(counts, beforeFormatChange, 'Changing audio encoding must reuse cached subtitles');
     const beforeRegenerate = {...counts};
     await popup.evaluate(tabId => chrome.storage.session.remove(`status-${tabId}`),tabId);
     await popup.locator('#regenerate').click();
@@ -233,6 +249,7 @@ try {
     }
     assert.equal(counts.extracts,beforeRegenerate.extracts+1);
     assert.equal(counts.transcriptions,beforeRegenerate.transcriptions+2,'Explicit regenerate must refresh each audio part once');
+    assert.deepEqual(uploadedFormats.slice(-2), ['flac', 'flac'], 'Regenerate must upload both parts as FLAC');
     const afterMixed = { ...counts };
     assert.equal((await generate('ready')).source, 'cache');
     assert.deepEqual(counts, afterMixed, 'Mixed timestamp recovery must survive cached playback without another provider request');
@@ -258,7 +275,7 @@ try {
     await shortcutPage.waitForURL('chrome://extensions/shortcuts');
     await shortcutPage.close();
     await writeFile(path.join(workspace, `browser-${provider}.json`), JSON.stringify({ passed: true, browser: await context.browser()?.version(), counts, externalServices: 'simulated' }, null, 2));
-    console.log(`${label} passed: native ASR models, one-request whole audio, panels/keys, mixed timestamps, cache reformatting and failure without fallback.`);
+    console.log(`${label} passed: native ASR models, whole audio, panels/keys, mixed timestamps, cache reuse, unchanged samples, explicit FLAC regeneration and failure without fallback.`);
 } finally {
     await context?.close();
     await new Promise(resolve => server.close(resolve));

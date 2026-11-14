@@ -1,10 +1,11 @@
 import { DEEPINFRA_BASE_URL, redact, validateTranscription, requireDeepInfraKey } from './config.js';
+import { audioExtension } from './audio.js';
 
 export async function transcribeDeepInfra(settings, audio, signal) {
     const { model } = validateTranscription(settings);
     const key = requireDeepInfraKey(settings);
     const body = new FormData();
-    const extension = ['audio/wav', 'audio/x-wav'].includes(audio.type) ? 'wav' : 'mp3';
+    const extension = audioExtension(audio);
     body.append('audio', audio, `audio.${extension}`);
     // DeepInfra's native ASR schema exposes these fields for Whisper, Qwen ASR,
     // Voxtral and the other ASR catalog models. Request timing for all families.

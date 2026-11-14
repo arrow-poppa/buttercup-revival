@@ -1,5 +1,15 @@
 // English source string -> translation. See api/i18n.js.
 export default {
+    "Audio format": "音频格式",
+    "MP3 — smaller uploads (default)": "MP3 — 上传文件更小（默认）",
+    "FLAC — lossless encoding, usually larger uploads": "FLAC — 无损编码，上传文件通常更大",
+    "Saved separately for each provider and model. Both formats use 16 kHz mono audio. FLAC avoids another lossy encoding step; model support varies. Cached subtitles are reused. Use Regenerate to request a new transcription with this format; API charges may apply. Sample tests send your selected file unchanged.": "按提供商和模型分别保存。两种格式均使用16 kHz单声道音频。FLAC避免再次进行有损编码；支持情况因模型而异。仍会复用缓存字幕。要使用此格式重新转录，请选择“重新生成”；可能产生API费用。样本测试会原样发送所选文件。",
+    "A limit per request, not per video. MP3 at 64 kbps uses about 0.48 MB per minute; FLAC size varies with the audio. Parts overlap by 1.5 s. Keep this limit within your provider's upload allowance.": "这是每次请求的限制，而非整个视频的限制。64 kbps的MP3每分钟约占0.48 MB；FLAC大小因音频而异。分段之间重叠1.5秒。请勿超过提供商允许的上传大小。",
+    "Invalid audio format preferences": "音频格式偏好设置无效",
+    "Update the local Buttercup assistant by running the installer, then restart it to enable FLAC uploads. No audio was sent.": "请运行安装程序更新Buttercup本地助手，然后重启助手以启用FLAC上传。未发送任何音频。",
+    "The assistant did not confirm the selected audio format. No audio was sent to the provider.": "助手未确认所选音频格式。未向提供商发送任何音频。",
+    "The assistant returned an unexpected audio format. No audio was sent for this part.": "助手返回了意外的音频格式。未发送此分段的音频。",
+    "A five-second FLAC part exceeds the upload limit. Increase the limit within your API allowance or choose MP3; no audio was sent to the provider.": "五秒的FLAC分段超过上传限制。请在API允许范围内提高限制，或选择MP3；未向提供商发送任何音频。",
     "Import opens in a tab so the file picker stays available.": "导入会在标签页中打开，避免选择文件时弹窗关闭。",
     "Japanese, Chinese and other supported scripts without spaces use character counts for these limits. Latin words and numbers remain intact. Provider timestamps determine where a subtitle can split.": "日语、中文及其他受支持的不使用空格分词的文字按字符数计算这些上限。拉丁字母单词和数字串保持完整。字幕分割位置由服务商返回的时间戳决定。",
     "Better YouTube captions · Revival": "更好的 YouTube 字幕 · Revival",

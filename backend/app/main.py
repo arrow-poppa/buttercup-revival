@@ -35,6 +35,7 @@ class ExtractRequest(BaseModel):
     video: str = Field(min_length=11, max_length=2048)
     audio_track: Literal['default', 'original'] = 'default'
     audio_mode: Literal['chunks', 'whole'] = 'chunks'
+    audio_format: Literal['mp3', 'flac'] = 'mp3'
     chunk_seconds: int = Field(default=120, ge=5, le=1200)
     max_upload_bytes: int = Field(default=24_000_000, ge=100_000, le=100_000_000)
 
@@ -133,7 +134,7 @@ def create_app(settings: Settings):
                 "ffmpeg": bool(shutil.which(settings.ffmpeg)), "ffprobe": bool(shutil.which(settings.ffprobe)),
                 "js_runtime": settings.js_runtime, "js_runtime_available": bool(shutil.which(settings.js_runtime)),
                 "pytubefix_netscape_cookies": False, "audio_track_selection": ["default", "original"],
-                "audio_modes": ["chunks", "whole"], "subtitle_save": True}
+                "audio_modes": ["chunks", "whole"], "audio_formats": ["mp3", "flac"], "subtitle_save": True}
 
     async def stop_cookie_jobs():
         for job in list(app.state.jobs.items.values()):
@@ -190,7 +191,7 @@ def create_app(settings: Settings):
         except ValueError as error:
             raise HTTPException(400, str(error)) from None
         try:
-            return app.state.jobs.create(video, payload.chunk_seconds, payload.max_upload_bytes, payload.audio_track, payload.audio_mode).public()
+            return app.state.jobs.create(video, payload.chunk_seconds, payload.max_upload_bytes, payload.audio_track, payload.audio_mode, payload.audio_format).public()
         except ValueError as error:
             raise HTTPException(429, str(error)) from None
 
@@ -210,7 +211,8 @@ def create_app(settings: Settings):
         job = get_job(identifier)
         if job.state != "ready" or not 0 <= index < len(job.chunks):
             raise HTTPException(404, "Chunk unavailable")
-        return FileResponse(job.directory / f"chunk-{index}.mp3", media_type="audio/mpeg")
+        return FileResponse(job.directory / f"chunk-{index}.{job.audio_format}",
+                            media_type="audio/flac" if job.audio_format == 'flac' else "audio/mpeg")
 
     @app.post("/jobs/{identifier}/cancel")
     async def cancel(identifier: str):

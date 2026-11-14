@@ -1,5 +1,15 @@
 // English source string -> translation. See api/i18n.js.
 export default {
+    "Audio format": "音声形式",
+    "MP3 — smaller uploads (default)": "MP3 — アップロード容量が小さい（既定）",
+    "FLAC — lossless encoding, usually larger uploads": "FLAC — 可逆圧縮、通常はアップロード容量が大きい",
+    "Saved separately for each provider and model. Both formats use 16 kHz mono audio. FLAC avoids another lossy encoding step; model support varies. Cached subtitles are reused. Use Regenerate to request a new transcription with this format; API charges may apply. Sample tests send your selected file unchanged.": "プロバイダーとモデルごとに保存されます。どちらも16 kHzのモノラル音声を使用します。FLACは追加の非可逆圧縮を避けますが、対応状況はモデルによって異なります。キャッシュ済み字幕は再利用されます。この形式で新たに文字起こしするには「再生成」を使ってください。API料金が発生する場合があります。サンプルテストは選択したファイルをそのまま送信します。",
+    "A limit per request, not per video. MP3 at 64 kbps uses about 0.48 MB per minute; FLAC size varies with the audio. Parts overlap by 1.5 s. Keep this limit within your provider's upload allowance.": "動画全体ではなく、リクエストごとの上限です。64 kbpsのMP3は1分あたり約0.48 MBです。FLACのサイズは音声によって異なります。分割部分は1.5秒重複します。プロバイダーのアップロード上限を超えないように設定してください。",
+    "Invalid audio format preferences": "音声形式の設定が正しくありません",
+    "Update the local Buttercup assistant by running the installer, then restart it to enable FLAC uploads. No audio was sent.": "インストーラーを実行してButtercupのローカルアシスタントを更新し、再起動してFLACのアップロードを有効にしてください。音声は送信されていません。",
+    "The assistant did not confirm the selected audio format. No audio was sent to the provider.": "アシスタントが選択した音声形式を確認しませんでした。プロバイダーに音声は送信されていません。",
+    "The assistant returned an unexpected audio format. No audio was sent for this part.": "アシスタントが想定外の音声形式を返しました。この部分の音声は送信されていません。",
+    "A five-second FLAC part exceeds the upload limit. Increase the limit within your API allowance or choose MP3; no audio was sent to the provider.": "5秒のFLAC部分がアップロード上限を超えています。APIの許容範囲内で上限を増やすか、MP3を選択してください。プロバイダーに音声は送信されていません。",
     "Import opens in a tab so the file picker stays available.": "ファイル選択中に画面が閉じないよう、インポートはタブで開きます。",
     "Japanese, Chinese and other supported scripts without spaces use character counts for these limits. Latin words and numbers remain intact. Provider timestamps determine where a subtitle can split.": "日本語、中国語など、空白で単語を区切らない対応文字では、この上限は文字数として数えます。英単語と数字列は分割しません。字幕の分割位置には、プロバイダーが返したタイムスタンプを使います。",
     "Better YouTube captions · Revival": "YouTube の字幕をもっと良く · Revival",

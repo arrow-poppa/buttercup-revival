@@ -21,6 +21,7 @@ def test_health_auth_origin_and_host(client):
     assert client.get('/health').status_code == 200
     assert client.get('/health').json()['audio_track_selection'] == ['default', 'original']
     assert client.get('/health').json()['audio_modes'] == ['chunks', 'whole']
+    assert client.get('/health').json()['audio_formats'] == ['mp3', 'flac']
     assert client.get('/health').json()['subtitle_save'] is True
     assert client.get('/health', headers={'Authorization': ''}).status_code == 401
     assert client.get('/health', headers={'Origin': 'https://www.youtube.com'}).status_code == 403
@@ -101,28 +102,39 @@ def test_original_job_requires_extractor_confirmation(client, monkeypatch, confi
     if not confirmed: assert 'did not confirm' in status['error']['message']
 
 
-def test_job_lifecycle_and_cleanup(client, monkeypatch):
+@pytest.mark.parametrize('audio_format', ['mp3', 'flac'])
+def test_job_lifecycle_and_cleanup(client, monkeypatch, audio_format):
     from backend.app.jobs import Jobs
     async def fake_extract(self, job, cookiefile):
         (job.directory / 'source.wav').write_bytes(b'audio')
         return {'stage': 'extracted', 'path': str(job.directory / 'source.wav'), 'extractor': 'mock'}
-    async def fake_prepare(source, directory, *args):
-        (directory / 'chunk-0.mp3').write_bytes(b'mock mp3')
+    async def fake_prepare(source, directory, *args, **kwargs):
+        assert kwargs.get('audio_format', 'mp3') == audio_format
+        (directory / f'chunk-0.{audio_format}').write_bytes(b'mock audio')
         source.unlink()
         return [{'index': 0, 'offset': 0, 'duration': 5, 'size': 8}]
     monkeypatch.setattr(Jobs, 'extract', fake_extract)
     monkeypatch.setattr('backend.app.jobs.prepare_audio', fake_prepare)
-    response = client.post('/jobs/extract', json={'video': 'abcdefghijk'})
+    response = client.post('/jobs/extract', json={'video': 'abcdefghijk', **({'audio_format': 'flac'} if audio_format == 'flac' else {})})
     assert response.status_code == 202
+    assert response.json()['audio_format'] == audio_format
     identifier = response.json()['id']
     for _ in range(50):
         status = client.get(f'/jobs/{identifier}').json()
         if status['state'] == 'ready': break
     assert status['state'] == 'ready'
-    assert client.get(f'/jobs/{identifier}/chunks/0').content == b'mock mp3'
+    audio = client.get(f'/jobs/{identifier}/chunks/0')
+    assert audio.content == b'mock audio'
+    assert audio.headers['content-type'] == ('audio/flac' if audio_format == 'flac' else 'audio/mpeg')
     assert client.get(f'/jobs/{identifier}/chunks/-1').status_code == 404
     assert client.delete(f'/jobs/{identifier}').status_code == 200
     assert client.get(f'/jobs/{identifier}').status_code == 404
+
+
+@pytest.mark.parametrize('audio_format', ['wav', '../flac', '', None])
+def test_unknown_audio_formats_are_rejected_before_extraction(client, audio_format):
+    assert client.post('/jobs/extract', json={'video': 'abcdefghijk', 'audio_format': audio_format}).status_code == 422
+    assert not client.app.state.jobs.items
 
 
 def test_cancel_removes_cookie_snapshots(client, monkeypatch):

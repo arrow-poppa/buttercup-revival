@@ -1,6 +1,7 @@
 import { baseUrl, redact, isChat, isOpenRouter, validateTranscription } from './config.js';
 import { transcribeDeepInfra, deepinfraModels } from './deepinfra.js';
 import { transcribeGroq, groqModels } from './groq.js';
+import { audioExtension } from './audio.js';
 
 function providerHeaders(settings) {
     const headers = { ...settings.extraHeaders };
@@ -73,7 +74,7 @@ export async function transcribe(settings, audio, signal) {
     const chat = isChat(settings);
     const route = validateTranscription(settings);
     let body = new FormData();
-    const extension = ({ 'audio/wav': 'wav', 'audio/x-wav': 'wav', 'audio/flac': 'flac', 'audio/ogg': 'ogg', 'audio/mp4': 'm4a', 'audio/webm': 'webm' })[audio.type] || 'mp3';
+    const extension = audioExtension(audio);
     body.append('file', audio, `audio.${extension}`); body.append('model', route.model);
     body.append('response_format', settings.responseFormat);
     if (settings.language && !settings.translate) body.append('language', settings.language);

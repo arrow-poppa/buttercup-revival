@@ -30,6 +30,8 @@ let browser, ws, fixture, call, flatpakInstance, nativeStarted = false;
 const registrations = [], errors = [], pending = new Map();
 const counts = { extracts: 0, transcriptions: 0, sends: 0, deletes: 0 };
 let providerDelay = Number(process.env.BUTTERCUP_GECKO_DELAY_MS || 65000);
+let fixtureFormat = 'mp3';
+const uploadedFormats = [];
 try {
     await mkdir(profile); await mkdir(state, { recursive: true, mode: 0o700 });
     await cp(path.join(root, 'dist/firefox'), extension, { recursive: true });
@@ -165,14 +167,17 @@ try {
         res.setHeader('Content-Type', 'application/json');
         res.setHeader('Access-Control-Allow-Origin', '*'); res.setHeader('Access-Control-Allow-Headers', 'Authorization,Content-Type');
         if (req.method === 'OPTIONS') return res.end('{}');
-        if (req.url === '/health') return res.end(JSON.stringify({ status: 'ok', version: '0.2.0', ffmpeg: true, ffprobe: true, js_runtime_available: true }));
+        if (req.url === '/health') return res.end(JSON.stringify({ status: 'ok', version: '0.2.0', ffmpeg: true, ffprobe: true, js_runtime_available: true, audio_formats: ['mp3', 'flac'] }));
         if (req.url === '/cookies/status') return res.end('{"imported":false}');
-        if (req.url === '/jobs/extract') { counts.extracts++; return res.end(JSON.stringify({ id: 'fixture', state: 'ready', chunks: [{ index: 0, offset: 0, duration: 4 }] })); }
-        if (req.url === '/jobs/fixture/chunks/0') { res.setHeader('Content-Type', 'audio/mpeg'); return res.end('fixture-audio'); }
+        if (req.url === '/jobs/extract') { counts.extracts++; fixtureFormat = JSON.parse(body).audio_format || 'mp3'; return res.end(JSON.stringify({ id: 'fixture', state: 'ready', audio_format: fixtureFormat, chunks: [{ index: 0, offset: 0, duration: 4 }] })); }
+        if (req.url === '/jobs/fixture/chunks/0') { res.setHeader('Content-Type', fixtureFormat === 'flac' ? 'audio/flac' : 'audio/mpeg'); return res.end('fixture-audio'); }
         if (req.url === '/jobs/fixture' && req.method === 'DELETE') { counts.deletes++; return res.end('{}'); }
         if (req.url === '/v1/audio/transcriptions') {
             counts.transcriptions++; assert.equal(req.headers.authorization, 'Bearer SYNTHETIC_PROVIDER_KEY');
             assert.ok(!body.includes(Buffer.from(token))); assert.ok(body.includes(Buffer.from('fixture-audio')));
+            assert.ok(body.includes(Buffer.from(`filename="audio.${fixtureFormat}"`)));
+            assert.ok(body.includes(Buffer.from(`Content-Type: ${fixtureFormat === 'flac' ? 'audio/flac' : 'audio/mpeg'}`)));
+            uploadedFormats.push(fixtureFormat);
             await pause(providerDelay);
             return res.end(JSON.stringify({ language: 'ja', segments: [{ start: 0, end: 4, text: '日本語の字幕を確認します。' }] }));
         }
@@ -232,6 +237,30 @@ try {
         assert.equal(counts.transcriptions,2,'Custom Regenerate key must request fresh subtitles');
         console.log('Physical customized Gecko shortcuts passed');
     }
+    // Exercise the real format selector, persistence and fresh FLAC upload.
+    await until(() => evaluate(popup, `!document.getElementById('settings-fields').disabled`));
+    await evaluate(popup, `(document.getElementById('audio-format').value='flac',document.getElementById('audio-format').dispatchEvent(new Event('change',{bubbles:true})),true)`);
+    await until(() => evaluate(popup, `(async()=>{const c=await import('./api/config.js');return c.audioFormat(await c.getSettings())==='flac'})()`));
+    await evaluate(popup, `(document.querySelector('[data-setting="model"]').value='other-fixture',document.querySelector('[data-setting="model"]').dispatchEvent(new Event('input',{bubbles:true})),true)`);
+    assert.equal(await evaluate(popup, `document.getElementById('audio-format').value`), 'mp3');
+    await evaluate(popup, `(document.querySelector('[data-setting="model"]').value='fixture',document.querySelector('[data-setting="model"]').dispatchEvent(new Event('input',{bubbles:true})),true)`);
+    assert.equal(await evaluate(popup, `document.getElementById('audio-format').value`), 'flac');
+    await call('browsingContext.close', { context: popup });
+    popup = await open(base + 'popup.html');
+    await until(() => evaluate(popup, `!document.getElementById('settings-fields').disabled`));
+    assert.equal(await evaluate(popup, `document.getElementById('audio-format').value`), 'flac');
+    const beforeFlac = { ...counts };
+    await evaluate(popup, `browser.storage.session.remove('status-${tabId}').then(()=>true)`);
+    await send({ type: 'GENERATE', tabId });
+    await until(async () => (await send({ type: 'STATUS', tabId })).data?.stage === 'ready');
+    assert.deepEqual(counts, beforeFlac, 'Changing encoding must reuse cached subtitles');
+    providerDelay = 0;
+    await evaluate(popup, `browser.storage.session.remove('status-${tabId}').then(()=>true)`);
+    await send({ type: 'GENERATE', tabId, ignoreCache: true });
+    await until(async () => (await send({ type: 'STATUS', tabId })).data?.stage === 'ready');
+    assert.equal(counts.transcriptions, beforeFlac.transcriptions + 1);
+    assert.equal(uploadedFormats.at(-1), 'flac');
+    console.log('Gecko format preferences, cache reuse and explicit FLAC regeneration passed');
     // Settings import uses the same schema and preserves the local pairing.
     await evaluate(popup, `(async()=>{const m=await import('./api/settings.js');await m.persistDraft(m.importDraft({app:'buttercup-revival',version:'0.5.0',settings:{language:'zh',maxLineLength:'6',backendToken:'IGNORED'}}));await m.commitDraft();return true})()`);
     await call('browsingContext.close', { context: popup });

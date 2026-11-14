@@ -1,11 +1,11 @@
 import { GROQ_BASE_URL, redact, validateTranscription, requireGroqKey } from './config.js';
+import { audioExtension } from './audio.js';
 
 export async function transcribeGroq(settings, audio, signal) {
     const { model } = validateTranscription(settings);
     const key = requireGroqKey(settings);
     const body = new FormData();
-    const extension = ({ 'audio/wav': 'wav', 'audio/x-wav': 'wav', 'audio/flac': 'flac', 'audio/ogg': 'ogg',
-        'audio/mp4': 'm4a', 'audio/webm': 'webm' })[audio.type] || 'mp3';
+    const extension = audioExtension(audio);
     body.append('file', audio, `audio.${extension}`);
     body.append('model', model);
     body.append('response_format', 'verbose_json');

@@ -3,7 +3,7 @@ function applyTheme(value = 'auto') {
     try { localStorage.setItem('buttercup-theme', value); } catch {}
 }
 try { applyTheme(localStorage.getItem('buttercup-theme') || 'auto'); } catch { applyTheme(); }
-import { DEFAULTS, DEEPINFRA_DEFAULT_MODEL, GROQ_DEFAULT_MODEL, validateTranscription, providerRouting, providerBaseUrl } from '../../api/config.js';
+import { DEFAULTS, DEEPINFRA_DEFAULT_MODEL, GROQ_DEFAULT_MODEL, validateTranscription, providerRouting, providerBaseUrl, audioProfileKey, audioFormat, validateAudioFormatProfiles } from '../../api/config.js';
 import { draftSettings, popupSettings, persistDraft, exportDraft, importDraft } from '../../api/settings.js';
 import { request, saveDraftWithWorker } from '../../api/messaging.js';
 import { setLanguage, tr, localize, watch, storedLanguage } from '../../api/i18n.js';
@@ -39,6 +39,11 @@ const status = text => {
     if (settingsTab) $('settings-import-status').textContent = text;
 };
 function updateProviderDetails() {
+    try {
+        const draft = readDraft();
+        $('audio-format').value = audioFormat({ ...draft, audioFormatProfiles: JSON.parse(draft.audioFormatProfiles || '{}') });
+        $('audio-format').disabled = false;
+    } catch { $('audio-format').value = 'mp3'; $('audio-format').disabled = true; }
     document.querySelector('[data-setting="wordsPerLine"]').disabled = document.querySelector('[data-setting="cueBreaks"]').value === 'provider';
     const whole = document.querySelector('[data-setting="audioMode"]').value === 'whole';
     $('whole-audio-hint').hidden = !whole;
@@ -117,7 +122,16 @@ function persistChanges() {
     });
 }
 function autosave(event) {
-    const key = event.target.dataset.setting;
+    let key = event.target.dataset.setting;
+    if (initialized && event.target.id === 'audio-format') {
+        try {
+            const input = document.querySelector('[data-setting="audioFormatProfiles"]');
+            const profiles = JSON.parse(input.value || '{}');
+            profiles[audioProfileKey(readDraft())] = event.target.value;
+            input.value = JSON.stringify(validateAudioFormatProfiles(profiles));
+            key = 'audioFormatProfiles';
+        } catch (error) { $('settings-status').textContent = `Could not save changes: ${error.message}`; return; }
+    }
     if (!initialized || !key) return;
     if (key === 'provider' && event.target.value === 'openrouter') {
         document.querySelector('[data-setting="baseUrl"]').value = DEFAULTS.baseUrl;

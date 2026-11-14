@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULTS } from '../api/config.js';
+import { DEFAULTS, audioProfileKey } from '../api/config.js';
 import { DRAFT_PREFIX } from '../api/settings.js';
 import { request, saveDraftWithWorker } from '../api/messaging.js';
 
@@ -50,6 +50,13 @@ test('a missing worker gives an actionable reload control without replaying a pa
 test('an older worker dropping original audio requires reload before generation', async t => {
     setup(t, async message => ({ ok: true, data: { ...message.settings, audioTrack: undefined } }), {
         settings: { ...DEFAULTS, audioTrack: 'original' },
+    });
+    await assert.rejects(saveDraftWithWorker(), error => error.code === 'BUTTERCUP_UPDATE_REQUIRED');
+});
+
+test('an older worker dropping FLAC preferences requires reload before generation', async t => {
+    setup(t, async message => ({ ok: true, data: { ...message.settings, audioFormatProfiles: undefined } }), {
+        settings: { ...DEFAULTS, audioFormatProfiles: { [audioProfileKey(DEFAULTS)]: 'flac' } },
     });
     await assert.rejects(saveDraftWithWorker(), error => error.code === 'BUTTERCUP_UPDATE_REQUIRED');
 });

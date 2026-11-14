@@ -233,6 +233,7 @@ The popup is organised in sections. The ones you are most likely to touch:
 | | Max words per subtitle | The cap on how much text is on screen at once |
 | | Line break every N words | Wraps a subtitle into lines |
 | **Audio upload (advanced)** | Audio sending | *In parts* works with any length; *Whole audio* is a single request |
+| | Audio format | MP3 (default) or FLAC, remembered for each provider/model configuration |
 | **Keyboard shortcuts** | Configure shortcuts | Customize Generate and Regenerate in the browser's shortcut settings |
 | **Backup** | Export / Import settings | Save your settings to a file and load them later |
 
@@ -247,11 +248,17 @@ Changing **Subtitle layout** never costs anything: it rearranges the words that 
 <details>
 <summary><b>About upload size and long videos</b></summary>
 
-Providers limit the size of one uploaded file. Groq and OpenRouter refuse files above 25 MB, on paid plans too. Buttercup's default is 24 MB per upload, which holds about 45 minutes of audio.
+Providers limit the size of one uploaded file. Keep **Max audio chunk (MB)** within your provider's allowance; Buttercup defaults to 24 MB. MP3 at 64 kbps uses about 0.48 MB per minute. FLAC size depends on the audio, so the same upload limit can fit a different duration.
 
 For anything longer, keep **Audio sending** on **In parts**: the audio is cut into pieces that overlap by 1.5 seconds, each piece is transcribed separately, and the results are joined without repeating or losing words.
 
 </details>
+
+**Audio format** offers **MP3 — smaller uploads (default)** and **FLAC — lossless encoding, usually larger uploads**. Both use **16 kHz mono** audio; MP3 uses **64 kbps**, and FLAC uses **16-bit samples**. Each format is encoded directly from the downloaded source. FLAC avoids an additional lossy encoding step, but cannot recover detail already lost in YouTube's audio and does not guarantee better transcription or timestamps.
+
+Buttercup remembers the format separately for each provider, API endpoint/mode, model and pinned upstream provider, including in settings backups. Existing installations and older backups default to MP3. Format support depends on the selected API/model; rejected uploads are not retried with another format or provider. FLAC requires the updated local assistant: run the installer and restart the assistant after updating.
+
+Changing the format **reuses cached subtitles**. Choose **Regenerate subtitles** to send freshly encoded audio in the selected format; provider charges may apply. The short sample test uploads the file you select unchanged, so use a sample already encoded in the format you want to test. No accuracy improvement or paid-provider benchmark is claimed.
 
 <details>
 <summary><b>About cookies and restricted videos</b></summary>

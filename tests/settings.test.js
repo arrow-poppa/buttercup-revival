@@ -149,7 +149,7 @@ test('a settings backup round-trips what was typed and leaves the local pairing 
     const patch = importDraft(file);
     assert.deepEqual(patch, Object.fromEntries(Object.entries(draft).filter(([key]) => !['backendToken', 'backendUrl'].includes(key))));
     // Unknown keys, wrong types and the pairing are ignored rather than stored.
-    assert.deepEqual(importDraft({ app: 'buttercup-revival', settings: { wordsPerLine: 7, enabled: 'yes', other: 'x', backendToken: 'T', language: 'ja' } }), { language: 'ja' });
+    assert.deepEqual(importDraft({ app: 'buttercup-revival', settings: { wordsPerLine: 7, enabled: 'yes', other: 'x', backendToken: 'T', language: 'ja' } }), { language: 'ja', audioFormatProfiles: '{}' });
     for (const bad of [null, {}, { app: 'other', settings: { language: 'ja' } }, { app: 'buttercup-revival', settings: [] }, { app: 'buttercup-revival', settings: { other: 1 } }]) {
         assert.throws(() => importDraft(bad), /not a Buttercup settings file/);
     }

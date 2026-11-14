@@ -1,4 +1,4 @@
-import { isChat, providerRouting, providerBaseUrl } from './config.js';
+import { isChat, providerRouting, providerBaseUrl, audioFormat } from './config.js';
 import { popupSettings, draftSettings } from './settings.js';
 
 export class ExtensionUpdateRequired extends Error {
@@ -33,7 +33,7 @@ function route(settings) {
     try { selection = providerRouting(settings); } catch { return ''; }
     const { model, pin, strict } = selection;
     return JSON.stringify([settings.provider, providerBaseUrl(settings), model, isChat(settings), pin, strict, settings.audioTrack || 'default',
-        settings.audioMode || 'chunks', settings.parallelRequests || 1]);
+        settings.audioMode || 'chunks', settings.parallelRequests || 1, audioFormat(settings)]);
 }
 
 export async function saveDraftWithWorker(send = request) {
