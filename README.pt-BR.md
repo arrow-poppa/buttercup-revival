@@ -1,53 +1,190 @@
-# 🌼 Buttercup Revival
+<div align="center">
 
-[English](README.md) · Português (Brasil) · [Español](README.es.md) · [日本語](README.ja.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-TW.md)
+<img src="icons/icon128.png" width="96" alt="Logotipo do Buttercup">
 
-> Este guia traduzido resume o README; detalhes técnicos adicionais estão disponíveis na [versão completa em inglês](README.md).
+# Buttercup Revival
 
 **Transcrição de vídeos do YouTube sob demanda para navegadores Chromium e Gecko.**
 
-O Buttercup Revival transcreve o áudio do vídeo que você está assistindo usando o modelo de sua escolha. Exiba legendas no player, envie-as ao [asbplayer](https://github.com/asbplayer/asbplayer) ou salve arquivos `.srt` e `.vtt`. O áudio é preparado no seu computador e enviado ao provedor de transcrição selecionado.
+O Buttercup Revival é uma extensão para navegadores baseados em Chromium e navegadores Gecko, como Firefox e Zen.
+Ela transcreve o áudio do vídeo que você está assistindo com o modelo de fala de sua escolha
+e exibe o resultado como legendas, envia-o ao [asbplayer](https://github.com/asbplayer/asbplayer)
+ou salva um arquivo `.srt`.
 
-[Baixar a versão mais recente](https://github.com/arrow-poppa/buttercup-revival/releases/latest/download/Buttercup-Revival.zip) · [Guia para Firefox e Zen (inglês)](docs/GECKO_SETUP.md) · [Código-fonte e documentação em inglês](README.md)
+[![Testes](https://github.com/arrow-poppa/buttercup-revival/actions/workflows/test.yml/badge.svg)](https://github.com/arrow-poppa/buttercup-revival/actions/workflows/test.yml)
+[![Versão](https://img.shields.io/github/v/release/arrow-poppa/buttercup-revival?color=d7476b)](https://github.com/arrow-poppa/buttercup-revival/releases/latest)
+![Plataformas](https://img.shields.io/badge/platforms-Windows%20%7C%20Linux-342334)
+![Navegadores](https://img.shields.io/badge/browsers-Chromium%20%7C%20Gecko-342334)
+![Versões do manifesto](https://img.shields.io/badge/manifest-Chromium%20V3%20%7C%20Gecko%20V2-342334)
 
-## O que o Buttercup faz
+[English](README.md) · **Português (Brasil)** · [Español](README.es.md) · [日本語](README.ja.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-TW.md)
 
-- Cria legendas para vídeos sem legendas ou com legendas automáticas ruins, usando DeepInfra, Groq, OpenRouter ou uma API compatível com OpenAI.
-- Ajusta a divisão das legendas ao conteúdo falado e permite configurar seu tamanho e as quebras de linha.
-- Reutiliza transcrições em cache para alterar o formato ou exportar novamente sem outra chamada à API. **Regenerar** solicita uma nova transcrição.
-- Prepara o áudio localmente com `yt-dlp` e FFmpeg. O assistente local se comunica com a extensão; o áudio e a chave de API necessária são enviados ao provedor escolhido.
-- Oferece seis idiomas para a interface: inglês, português brasileiro, espanhol, japonês, chinês simplificado e chinês tradicional.
+[Instalação](#-instalação) · [Guia Firefox / Zen](docs/pt-BR/GECKO_SETUP.md) · [Primeiras legendas](#-suas-primeiras-legendas) · [asbplayer](#-usando-com-o-asbplayer) · [Configurações](#-configurações) · [Solução de problemas](#-solução-de-problemas) · [Desenvolvedores](#-para-desenvolvedores)
 
-## Requisitos
+<img src="docs/images/popup.png" width="380" alt="O popup do Buttercup">
 
-Windows 10/11 ou Linux; navegador de desktop Chromium 120+ ou Gecko 140+; uma chave de API de um provedor de transcrição; e cerca de 1 GB de espaço livre. Os instaladores instalam Python, Node.js e FFmpeg quando necessário. Consulte a [compatibilidade Chromium](docs/BROWSERS.md) e o [guia Gecko](docs/GECKO_SETUP.md) para detalhes.
+</div>
 
-## Instalação
+---
 
-1. [Baixe o pacote completo](https://github.com/arrow-poppa/buttercup-revival/releases/latest/download/Buttercup-Revival.zip), extraia-o e guarde a pasta em um local permanente, como Documentos. Mover ou apagar a pasta pode interromper o funcionamento.
-2. **Windows:** clique duas vezes em `Install Buttercup.cmd`. Se o Windows bloquear o script, escolha **Mais informações → Executar assim mesmo**. Autorize a instalação do Node.js se solicitado.
-3. **Linux:** abra um terminal na pasta extraída e execute:
+## ✨ O que ele faz
 
-   ```sh
-   sh install.sh
-   ```
+- **Legendas para vídeos que não têm legendas** ou cujas legendas automáticas são ruins.
+- **Acompanha a fala.** Cada legenda termina com a frase, em uma vírgula ou em uma pausa, para que o texto apareça e desapareça junto com a fala em vez de blocos fixos.
+- **Você escolhe o modelo de fala.** DeepInfra, Groq, OpenRouter ou qualquer API compatível com OpenAI. Whisper, Qwen ASR, Voxtral e outros.
+- **Três formas de usar o resultado:** legendas no player do YouTube, envio automático ao **asbplayer** ou arquivos `.srt` / `.vtt` salvos em uma pasta escolhida por você.
+- **Reutilize transcrições em cache.** Altere o layout das legendas ou exporte novamente sem outra solicitação ao provedor. Regenerar solicita explicitamente uma nova transcrição.
+- **Preparação local do áudio.** O assistente prepara o áudio no seu computador; a extensão envia o áudio e a chave de API necessária somente ao provedor de transcrição escolhido.
+- **Seis idiomas de interface:** English, Português, Español, 日本語, 简体中文, 繁體中文.
 
-   O instalador usa `apt`, `dnf`, `pacman` ou `zypper` e solicita a senha para instalar dependências ausentes.
-4. **Chromium, Chrome, Edge, Brave e outros derivados:** abra `chrome://extensions`, ative o modo de desenvolvedor, clique em **Carregar sem compactação** e escolha `dist/chromium`. Fixe o Buttercup na barra do navegador.
-5. **Firefox, Zen e outros navegadores Gecko:** siga o [guia de instalação Gecko](docs/GECKO_SETUP.md). O pacote inclui `dist/firefox` e `dist/firefox-unsigned.zip`. O Zen pode manter a extensão não assinada quando `xpinstall.signatures.required` está em `false` em `about:config`; o Firefox Release padrão exige assinatura. O guia explica as diferentes edições e métodos Flatpak. No Linux, o Helium usa a versão Chromium; os caminhos do assistente estão registrados, mas o navegador ainda não foi testado em execução.
-6. Crie uma chave em [Groq](https://console.groq.com/keys), [DeepInfra](https://deepinfra.com/dash/api_keys), [OpenRouter](https://openrouter.ai/keys) ou outro provedor compatível. Abra o Buttercup, clique em **Start and connect** e, em **Transcription**, escolha o provedor e cole a chave.
+## 🧩 Como funciona
 
-Navegadores nativos usam mensagens nativas para conectar o assistente. Snap e Flatpak podem bloqueá-las. No Zen Flatpak, escolha a [conexão automática com Flatseal](docs/GECKO_SETUP.md#method-a-automatic-connection-with-flatseal) ou a [conexão manual](docs/GECKO_SETUP.md#method-b-manual-connection-without-extra-flatpak-permissions). O guia está em inglês.
+O Buttercup tem duas partes que o instalador configura em conjunto:
 
-## Primeiras legendas
+| Parte | O que é | O que faz |
+| --- | --- | --- |
+| **A extensão** | WebExtension para Chromium ou Gecko | Adiciona o botão **BC** ao player do YouTube, comunica-se com o modelo de fala e exibe e exporta legendas |
+| **O assistente local** | Um pequeno programa no computador | Obtém o áudio do vídeo com `yt-dlp` e o prepara com FFmpeg |
 
-Abra um vídeo no YouTube e clique no botão rosa **BC** no player. O aviso mostra o progresso e as legendas aparecem no vídeo; clique novamente para ocultá-las ou mostrá-las. O tempo inicial depende do provedor. Vídeos já transcritos podem usar o cache. Após reiniciar o computador, abra o Buttercup e clique em **Start and connect**.
+```mermaid
+flowchart LR
+    Y["Vídeo do YouTube"] --> E["Extensão Buttercup"]
+    E -- "qual vídeo" --> A["Assistente local<br/>(seu computador)"]
+    A -- "áudio" --> E
+    E -- "áudio" --> P["Modelo de fala<br/>DeepInfra · Groq · OpenRouter · personalizado"]
+    P -- "texto + tempos" --> E
+    E --> C["Legendas no vídeo"]
+    E --> S["asbplayer"]
+    E --> F["Arquivos .srt / .vtt"]
+```
 
-Se o vídeo tiver legendas humanas e você quiser substituí-las, desative **Prefer human captions**. Para vídeos dublados, selecione **Original audio** em **Audio track for transcription**.
+O assistente só é executado quando você solicita e só aceita conexões do próprio computador (`127.0.0.1`).
 
-## Usar com asbplayer
+## 📋 O que você precisa
 
-O servidor WebSocket do asbplayer é separado do Buttercup e precisa ser iniciado uma vez por sessão. Instale [Go](https://go.dev/dl/) e [Git](https://git-scm.com/downloads) e execute:
+- **Windows 10 ou 11** ou **Linux**.
+- **Um navegador de desktop compatível:** Chromium 120+ (Chrome, Edge, Brave, Vivaldi, Opera, Chromium e forks compatíveis) ou Gecko 140+ (Firefox, Zen e forks modernos compatíveis). Consulte a [compatibilidade Chromium](docs/pt-BR/BROWSERS.md) e a [configuração Firefox / Zen](docs/pt-BR/GECKO_SETUP.md).
+- **Uma chave de API** de um provedor de fala. Criar uma leva alguns minutos; veja a [etapa 4](#etapa-4--adicione-sua-chave-de-api).
+- Aproximadamente **1 GB** de espaço livre.
+
+Você **não** precisa instalar Python, Node.js ou FFmpeg por conta própria. O instalador faz isso.
+
+## 🚀 Instalação
+
+Comece pela opção correspondente ao seu navegador. Instalações nativas conectam-se pela API de mensagens nativas do navegador. O Zen Flatpak pode usar um inicializador automático opcional com Flatseal ou um arquivo de conexão manual.
+
+| Navegador | Versão | Guia de configuração |
+| --- | --- | --- |
+| Baseado em Chromium | `dist/chromium` | Continue com as etapas abaixo |
+| Firefox / Zen / forks Gecko modernos | `dist/firefox` ou `dist/firefox-unsigned.zip` | [Siga o guia Firefox / Zen](docs/pt-BR/GECKO_SETUP.md) |
+| Zen Flatpak | Versão Gecko | [Automática com Flatseal](docs/pt-BR/GECKO_SETUP.md#flatseal) ou [conexão manual](docs/pt-BR/GECKO_SETUP.md#manual) |
+
+### Etapa 1 · Baixe
+
+1. **[Baixe o Buttercup (ZIP)](https://github.com/arrow-poppa/buttercup-revival/releases/latest/download/Buttercup-Revival.zip)**.
+2. **Extraia** o ZIP: clique com o botão direito → **Extrair tudo…**
+3. Coloque a pasta extraída em um lugar permanente, por exemplo, **Documentos**.
+
+> [!IMPORTANT]
+> A extensão é executada a partir dessa pasta. Se você movê-la ou apagá-la depois, o Buttercup deixará de funcionar.
+
+> [!NOTE]
+> A partir da **v0.6.0**, o ZIP da versão inclui as duas compilações: `dist/chromium`, `dist/firefox` e `dist/firefox-unsigned.zip`. Para Firefox/Zen, siga o [guia Gecko](docs/pt-BR/GECKO_SETUP.md), incluindo os requisitos de assinatura do navegador.
+
+### Etapa 2 · Execute o instalador
+
+<details open>
+<summary><b>Windows</b></summary>
+
+Abra a pasta e clique duas vezes em **`Install Buttercup.cmd`**.
+
+Uma janela se abre e mostra cinco etapas durante o processo. Ela baixa e instala o que estiver faltando, então a primeira execução pode levar alguns minutos. Ao terminar, abre a pasta necessária na etapa 3.
+
+- Se o Windows mostrar **"O Windows protegeu o computador"**, clique em **Mais informações** → **Executar assim mesmo**. Isso pode aparecer para scripts baixados.
+- Se uma janela pedir permissão para instalar o **Node.js**, escolha **Sim**.
+
+</details>
+
+<details>
+<summary><b>Linux</b></summary>
+
+Abra um terminal na pasta e execute:
+
+```sh
+sh install.sh
+```
+
+O instalador usa o gerenciador de pacotes (`apt`, `dnf`, `pacman` ou `zypper`) e solicita sua senha apenas para instalar pacotes ausentes.
+
+Para inicialização automática, use um pacote nativo do navegador (`.deb` / `.rpm`). **Snap** e **Flatpak** podem bloquear mensagens nativas. Usuários do Zen Flatpak podem seguir o [tutorial de conexão automática ou manual](docs/pt-BR/GECKO_SETUP.md#connect).
+
+</details>
+
+### Etapa 3 · Adicione a extensão ao navegador
+
+**Firefox, Zen e outros navegadores Gecko modernos:** use o [guia de instalação passo a passo](docs/pt-BR/GECKO_SETUP.md). Ele explica a instalação permanente não assinada no Zen, as diferenças entre edições do Firefox e os dois métodos de conexão Flatpak. **Helium no Linux** usa a versão Chromium; os caminhos do assistente nativo são registrados, mas a validação em execução no Helium ainda está pendente.
+
+**Versões Gecko não assinadas:** o Zen pode manter uma extensão não assinada após definir `xpinstall.signatures.required` como `false` em `about:config`. O Firefox Release padrão continua exigindo assinatura; Firefox ESR, Developer Edition, Nightly, LibreWolf e Waterfox têm políticas diferentes. O guia inclui [requisitos de assinatura verificados e links para as fontes](docs/pt-BR/GECKO_SETUP.md#quais-outros-navegadores-permitem-isso).
+
+As etapas abaixo se aplicam a navegadores baseados em Chromium.
+
+Os navegadores só instalam extensões automaticamente a partir de suas lojas, portanto esta etapa é manual.
+
+1. Abra seu navegador baseado em Chromium, digite **`chrome://extensions`** na barra de endereço e pressione Enter.
+2. Ative o **Modo do desenvolvedor** (canto superior direito no Chrome, lado esquerdo no Edge).
+3. Clique em **Carregar sem compactação**.
+4. Escolha a pasta **`dist/chromium`** dentro da pasta Buttercup. No Windows, o instalador já copiou o endereço: pressione **Ctrl + V** na janela de escolha de pasta e clique em **Selecionar pasta**.
+
+<img src="docs/images/load-unpacked.png" width="760" alt="Página de extensões com o modo de desenvolvedor ativado e o botão Carregar sem compactação">
+
+O Buttercup agora aparece na lista. Clique no ícone de peça de quebra-cabeça na barra de ferramentas e **fixe** o Buttercup para manter o ícone visível.
+
+### Etapa 4 · Adicione sua chave de API
+
+O modelo de fala é executado em um provedor, que precisa de uma chave para identificar sua solicitação.
+
+1. Crie uma conta e uma chave em um dos seguintes:
+
+   | Provedor | Informações | Obter uma chave |
+   | --- | --- | --- |
+   | **Groq** | Tem plano gratuito; rápido | [console.groq.com/keys](https://console.groq.com/keys) |
+   | **DeepInfra** | Pagamento por uso; muitos modelos de fala (Whisper, Qwen ASR, Voxtral) | [deepinfra.com/dash/api_keys](https://deepinfra.com/dash/api_keys) |
+   | **OpenRouter** | Uma conta para vários provedores | [openrouter.ai/keys](https://openrouter.ai/keys) |
+
+2. Clique no **ícone do Buttercup** na barra de ferramentas do navegador.
+3. Conecte o assistente usando **Start and connect** ou o [método Flatpak](docs/pt-BR/GECKO_SETUP.md#connect) escolhido. O indicador muda para **Connected**.
+4. Em **Transcription**, escolha o provedor e cole a chave.
+
+<img src="docs/images/transcription.png" width="380" alt="Escolhendo um provedor e colando a chave de API">
+
+Tudo é salvo automaticamente. Pronto.
+
+## 🎬 Suas primeiras legendas
+
+1. Abra qualquer vídeo no YouTube.
+2. Clique no botão rosa **BC** nos controles do player.
+3. Um aviso roxo mostra o progresso: extração de áudio, transcrição e conclusão.
+4. As legendas aparecem no vídeo. Clique em **BC** novamente para ocultá-las ou mostrá-las.
+
+A primeira vez leva aproximadamente o tempo que o provedor precisa para transcrever o áudio. Ao abrir o mesmo vídeo depois, o resultado é imediato porque fica em cache.
+
+> [!TIP]
+> Após reiniciar o computador, abra o popup do Buttercup e clique uma vez em **Start and connect**.
+
+**Duas mensagens que você pode encontrar**
+
+- *"Human captions are available"*: o vídeo já tem legendas feitas por uma pessoa. Para substituí-las mesmo assim, desative **Prefer human captions** em **General**.
+- *"Multiple audio tracks detected"*: o vídeo é dublado. Defina **Audio track for transcription** como **Original audio**. Você pode deixar essa opção ativa para todos os vídeos.
+
+## 📚 Usando com o asbplayer
+
+O Buttercup pode enviar suas legendas diretamente ao [asbplayer](https://github.com/asbplayer/asbplayer) para estudo de idiomas.
+
+Os dois se comunicam pelo **servidor WebSocket** do asbplayer, um pequeno programa do projeto asbplayer executado no seu computador. Ele não faz parte do Buttercup e não é configurado pelo instalador, então faça isto uma vez:
+
+**1 · Inicie o servidor WebSocket do asbplayer**
+
+Instale [Go](https://go.dev/dl/) e [Git](https://git-scm.com/downloads), depois execute em um terminal:
 
 ```sh
 git clone https://github.com/asbplayer/asbplayer.git
@@ -55,55 +192,194 @@ cd asbplayer/scripts/web-socket-server
 go run .
 ```
 
-Deixe o terminal aberto. No asbplayer, ative **Misc → WebSocket client**. No Buttercup, abra **Integrations → asbplayer**, verifique a conexão e ative o envio automático. Para mostrar apenas as legendas do asbplayer, desative a exibição das legendas Buttercup no vídeo. Mais detalhes no [guia do asbplayer](https://docs.asbplayer.dev/docs/guides/web-socket-server).
+Deixe essa janela aberta enquanto usa o asbplayer. Na próxima vez, apenas as duas últimas linhas serão necessárias. O [guia do servidor WebSocket](https://docs.asbplayer.dev/docs/guides/web-socket-server) do asbplayer contém os detalhes e opções.
 
-## Arquivos e configurações
+**2 · Permita que o asbplayer se conecte**
 
-Use **Download SRT** ou **Download VTT** para salvar as legendas atuais; a opção de salvamento automático grava um SRT após a geração. Escolha uma pasta existente ou deixe em branco para usar Downloads. Arquivos com o mesmo nome são substituídos.
+Abra as configurações do asbplayer, acesse **Misc** e ative **WebSocket client**. Deixe o endereço como está.
 
-O menu superior altera o idioma; **Auto** segue o navegador. Em **Transcription**, escolha provedor, chave e modelo. Solicitar timestamps por palavra ajuda a criar legendas curtas, quando o modelo os oferece. Em **Subtitle layout**, ajuste segmentação, limite de palavras e quebras de linha. Quando há apenas timestamps de segmentos, limites internos podem ser estimados. **Keep provider segments (original timing)** mantém os segmentos originais e ignora o limite de palavras; defina a quebra de linha como `0` para manter o layout recebido. Para japonês e chinês, a divisão considera caracteres e preserva palavras latinas e grafemas.
+**3 · Configure o Buttercup para usá-lo**
 
-Em **Audio upload (advanced)**, escolha envio em partes ou áudio completo. O padrão é MP3 mono, 16 kHz e 64 kbps; FLAC mono, 16 kHz e 16 bits também está disponível. FLAC costuma gerar arquivos maiores e não garante maior precisão; a compatibilidade depende do provedor e modelo. A escolha é salva por configuração de provedor/modelo e incluída no backup. Atualize e reinicie o assistente para usar FLAC. Ambos os formatos compartilham o cache: use **Regenerate subtitles** para enviar áudio novo no formato escolhido, sujeito a cobranças. O teste de amostra envia o arquivo selecionado sem convertê-lo.
+No popup do Buttercup, abra **Integrations · asbplayer**:
 
-O envio em partes usa sobreposição de 1,5 segundo e respeita o limite de tamanho configurado, cujo padrão é 24 MB. Para vídeos restritos, importe um `cookies.txt` em **YouTube Authentication / Cookies**; apenas cookies do YouTube e Google são aceitos e permanecem no computador.
+- Clique em **Check connected media** para confirmar que o Buttercup alcança o servidor.
+- Ative **Auto-send subtitles to asbplayer**.
+- Para ver somente as legendas do asbplayer, desative **Show Buttercup captions on the YouTube video** em **General**.
 
-Os atalhos padrão são **Alt+Shift+G** para gerar e **Alt+Shift+U** para regenerar. Personalize-os em **Keyboard shortcuts → Configure shortcuts**; o navegador os armazena separadamente do backup. Algumas combinações podem ser reservadas pelo navegador.
+Depois disso, pressionar **BC** gera as legendas e as carrega no asbplayer. O botão **Send to asbplayer** as envia novamente a qualquer momento, inclusive do cache.
 
-## Atualização e importação
+## 💾 Salvando arquivos de legenda
 
-Baixe o [ZIP mais recente](https://github.com/arrow-poppa/buttercup-revival/releases/latest/download/Buttercup-Revival.zip), extraia-o sobre a mesma pasta e execute o instalador novamente. No Chromium, recarregue a extensão em `chrome://extensions`. No Gecko, instale o novo ZIP sobre a extensão existente conforme o [guia](docs/GECKO_SETUP.md), sem removê-la primeiro. Os IDs são estáveis, mas não há canal de atualização automática. Exporte suas configurações antes de atualizar para ter um backup.
+- **Download SRT** / **Download VTT** salvam as legendas do vídeo atual.
+- **Save SRT automatically after generating** faz isso para cada vídeo.
+- **Folder for subtitle files** escolhe onde salvá-las. Deixe vazio para usar a pasta Downloads do navegador ou digite um caminho completo, como `D:\Subtitles`. A pasta já deve existir.
 
-A importação de configurações, cookies e conexão, assim como o teste de áudio, abre uma página persistente. Selecione o arquivo nessa página e clique no botão correspondente; selecionar um arquivo não o envia automaticamente. A persistência de cookies é opcional e fica desativada por padrão.
+Os arquivos são nomeados `[videoID]___Title.srt`, por exemplo `[dQw4w9WgXcQ]___Never Gonna Give You Up.srt`. Um arquivo mais novo substitui outro com o mesmo nome.
 
-## Solução de problemas
+## 🔧 Configurações
 
-- **Assistente desconectado:** execute o instalador na pasta correta e use **Start and connect**. Para Zen Flatpak, conclua um dos métodos do guia; na conexão manual, execute `Start Buttercup assistant.sh` e clique em **Check connection**.
-- **Botão BC ausente:** recarregue o YouTube e verifique se o Buttercup está ativado.
-- **Erro de chave:** cole a chave do provedor selecionado. Para erro de autenticação ou 403 no YouTube, tente importar cookies atualizados.
-- **Legendas muito longas:** use um modo de segmentação do Buttercup e reduza o limite de palavras; os segmentos originais do provedor ignoram esse limite.
-- **Arquivo grande demais:** selecione envio em partes. Para problemas no asbplayer, inicie seu servidor WebSocket e ative o cliente.
-- Se ainda precisar de ajuda, [abra uma issue](https://github.com/arrow-poppa/buttercup-revival/issues) com a mensagem e os passos para reproduzir.
+O popup é organizado em seções. As opções que você provavelmente usará mais:
 
-## Privacidade, desenvolvimento e créditos
+| Seção | Configuração | O que faz |
+| --- | --- | --- |
+| **Cabeçalho** | Language | Idioma da interface. *Auto* segue o navegador |
+| **General** | Audio track for transcription | *Original audio* evita transcrever uma dublagem |
+| | Show Buttercup captions on the YouTube video | Desativado = legendas apenas no asbplayer ou em arquivos |
+| | Spoken language | Deixe vazio para detectar; defina (`ja`, `en`, `pt`…) se a detecção falhar |
+| | Folder for subtitle files | Onde os arquivos `.srt` / `.vtt` são salvos |
+| **Transcription** | Provedor, chave e modelo | Qual modelo de fala transcreve o áudio |
+| | Request word timestamps | Necessário para legendas curtas alinhadas à fala. Mantenha ativado |
+| | Vocabulary prompt | Nomes e palavras incomuns para ajudar o modelo a escrevê-los |
+| **Subtitle layout** | Start a new subtitle | Acompanha a fala ou corta apenas no limite de palavras |
+| | Max words per subtitle | Limite de texto exibido de uma vez |
+| | Line break every N words | Divide uma legenda em linhas |
+| **Audio upload (advanced)** | Audio sending | *In parts* funciona com qualquer duração; *Whole audio* usa uma única solicitação |
+| | Audio format | MP3 (padrão) ou FLAC, lembrado para cada configuração de provedor/modelo |
+| **Keyboard shortcuts** | Configure shortcuts | Personaliza Gerar e Regenerar nas configurações de atalhos do navegador |
+| **Backup** | Export / Import settings | Salva as configurações em um arquivo e as carrega depois |
 
-O áudio é convertido localmente e enviado ao provedor escolhido. As chaves ficam no armazenamento privado da extensão; o assistente aceita conexões locais autorizadas por um token. O cache comunitário é opcional e desativado por padrão. **O backup de configurações contém suas chaves de API: proteja-o como uma senha.**
+Os atalhos funcionam no vídeo ativo do YouTube com o popup fechado. Padrões: **Alt+Shift+G** gera usando o cache quando disponível; **Alt+Shift+U** regenera com uma nova solicitação ao provedor (pode haver cobranças). Abra **Keyboard shortcuts → Configure shortcuts** no Buttercup para alterá-los ou desativá-los. O Chromium abre sua página de atalhos de extensões; Firefox/Zen abre o gerenciamento de atalhos. O navegador salva as atribuições separadamente dos backups, e combinações reservadas ou conflitantes podem permanecer sem atribuição ou ser interceptadas. Eventos físicos de teclas foram testados sob Xvfb no Chromium e Firefox, incluindo atribuições personalizadas no Firefox; execute as suítes de navegador com `BUTTERCUP_TEST_SHORTCUTS=1` em um display X11 isolado para reproduzir.
 
-Para desinstalar, execute `Uninstall Buttercup.cmd` no Windows ou `.venv/bin/python scripts/setup-assistant.py --uninstall` no Linux, remova a extensão no navegador e apague a pasta. Dependências compartilhadas permanecem instaladas.
+Nos modos de segmentação do Buttercup, os limites de palavras também se aplicam quando o provedor retorna apenas tempos de segmentos ou coloca uma frase inteira em uma entrada de palavra. Nesses casos, os limites internos das legendas são estimados dentro do segmento original e a mensagem de conclusão explica isso; tempos reais por palavra são preservados. Japonês/chinês usam caracteres de texto mantendo palavras latinas e grafemas Unicode intactos. Escolha **Start a new subtitle → Keep provider segments (original timing)** para usar os limites de segmentos retornados. Isso ignora o limite de palavras; defina **Line break** como **0** para preservar o layout retornado. Quando não há segmentos, são usadas as entradas originais de palavras com tempo. Alterar o layout reformata legendas em cache sem chamar um provedor. **Regenerate subtitles** ignora explicitamente os caches local e comunitário e solicita uma nova transcrição (o provedor pode cobrar); uma solicitação malsucedida preserva o último resultado em cache.
 
-Consulte o [README em inglês](README.md#-for-developers) para estrutura, comandos de build/teste e arquitetura. Cada execução do instalador tenta atualizar `yt-dlp` e `pytubefix` para versões estáveis compatíveis.
+<img src="docs/images/subtitle-layout.png" width="380" alt="Configurações de layout das legendas">
 
-### Compilar e testar
+Alterar **Subtitle layout** nunca tem custo: apenas reorganiza as palavras já transcritas.
 
-Para desenvolvimento, instale Python 3.11+, Node.js 22+ e FFmpeg. Execute os comandos abaixo na raiz do projeto. O build compartilha o código entre os dois navegadores; a versão Gecko usa uma página de processamento em segundo plano. O assistente registra os dois IDs estáveis e usa mensagens nativas. Solicitações pagas que falham não são repetidas nem redirecionadas automaticamente.
+<details>
+<summary><b>Sobre o tamanho do envio e vídeos longos</b></summary>
+
+Os provedores limitam o tamanho de cada arquivo enviado. Mantenha **Max audio chunk (MB)** dentro do limite do provedor; o padrão do Buttercup é 24 MB. MP3 a 64 kbps usa cerca de 0,48 MB por minuto. O tamanho do FLAC depende do áudio, então o mesmo limite pode comportar durações diferentes.
+
+Para vídeos mais longos, mantenha **Audio sending** em **In parts**: o áudio é dividido em partes com sobreposição de 1,5 segundo, cada parte é transcrita separadamente e os resultados são unidos sem repetir ou perder palavras.
+
+</details>
+
+**Audio format** oferece **MP3 — menor tamanho de envio (padrão)** e **FLAC — codificação sem perdas, geralmente maior**. Ambos usam áudio **mono de 16 kHz**; MP3 usa **64 kbps**, e FLAC usa **amostras de 16 bits**. Cada formato é codificado diretamente a partir da fonte baixada. FLAC evita uma etapa adicional de codificação com perdas, mas não recupera detalhes já perdidos no áudio do YouTube nem garante melhor transcrição ou tempos.
+
+O Buttercup lembra o formato separadamente para cada provedor, endpoint/modo de API, modelo e provedor upstream fixado, inclusive nos backups. Instalações existentes e backups antigos usam MP3 por padrão. Ambas as opções continuam selecionáveis para todos os provedores. A aceitação depende da API/modelo; envios rejeitados não são repetidos com outro formato ou provedor. FLAC exige o assistente local atualizado: execute o instalador e reinicie o assistente após atualizar.
+
+Alterar o formato **reutiliza as legendas em cache**. Escolha **Regenerate subtitles** para enviar áudio recém-codificado no formato selecionado; o provedor pode cobrar. O teste de amostra curta envia o arquivo escolhido sem alterá-lo, então use uma amostra já codificada no formato que deseja testar. Não se afirma melhoria de precisão nem foi feito benchmark pago com provedores.
+
+<details>
+<summary><b>Sobre cookies e vídeos restritos</b></summary>
+
+Vídeos com restrição de idade ou exclusivos para membros exigem que você esteja conectado. Em **YouTube Authentication / Cookies**, importe um arquivo `cookies.txt` exportado do navegador. Apenas cookies do YouTube e Google são aceitos e permanecem no computador.
+
+</details>
+
+Para japonês, chinês e outros sistemas de escrita compatíveis sem espaços, o layout usa contagem de caracteres em vez de palavras separadas por espaços. Tokens com tempo são unidos sem espaços artificiais; palavras latinas e números permanecem intactos em texto misto. As quebras preservam grafemas Unicode e mantêm sinais de fechamento junto ao texto anterior. Os limites das legendas ainda seguem os tempos do provedor: uma frase longa retornada como uma única entrada pode ocupar várias linhas, mas não recebe tempos por caractere inventados.
+
+## 🌍 Idiomas
+
+A interface está disponível em **English, Português (Brasil), Español, 日本語, 简体中文 e 繁體中文**. Escolha um no menu no topo do popup. Na seleção automática, chinês tradicional é usado para localidades de Taiwan, Hong Kong, Macau e `zh-Hant`; uma preferência explícita de escrita tem prioridade sobre a região.
+
+As traduções ficam em [`locales/`](locales), um arquivo por idioma, como `"texto original": "tradução"`. Todos os textos de origem e chaves de tradução são em inglês. A descrição da extensão e os instaladores são sempre em inglês. Textos sem tradução aparecem como foram escritos, portanto uma entrada ausente não impede o funcionamento. Para adicionar um idioma, copie um arquivo, traduza os valores e registre-o em [`api/i18n.js`](api/i18n.js).
+
+## 🔄 Atualização
+
+1. Baixe o [ZIP mais recente](https://github.com/arrow-poppa/buttercup-revival/releases/latest/download/Buttercup-Revival.zip) e extraia-o **sobre a mesma pasta**, substituindo os arquivos.
+2. Execute o instalador novamente.
+3. Abra `chrome://extensions` e clique na seta **Recarregar** no cartão do Buttercup.
+
+Suas configurações permanecem salvas. Por segurança, use **Backup → Export settings** antes. Para restaurar um backup, escolha **Backup → Import settings**. O Buttercup abre uma aba de configurações; selecione o arquivo JSON nela e clique em **Import settings**. Mantenha a aba aberta até concluir a importação.
+
+Todas as seleções de arquivos usam essa página persistente: **Test transcription and timestamps**, **Import cookies**, **Open connection editor** e **Import settings** abrem a seção correspondente em uma aba. Escolha o arquivo e clique no botão de teste/importação. Fechar o popup original ou trocar de aba mantém o arquivo selecionado disponível. Abrir a página ou selecionar um arquivo não o envia; testes de áudio e importações de cookies exigem envio explícito. A persistência de cookies permanece desativada até ser ativada nessa importação.
+
+## 🧹 Desinstalação
+
+1. **Windows:** clique duas vezes em **`Uninstall Buttercup.cmd`**. **Linux:** execute `.venv/bin/python scripts/setup-assistant.py --uninstall`.
+2. Remova **Buttercup Revival** em `chrome://extensions`.
+3. Exclua a pasta Buttercup.
+
+Python, Node.js e FFmpeg permanecem instalados, pois outros programas podem usá-los. Remova-os da lista de aplicativos do sistema se desejar.
+
+## 🛠 Solução de problemas
+
+| O que aparece | O que fazer |
+| --- | --- |
+| O assistente mostra **Disconnected** | Navegadores nativos e a ponte Flatseal usam **Start and connect**. Conexões Flatpak manuais usam **Start Buttercup assistant.sh** e depois **Check connection** |
+| O navegador não consegue acessar o assistente local | Execute o instalador na pasta extraída correta. No Flatpak, conclua o [Método A ou B](docs/pt-BR/GECKO_SETUP.md#connect); instalar a extensão não basta |
+| Não há botão **BC** no player | Recarregue a página do YouTube. Verifique se **Enable Buttercup** está ativado |
+| Aparece **Reload extension** no popup | Clique nele. A extensão foi atualizada enquanto estava aberta |
+| *"Set your … API key first"* | Cole a chave do provedor selecionado em **Transcription** |
+| *"YouTube rejected extraction (403)"* ou falha de autenticação | Importe cookies atualizados ou tente mais tarde; o YouTube às vezes bloqueia downloads temporariamente |
+| Legendas são blocos enormes de texto | Selecione um modo de segmentação do Buttercup e reduza **Max words per subtitle**. A segmentação original do provedor ignora esse limite. Sem tempos por palavra, os tempos internos são estimados |
+| *"asbplayer is unavailable"* | Inicie o servidor WebSocket do asbplayer e ative seu cliente; veja [Usando com o asbplayer](#-usando-com-o-asbplayer) |
+| O envio é recusado por ser muito grande | Use **Audio sending → In parts** |
+| O instalador diz que um programa não pôde ser instalado | Instale-o manualmente ([Python](https://www.python.org/downloads/), [Node.js](https://nodejs.org/), [FFmpeg](https://ffmpeg.org/download.html)) e execute novamente o instalador |
+| Nada acontece e não há mensagem | Abra o popup: a linha de status no topo mostra o último erro |
+
+Ainda precisa de ajuda? [Abra uma issue](https://github.com/arrow-poppa/buttercup-revival/issues) com a mensagem e os passos que levaram ao problema.
+
+## 🔒 Privacidade e segurança
+
+- **Áudio** é baixado e convertido no computador e enviado apenas ao provedor escolhido.
+- **Chaves de API** ficam no armazenamento privado da extensão e são enviadas apenas a esse provedor. A página do YouTube nunca as vê.
+- **O assistente local** aceita conexões somente do seu computador e somente dessa extensão, usando um token aleatório criado na instalação.
+- **Configuração do assistente por usuário.** O assistente fica na pasta Buttercup e é registrado por usuário. O instalador pode usar o gerenciador de pacotes para dependências ausentes; o assistente não inicia automaticamente no login.
+- **Sem telemetria.** O cache comunitário opcional é desativado por padrão e, quando ativado, compartilha somente o texto das legendas e detalhes do vídeo/modelo.
+
+Um backup de configurações contém suas chaves de API. Trate esse arquivo como uma senha.
+
+## 👩‍💻 Para desenvolvedores
+
+<details>
+<summary><b>Estrutura do projeto</b></summary>
+
+```
+manifest.json, popup.html      Manifesto da extensão e popup
+buttercup.js, content.js       Botão do player, legendas e aviso de progresso (scripts de conteúdo)
+background/, gecko/            Processamento compartilhado e compatibilidade Chromium/Gecko
+api/                           Configurações, provedores, pipeline de transcrição, i18n
+subtitles/, cache/             Formatação de legendas, exportação SRT/VTT, cache IndexedDB
+integrations/                  asbplayer
+locales/                       Traduções da interface (chaves de origem em inglês)
+backend/                       Assistente local (FastAPI, yt-dlp, pytubefix, FFmpeg)
+scripts/                       Instaladores, ponte de mensagens nativas, build e testes de navegador
+tests/                         Testes unitários Node e pytest
+docs/                          Notas técnicas, análise do projeto original, registro de validação
+```
+
+</details>
+
+<details>
+<summary><b>Compilação e testes</b></summary>
+
+Requer Python 3.11+, Node.js 22+ e FFmpeg. Cada execução do instalador solicita ao pip que atualize yt-dlp e pytubefix para as versões estáveis mais recentes compatíveis com o Python e as dependências instaladas.
 
 ```sh
 python -m venv .venv
-.venv/bin/python -m pip install -r backend/requirements-dev.txt
+.venv/bin/python -m pip install -r backend/requirements-dev.txt   # Windows: .venv\Scripts\python.exe
 npm ci
-npm run build
-npm run package
-npm test
+
+npm run build                       # gera dist/chromium, dist/firefox e dist/firefox-unsigned.zip
+npm run package                     # cria o arquivo de release, dist/Buttercup-Revival.zip
+npm test                            # testes unitários JavaScript
 .venv/bin/python -m pytest tests/backend -q
 ```
 
-O Buttercup Revival é uma versão modernizada de [Buttercup, de iGerman00](https://github.com/iGerman00/buttercup-chrome), e usa [yt-dlp](https://github.com/yt-dlp/yt-dlp), [pytubefix](https://github.com/JuanBindez/pytubefix), [FFmpeg](https://ffmpeg.org/) e [FastAPI](https://fastapi.tiangolo.com/). O projeto original não declara licença e este fork não adiciona uma; veja [UPSTREAM](docs/UPSTREAM.md).
+A extensão não tem bundler: `npm run build` copia os arquivos compartilhados e aplica pequenas adaptações de manifesto/API/armazenamento Gecko. `node scripts/build.mjs` é tudo de que o instalador precisa. Veja a [arquitetura Gecko e validação em execução](docs/firefox.md).
+
+</details>
+
+<details>
+<summary><b>Notas de projeto</b></summary>
+
+- **Chromium Manifest V3; Gecko Manifest V2 com uma página persistente de fundo oculta.** Sem código remoto. As legendas usam o `TextTrack` nativo do vídeo.
+- **Identidades estáveis da extensão.** Chromium deriva o ID da chave pública do manifesto; Gecko usa um ID explícito de extensão. O instalador registra ambos automaticamente.
+- **Ponte de mensagens nativas** com uma única ação permitida: iniciar o serviço local e retornar seu token de pareamento.
+- **Solicitações ao provedor nunca são repetidas nem redirecionadas** após uma falha, para que uma solicitação paga não seja repetida silenciosamente.
+- Mais detalhes: [notas técnicas](docs/TECHNICAL.pt-BR.md), [alterações em relação ao projeto original](docs/CHANGES.md), [registro de validação](docs/VALIDATION.md).
+
+</details>
+
+Contribuições são bem-vindas. Execute os testes unitários antes de abrir um pull request.
+
+## 🙏 Créditos
+
+O Buttercup Revival é um fork modernizado do **[Buttercup](https://github.com/iGerman00/buttercup-chrome), de iGerman00**, que criou a ideia, o nome e a aparência. Se for útil para você, considere [apoiar o autor original](https://github.com/iGerman00).
+
+Construído com [yt-dlp](https://github.com/yt-dlp/yt-dlp), [pytubefix](https://github.com/JuanBindez/pytubefix), [FFmpeg](https://ffmpeg.org/) e [FastAPI](https://fastapi.tiangolo.com/).
+
+O projeto original não declara uma licença, e este fork não adiciona uma; veja [docs/UPSTREAM.md](docs/UPSTREAM.md).
