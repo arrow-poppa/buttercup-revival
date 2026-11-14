@@ -104,8 +104,12 @@
 <label id="translation-support" class="check"><input type="checkbox" data-setting="supportsTranslation">Custom API supports /audio/translations</label>
 <label>Vocabulary prompt<textarea data-setting="prompt" maxlength="896"></textarea></label>
 <label id="extra-headers-setting">Additional X- headers (JSON)<textarea data-setting="extraHeaders" spellcheck="false"></textarea></label>
-<label>Test with a short spoken audio sample (up to 2 MB)<input id="sample" type="file" accept="audio/*"></label>
+<div id="sample-test">
+<label id="sample-file-picker" hidden>Test with a short spoken audio sample (up to 2 MB)<input id="sample" type="file" accept="audio/*"></label>
+<p class="hint" data-file-tab-hint>Import opens in a tab so the file picker stays available.</p>
 <button type="button" id="provider-test">Test transcription and timestamps</button><p class="hint">This sends your selected sample to the configured provider and may incur usage charges.</p>
+<p id="sample-test-status" role="status" aria-live="polite"></p>
+</div>
 </details>
 <details open><summary>Subtitle layout</summary>
 <label>Start a new subtitle<select data-setting="cueBreaks"><option value="provider">Keep provider segments (original timing)</option><option value="speech">When the speaker ends a sentence or pauses</option><option value="words">Only when the word limit is reached</option></select></label>
@@ -136,12 +140,14 @@
 <label>Pairing token<input data-setting="backendToken" type="password" autocomplete="off"></label>
 <button type="button" id="health">Check assistant</button><details><summary>Technical connection details</summary><pre id="health-status"></pre></details>
 </details>
-<details><summary>YouTube Authentication / Cookies</summary>
+<details id="cookie-settings"><summary>YouTube Authentication / Cookies</summary>
 <p class="hint">Only explicitly imported YouTube/Google Netscape cookies are sent to the local backend.</p>
 <p id="cookie-status">Check backend connection to see cookie status.</p>
-<label>Import / replace cookies.txt<input type="file" id="cookies" accept=".txt,text/plain"></label>
-<label class="check"><input type="checkbox" id="persist-cookies">Authorize persistence between backend sessions</label>
+<label id="cookies-file-picker" hidden>Import / replace cookies.txt<input type="file" id="cookies" accept=".txt,text/plain"></label>
+<p class="hint" data-file-tab-hint>Import opens in a tab so the file picker stays available.</p>
+<div id="cookies-import-options" hidden><label class="check"><input type="checkbox" id="persist-cookies">Authorize persistence between backend sessions</label></div>
 <div class="actions"><button type="button" id="import-cookies">Import cookies</button><button type="button" id="toggle-cookies">Enable / disable</button><button type="button" id="remove-cookies">Remove cookies</button></div>
+<p id="cookies-import-status" role="status" aria-live="polite"></p>
 </details>
 <details><summary>Cache</summary>
 <label class="check"><input type="checkbox" data-setting="cache">Use persistent local cache</label>

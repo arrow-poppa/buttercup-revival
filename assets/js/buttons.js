@@ -20,23 +20,26 @@ storedLanguage().then(value => { if (value !== uiLanguage) useLanguage(value); }
 const $ = id => document.getElementById(id);
 // Browser action popups may close when a native file picker takes focus.
 // Keep the same settings editor in a tab for the complete import operation.
-const settingsTab = new URL(location.href).searchParams.get('view') === 'settings';
-document.body.classList.toggle('settings-tab', settingsTab);
-$('settings-file-picker').hidden = !settingsTab;
-$('settings-import-hint').hidden = settingsTab;
-if (settingsTab) $('backup-settings').open = true;
-const connectionTab = new URL(location.href).searchParams.get('view') === 'connection';
-if (connectionTab) {
-    document.body.classList.add('settings-tab');
-    $('manual-connection').open = true;
-    $('connection-file-picker').hidden = false;
-    $('import-connection').hidden = false;
-    $('open-connection-editor').hidden = true;
-}
+const FILE_VIEWS = {
+    settings: { section: 'backup-settings', picker: 'settings-file-picker' },
+    connection: { section: 'manual-connection', picker: 'connection-file-picker' },
+    sample: { section: 'sample-test', picker: 'sample-file-picker' },
+    cookies: { section: 'cookie-settings', picker: 'cookies-file-picker' },
+};
+const view = new URL(location.href).searchParams.get('view');
+const editor = Object.hasOwn(FILE_VIEWS, view) ? FILE_VIEWS[view] : null;
+const editorTab = editor !== null;
+document.body.classList.toggle('settings-tab', editorTab);
+for (const { picker } of Object.values(FILE_VIEWS)) $(picker).hidden = !editorTab;
+for (const hint of document.querySelectorAll('[data-file-tab-hint]')) hint.hidden = editorTab;
+$('settings-import-hint').hidden = editorTab;
+$('import-connection').hidden = !editorTab;
+$('open-connection-editor').hidden = editorTab;
+$('cookies-import-options').hidden = !editorTab;
 $('connection-origin').textContent = chrome.runtime.getURL('').replace(/\/$/, '');
-const status = text => {
+const status = (text, inline) => {
     $('status').textContent = text;
-    if (settingsTab) $('settings-import-status').textContent = text;
+    if (inline) $(inline).textContent = text;
 };
 function updateProviderDetails() {
     try {
@@ -187,10 +190,16 @@ async function save() {
     }
     return settings;
 }
-function action(id, callback) {
+async function openFilePage(view) {
+    const pending = persistChanges();
+    if (pending) await pending;
+    await chrome.tabs.create({ url: chrome.runtime.getURL(`popup.html?view=${view}#${FILE_VIEWS[view].section}`) });
+}
+function action(id, callback, inline) {
     $(id).addEventListener('click', async () => {
         $(id).disabled = true;
-        try { await callback(); } catch (error) { status(error.message); }
+        const report = text => status(text, editorTab ? inline : undefined);
+        try { await callback(report); } catch (error) { report(error.message); }
         finally { $(id).disabled = false; }
     });
 }
@@ -366,9 +375,10 @@ action('copy-connection-origin', async () => {
     status('Connection origin copied. Paste it in the assistant setup.');
 });
 action('open-connection-editor', async () => {
-    await chrome.tabs.create({ url: chrome.runtime.getURL('popup.html?view=connection#manual-connection') });
+    await openFilePage('connection');
 });
-action('import-connection', async () => {
+action('import-connection', async report => {
+    if (!editorTab) return openFilePage('connection');
     const file = $('connection-file').files[0];
     if (!file || file.size > 16384) throw new Error('Choose the private connection file created by the assistant setup.');
     let connection;
@@ -379,8 +389,8 @@ action('import-connection', async () => {
     $('connection-file').value = '';
     showBackend(value);
     $('connection-import-status').textContent = value.state === 'online' ? 'Assistant connected. You can close this tab and delete the connection file.' : value.message;
-    status($('connection-import-status').textContent);
-});
+    report($('connection-import-status').textContent);
+}, 'connection-import-status');
 action('check-backend', checkBackend);
 action('copy-extension-id', async () => {
     await navigator.clipboard.writeText(chrome.runtime.id);
@@ -400,21 +410,23 @@ action('models', async () => {
     $(draft.provider === 'groq' ? 'groq-model-list' : draft.provider === 'deepinfra' ? 'deepinfra-model-list' : 'model-list').replaceChildren(...models.map(id => new Option(id, id)));
     status(`${models.length} model suggestions found. You can also type any model ID.`);
 });
-action('provider-test', async () => {
+action('provider-test', async report => {
+    if (!editorTab) return openFilePage('sample');
     const file = $('sample').files[0];
     if (!file || file.size > 2000000) throw new Error('Choose a spoken audio sample up to 2 MB.');
     await save(); const bytes = new Uint8Array(await file.arrayBuffer()); let binary = '';
     for (let i = 0; i < bytes.length; i += 8192) binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
-    status('Testing the transcription endpoint…');
+    report('Testing the transcription endpoint…');
     const result = await rpc({ type: 'PROVIDER_TEST', audio: btoa(binary), mime: file.type });
-    status(`Compatible: ${result.segments} cues, ${result.words} timed words.${result.warnings?.length ? ' ' + result.warnings.join(' ') : ''}`);
-});
-action('import-cookies', async () => {
+    report(`Compatible: ${result.segments} cues, ${result.words} timed words.${result.warnings?.length ? ' ' + result.warnings.join(' ') : ''}`);
+}, 'sample-test-status');
+action('import-cookies', async report => {
+    if (!editorTab) return openFilePage('cookies');
     const file = $('cookies').files[0];
     if (!file || file.size > 1048576) throw new Error('Choose a Netscape cookies.txt file up to 1 MiB.');
     await save(); await rpc({ type: 'COOKIE_IMPORT', content: await file.text(), persist: $('persist-cookies').checked });
-    $('cookies').value = ''; await cookieStatus(); status('Cookies imported into the local backend.');
-});
+    $('cookies').value = ''; await cookieStatus(); report('Cookies imported into the local backend.');
+}, 'cookies-import-status');
 action('remove-cookies', async () => { await rpc({ type: 'COOKIE_DELETE' }); await cookieStatus(); status('Cookies removed.'); });
 action('toggle-cookies', async () => { await cookieStatus(); await rpc({ type: 'COOKIE_TOGGLE', enabled: !cookies.enabled }); await cookieStatus(); });
 action('clear-cache', async () => { await rpc({ type: 'CACHE_CLEAR' }); await tracks(); status('Local subtitle cache cleared.'); });
@@ -428,13 +440,8 @@ action('export-settings', async () => {
     setTimeout(() => URL.revokeObjectURL(link.href), 60000);
     status('Settings exported.');
 });
-action('import-settings', async () => {
-    if (!settingsTab) {
-        const pending = persistChanges();
-        if (pending) await pending;
-        await chrome.tabs.create({ url: chrome.runtime.getURL('popup.html?view=settings#backup-settings') });
-        return;
-    }
+action('import-settings', async report => {
+    if (!editorTab) return openFilePage('settings');
     const file = $('settings-file').files[0];
     if (!file || file.size > 1048576) throw new Error('Choose a Buttercup settings file.');
     let data;
@@ -451,18 +458,20 @@ action('import-settings', async () => {
         sessionStorage.setItem('settings-imported', 'true');
         useLanguage(patch.uiLanguage); return;
     }
-    status('Settings imported.');
-});
+    report('Settings imported.');
+}, 'settings-import-status');
 action('asb-status', async () => { await save(); $('asb-result').textContent = JSON.stringify(await rpc({ type: 'ASB_STATUS' }), null, 2); status('asbplayer server reachable.'); });
 $('settings-form').addEventListener('input', autosave);
 $('settings-form').addEventListener('change', autosave);
 document.querySelector('[data-setting="uiLanguage"]').addEventListener('change', autosave);
 initialize().then(() => {
-    if (settingsTab) {
-        $('backup-settings').scrollIntoView();
+    if (editorTab) {
+        const section = $(editor.section);
+        section.closest('details').open = true;
+        section.scrollIntoView();
         if (sessionStorage.getItem('settings-imported')) {
             sessionStorage.removeItem('settings-imported');
-            status('Settings imported.');
+            status('Settings imported.', 'settings-import-status');
         }
     }
 }).catch(error => status(error.message));

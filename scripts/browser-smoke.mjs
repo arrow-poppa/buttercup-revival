@@ -217,7 +217,7 @@ try {
     await popup.locator('[data-setting="model"]').fill('manually/typed-model');
     await popup.close();
     popup = await context.newPage();
-    await popup.goto(`chrome-extension://${extensionId}/popup.html`);
+    await popup.goto(`chrome-extension://${extensionId}/popup.html?view=sample#sample-test`);
     await popup.locator('#extension-id').filter({ hasText: extensionId }).waitFor({ state: 'attached' });
     await popup.locator('details').evaluateAll(items => items.forEach(item => { item.open = true; }));
     assert.equal(await popup.locator('#custom-settings').isVisible(), true);

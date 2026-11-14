@@ -100,7 +100,7 @@ try {
     await youtube.goto('https://www.youtube.com/watch?v=abcdefghijk');
     await youtube.waitForSelector('#buttercup-button');
     const popup = await context.newPage();
-    await popup.goto(`chrome-extension://${id}/popup.html`);
+    await popup.goto(`chrome-extension://${id}/popup.html?view=sample#sample-test`);
     await popup.locator('#extension-id').filter({ hasText: id }).waitFor({ state: 'attached' });
     await popup.locator('details').evaluateAll(items => items.forEach(item => { item.open = true; }));
     await popup.locator('[data-setting="apiKey"]').fill('OPENROUTER_TEST_KEY');

@@ -23,6 +23,13 @@
 - Automatic selection uses the browser locale's maximized script: Taiwan, Hong Kong, Macao and `zh-Hant` select Traditional Chinese. An explicit `Hans`/`Hant` script takes priority over the region, while a saved UI language takes priority over automatic selection. No runtime conversion dependency was added.
 - **127 JavaScript tests passed**. The Chromium 151.0.7922.34 i18n suite passed all six interface languages plus Hong Kong, Hant and explicit-Hans regional cases, including manual language switching and reload persistence. Firefox 159.0 passed Traditional Chinese UI, saved language, locale-resolution and dynamic-status checks alongside its existing subtitle/native-assistant regressions. Both build targets include the new catalog; extension IDs and English metadata remain unchanged. External transcription was simulated; no release was published.
 
+## Persistent file-selection pages — 2026-11-14 (unreleased)
+
+- All four file actions (settings backup, manual connection, spoken-audio sample and cookies) hide their native file controls in the action popup and open the shared editor in a persistent tab. The appropriate section opens automatically; durable draft edits, including unfinished fields, are preserved before the handoff. Results/errors are shown beside the relevant test/import controls. Existing i18n strings cover the added hints in all six interface languages.
+- Selecting a file never submits it. Provider tests and cookie imports require the explicit test/import action; existing size guards, routing, credentials and cookie-persistence consent are preserved. Cookie persistence defaults to off in the editor.
+- Chromium 151.0.7922.34 passed native file-chooser tests for all four routes: source-popup closure, focus changes, canceled/oversized selections, one explicit submission, unchanged sample bytes/MIME, retained cookie-consent state and settings/pairing preservation. The main browser, DeepInfra, Groq and full i18n suites also passed with simulated services.
+- Firefox 159.0 passed actual sample/cookie tab creation through the UI, source-popup closure, draft/file retention after focus changes, cancellation and explicit submission to local fixtures, plus the existing native/subtitle/localization suite. The Gecko harness supplies synthetic `File` objects through `DataTransfer` because BiDi can reject native file-setting commands on extension origins; native chooser events are exercised separately in Chromium. No real cookies or paid APIs were used. Both browser builds were rebuilt; no release was published.
+
 Ambiente local: Windows, Python 3.14.6, Node.js 26.4.0, FFmpeg/FFprobe 9.0.2, yt-dlp 2026.8.19, yt-dlp-ejs 0.8.0, pytubefix 11.2.1.
 
 ## Executado localmente

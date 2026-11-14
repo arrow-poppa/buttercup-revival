@@ -29,6 +29,7 @@ const freePort = async () => {
 let browser, ws, fixture, call, flatpakInstance, nativeStarted = false;
 const registrations = [], errors = [], pending = new Map();
 const counts = { extracts: 0, transcriptions: 0, sends: 0, deletes: 0 };
+let fixtureCookies = { imported: false };
 let providerDelay = Number(process.env.BUTTERCUP_GECKO_DELAY_MS || 65000);
 let fixtureFormat = 'mp3';
 const uploadedFormats = [];
@@ -95,7 +96,7 @@ try {
     call = (method, params = {}) => new Promise((resolve, reject) => {
         const id = ++sequence;
         const timeout = setTimeout(() => { pending.delete(id); reject(new Error(`BiDi timed out: ${method}`)); }, 20000);
-        pending.set(id, { resolve, reject, timeout }); ws.send(JSON.stringify({ id, method, params }));
+        pending.set(id, { resolve, reject, timeout, method }); ws.send(JSON.stringify({ id, method, params }));
     });
     const html = `<!doctype html><title>Buttercup Gecko shortcut fixture</title><div id="movie_player"><video></video><div class="ytp-right-controls"><button class="ytp-subtitles-button">CC</button></div></div><script>
       const p = document.getElementById('movie_player');
@@ -107,7 +108,7 @@ try {
         if (message.id) {
             const item = pending.get(message.id); if (!item) return;
             pending.delete(message.id); clearTimeout(item.timeout);
-            if (message.type === 'error') item.reject(new Error(`${message.error}: ${message.message}`)); else item.resolve(message.result);
+            if (message.type === 'error') item.reject(new Error(`${item.method}: ${message.error}: ${message.message}`)); else item.resolve(message.result);
         } else if (message.method === 'network.beforeRequestSent' && message.params.isBlocked) {
             const request = message.params.request;
             const operation = request.url.startsWith('https://www.youtube.com/')
@@ -168,7 +169,14 @@ try {
         res.setHeader('Access-Control-Allow-Origin', '*'); res.setHeader('Access-Control-Allow-Headers', 'Authorization,Content-Type');
         if (req.method === 'OPTIONS') return res.end('{}');
         if (req.url === '/health') return res.end(JSON.stringify({ status: 'ok', version: '0.2.0', ffmpeg: true, ffprobe: true, js_runtime_available: true, audio_formats: ['mp3', 'flac'] }));
-        if (req.url === '/cookies/status') return res.end('{"imported":false}');
+        if (req.url === '/cookies/status') return res.end(JSON.stringify(fixtureCookies));
+        if (req.url === '/cookies/import' && req.method === 'POST') {
+            const payload = JSON.parse(body);
+            assert.ok(payload.content.includes('SYNTHETIC_COOKIE_VALUE'));
+            assert.equal(payload.persist, true);
+            fixtureCookies = { imported: true, enabled: true, persistent: payload.persist, imported_at: 'fixture' };
+            return res.end('{}');
+        }
         if (req.url === '/jobs/extract') { counts.extracts++; fixtureFormat = JSON.parse(body).audio_format || 'mp3'; return res.end(JSON.stringify({ id: 'fixture', state: 'ready', audio_format: fixtureFormat, chunks: [{ index: 0, offset: 0, duration: 4 }] })); }
         if (req.url === '/jobs/fixture/chunks/0') { res.setHeader('Content-Type', fixtureFormat === 'flac' ? 'audio/flac' : 'audio/mpeg'); return res.end('fixture-audio'); }
         if (req.url === '/jobs/fixture' && req.method === 'DELETE') { counts.deletes++; return res.end('{}'); }
@@ -291,6 +299,47 @@ try {
     const reloaded = await evaluate(popup, `(await import('./api/config.js')).getSettings().then(s=>({language:s.language,paired:s.backendToken===${JSON.stringify(token)}}))`);
     assert.deepEqual(reloaded, {language:'zh',paired:true});
     await until(() => evaluate(youtube, `!!document.getElementById('buttercup-button')`));
+    for (const example of [
+        { view: 'sample', button: 'provider-test', input: 'sample', section: 'sample-test', status: 'sample-test-status', name: 'spoken.mp3', mime: 'audio/mpeg', content: 'fixture-audio',
+            empty: 'Choose a spoken audio sample up to 2 MB.', success: 'Compatible:' },
+        { view: 'cookies', button: 'import-cookies', input: 'cookies', section: 'cookie-settings', status: 'cookies-import-status', name: 'cookies.txt', mime: 'text/plain',
+            content: '# Netscape HTTP Cookie File\n.youtube.com\tTRUE\t/\tTRUE\t2147483647\tTEST\tSYNTHETIC_COOKIE_VALUE\n',
+            empty: 'Choose a Netscape cookies.txt file up to 1 MiB.', success: 'Cookies imported' },
+    ]) {
+        await call('browsingContext.close', { context: popup });
+        popup = await open(base + 'popup.html');
+        await until(() => evaluate(popup, `!document.getElementById('settings-fields').disabled`));
+        assert.equal(await evaluate(popup, `Array.from(document.querySelectorAll('input[type="file"]')).every(input=>!input.getClientRects().length)`), true);
+        const marker = `Draft before ${example.view}`;
+        await evaluate(popup, `(document.querySelector('[data-setting="prompt"]').value=${JSON.stringify(marker)},document.querySelector('[data-setting="prompt"]').dispatchEvent(new Event('input',{bubbles:true})),document.getElementById(${JSON.stringify(example.button)}).click(),true)`);
+        const expectedUrl = base + `popup.html?view=${example.view}#${example.section}`;
+        const target = await until(async () => (await call('browsingContext.getTree', { maxDepth: 0 })).contexts.find(item => item.url === expectedUrl)?.context);
+        await call('browsingContext.close', { context: popup });
+        popup = target;
+        await until(() => evaluate(popup, `!document.getElementById('settings-fields').disabled`));
+        assert.equal(await evaluate(popup, `document.querySelector('[data-setting="prompt"]').value`), marker);
+        assert.equal(await evaluate(popup, `document.getElementById(${JSON.stringify(example.input)}).getClientRects().length>0`), true);
+        // Firefox/Zen BiDi can reject input.setFiles on extension origins. Use
+        // a synthetic File here; Chromium covers the real native chooser above.
+        await evaluate(popup, `(document.getElementById(${JSON.stringify(example.input)}).files=new DataTransfer().files,document.getElementById(${JSON.stringify(example.button)}).click(),true)`);
+        await until(() => evaluate(popup, `document.getElementById(${JSON.stringify(example.status)}).textContent===${JSON.stringify(example.empty)}`));
+        const beforeSample = counts.transcriptions;
+        await evaluate(popup, `(async()=>{const transfer=new DataTransfer();transfer.items.add(new File([${JSON.stringify(example.content)}],${JSON.stringify(example.name)},{type:${JSON.stringify(example.mime)}}));document.getElementById(${JSON.stringify(example.input)}).files=transfer.files;return true})()`);
+        await evaluate(popup, `browser.tabs.update(${tabId},{active:true}).then(()=>true)`);
+        await evaluate(popup, `browser.tabs.getCurrent().then(tab=>browser.tabs.update(tab.id,{active:true})).then(()=>true)`);
+        assert.equal(await evaluate(popup, `document.getElementById(${JSON.stringify(example.input)}).files[0].name`), example.name);
+        assert.equal(counts.transcriptions, beforeSample, 'Selecting a file must not contact the provider');
+        if (example.view === 'cookies') {
+            assert.equal(await evaluate(popup, `document.getElementById('persist-cookies').checked`), false);
+            await evaluate(popup, `(document.getElementById('persist-cookies').checked=true,true)`);
+        }
+        providerDelay = 0;
+        await evaluate(popup, `(document.getElementById(${JSON.stringify(example.button)}).click(),true)`);
+        await until(() => evaluate(popup, `document.getElementById(${JSON.stringify(example.status)}).textContent.startsWith(${JSON.stringify(example.success)})`));
+        assert.equal(counts.transcriptions, beforeSample + (example.view === 'sample' ? 1 : 0));
+        if (example.view === 'cookies') assert.equal(fixtureCookies.persistent, true);
+    }
+    console.log('Gecko sample/cookie tab handoff, popup closure, focus changes and explicit submission passed');
     await evaluate(popup, `(async()=>{localStorage.setItem('buttercup-language','pt-BR');const m=await import('./api/settings.js');await m.persistDraft({uiLanguage:'pt-BR'});await m.commitDraft();return true})()`);
     await call('browsingContext.close', { context: popup });
     popup = await open(base + 'popup.html');

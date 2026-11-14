@@ -283,6 +283,8 @@ Translations live in [`locales/`](locales), one file per language, as `"original
 
 Your settings stay where they are. To be safe, use **Backup → Export settings** first. To restore a backup, choose **Backup → Import settings**. Buttercup opens a settings tab; select your JSON file there and click **Import settings**. Keep the tab open until the import completes.
 
+All file selections use this persistent page: **Test transcription and timestamps**, **Import cookies**, **Open connection editor**, and **Import settings** open the relevant section in a tab. Choose the file there, then click the test/import button. Closing the original popup or switching tabs keeps the selected file available. Opening the page or selecting a file does not send it; audio tests and cookie imports require your explicit submission. Cookie persistence remains off unless you enable it for that import.
+
 ## 🧹 Uninstalling
 
 1. **Windows:** double-click **`Uninstall Buttercup.cmd`**. **Linux:** run `.venv/bin/python scripts/setup-assistant.py --uninstall`.
