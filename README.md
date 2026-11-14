@@ -256,7 +256,7 @@ For anything longer, keep **Audio sending** on **In parts**: the audio is cut in
 
 **Audio format** offers **MP3 — smaller uploads (default)** and **FLAC — lossless encoding, usually larger uploads**. Both use **16 kHz mono** audio; MP3 uses **64 kbps**, and FLAC uses **16-bit samples**. Each format is encoded directly from the downloaded source. FLAC avoids an additional lossy encoding step, but cannot recover detail already lost in YouTube's audio and does not guarantee better transcription or timestamps.
 
-Buttercup remembers the format separately for each provider, API endpoint/mode, model and pinned upstream provider, including in settings backups. Existing installations and older backups default to MP3. Format support depends on the selected API/model; rejected uploads are not retried with another format or provider. FLAC requires the updated local assistant: run the installer and restart the assistant after updating.
+Buttercup remembers the format separately for each provider, API endpoint/mode, model and pinned upstream provider, including in settings backups. Existing installations and older backups default to MP3. Both options remain selectable for every provider. Format acceptance depends on the selected API/model; rejected uploads are not retried with another format or provider. FLAC requires the updated local assistant: run the installer and restart the assistant after updating.
 
 Changing the format **reuses cached subtitles**. Choose **Regenerate subtitles** to send freshly encoded audio in the selected format; provider charges may apply. The short sample test uploads the file you select unchanged, so use a sample already encoded in the format you want to test. No accuracy improvement or paid-provider benchmark is claimed.
 

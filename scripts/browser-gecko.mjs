@@ -239,6 +239,15 @@ try {
     }
     // Exercise the real format selector, persistence and fresh FLAC upload.
     await until(() => evaluate(popup, `!document.getElementById('settings-fields').disabled`));
+    await evaluate(popup, `(globalThis.originalFormatSend=browser.runtime.sendMessage.bind(browser.runtime),browser.runtime.sendMessage=async(message,...args)=>{const result=await globalThis.originalFormatSend(message,...args);if(message.type==='POPUP_SETTINGS'&&result?.data?.draft){delete result.data.settings.audioFormatProfiles;delete result.data.draft.audioFormatProfiles}return result},document.getElementById('reload-settings').click(),true)`);
+    await until(() => evaluate(popup, `!document.getElementById('settings-fields').disabled&&!document.getElementById('update-extension').hidden`));
+    assert.equal(await evaluate(popup, `document.getElementById('audio-format').disabled`), false, 'Old background settings must not lock the Gecko picker');
+    await evaluate(popup, `(browser.runtime.sendMessage=globalThis.originalFormatSend,delete globalThis.originalFormatSend,document.querySelector('[data-setting="provider"]').value='deepinfra',document.querySelector('[data-setting="provider"]').dispatchEvent(new Event('change',{bubbles:true})),true)`);
+    await evaluate(popup, `(document.getElementById('audio-format').value='flac',document.getElementById('audio-format').dispatchEvent(new Event('change',{bubbles:true})),true)`);
+    assert.equal(await evaluate(popup, `document.getElementById('audio-format').disabled`), false);
+    assert.equal(await evaluate(popup, `document.getElementById('audio-format').value`), 'flac', 'DeepInfra must allow FLAC in Gecko');
+    await evaluate(popup, `(document.querySelector('[data-setting="provider"]').value='custom',document.querySelector('[data-setting="provider"]').dispatchEvent(new Event('change',{bubbles:true})),true)`);
+    await until(() => evaluate(popup, `(await import('./api/config.js')).getSettings().then(s=>s.provider==='custom')`));
     await evaluate(popup, `(document.getElementById('audio-format').value='flac',document.getElementById('audio-format').dispatchEvent(new Event('change',{bubbles:true})),true)`);
     await until(() => evaluate(popup, `(async()=>{const c=await import('./api/config.js');return c.audioFormat(await c.getSettings())==='flac'})()`));
     await evaluate(popup, `(document.querySelector('[data-setting="model"]').value='other-fixture',document.querySelector('[data-setting="model"]').dispatchEvent(new Event('input',{bubbles:true})),true)`);

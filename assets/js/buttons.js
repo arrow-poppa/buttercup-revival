@@ -42,8 +42,10 @@ function updateProviderDetails() {
     try {
         const draft = readDraft();
         $('audio-format').value = audioFormat({ ...draft, audioFormatProfiles: JSON.parse(draft.audioFormatProfiles || '{}') });
-        $('audio-format').disabled = false;
-    } catch { $('audio-format').value = 'mp3'; $('audio-format').disabled = true; }
+    } catch {
+        // An unfinished route must not lock the format picker or reset a choice.
+        // Saving/generating still validates the complete configuration.
+    }
     document.querySelector('[data-setting="wordsPerLine"]').disabled = document.querySelector('[data-setting="cueBreaks"]').value === 'provider';
     const whole = document.querySelector('[data-setting="audioMode"]').value === 'whole';
     $('whole-audio-hint').hidden = !whole;
@@ -244,6 +246,12 @@ async function initialize() {
             stored = await popupSettings();
             status('Background unavailable. Reload Buttercup on the browser extensions page to use its actions.');
         } finally { clearTimeout(timeout); }
+        if (!Object.hasOwn(stored.draft || {}, 'audioFormatProfiles')) {
+            // Files can update before a persistent background page restarts.
+            // Read the current schema locally, preserving durable preferences.
+            stored = await popupSettings();
+            showUpdate();
+        }
         restoreForm(stored);
         void checkBackend();
         $('reload-settings').hidden = true;

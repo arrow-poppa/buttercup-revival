@@ -5,6 +5,7 @@ import { mkdtemp, mkdir, realpath, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import assert from 'node:assert/strict';
+import { DEFAULTS } from '../api/config.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const workspace = path.join(root, 'test-results');
@@ -31,6 +32,45 @@ try {
             const developerMode = manager.locator('#devMode');
             if (!await developerMode.evaluate(toggle => toggle.checked)) await developerMode.click();
             await manager.close();
+            // Model a new popup receiving an older worker's settings schema.
+            await worker.evaluate(defaults => chrome.storage.local.set({ settings: { ...defaults, provider: 'deepinfra', uiLanguage: 'en' } }), DEFAULTS);
+            const legacy = await context.newPage();
+            await legacy.addInitScript(() => {
+                const send = chrome.runtime.sendMessage.bind(chrome.runtime);
+                chrome.runtime.sendMessage = async (message, ...args) => {
+                    const result = await send(message, ...args);
+                    if (message.type === 'POPUP_SETTINGS' && result?.data?.draft) {
+                        delete result.data.settings.audioFormatProfiles;
+                        delete result.data.draft.audioFormatProfiles;
+                    }
+                    return result;
+                };
+            });
+            await legacy.goto(`chrome-extension://${extensionId}/popup.html`);
+            await legacy.locator('#settings-fields:not([disabled])').waitFor();
+            await legacy.locator('details').evaluateAll(items => items.forEach(item => { item.open = true; }));
+            assert.equal(await legacy.locator('#audio-format').isEnabled(), true, 'An older worker must not disable format selection');
+            await legacy.locator('#audio-format').selectOption('flac');
+            assert.equal(await legacy.locator('#audio-format').inputValue(), 'flac');
+            assert.equal(await legacy.locator('#update-extension').isVisible(), true, 'An outdated worker must show the reload control');
+            for (const provider of ['openrouter', 'deepinfra', 'groq', 'custom']) {
+                await legacy.locator('[data-setting="provider"]').selectOption(provider);
+                assert.equal(await legacy.locator('#audio-format option').count(), 2);
+                assert.equal(await legacy.locator('#audio-format').isEnabled(), true, `${provider} must allow format selection`);
+                for (const format of ['flac', 'mp3']) {
+                    await legacy.locator('#audio-format').selectOption(format);
+                    assert.equal(await legacy.locator('#audio-format').inputValue(), format);
+                }
+            }
+            await legacy.locator('[data-setting="model"]').fill('');
+            assert.equal(await legacy.locator('#audio-format').isEnabled(), true, 'An unfinished model must not lock the picker');
+            await legacy.locator('#audio-format').selectOption('flac');
+            assert.equal(await legacy.locator('#audio-format').inputValue(), 'flac');
+            await legacy.close();
+            await worker.evaluate(async defaults => {
+                await chrome.storage.local.clear();
+                await chrome.storage.local.set({ settings: { ...defaults, uiLanguage: 'en' } });
+            }, DEFAULTS);
         }
         let popup = await context.newPage();
         if (round === 0) await popup.addInitScript(() => {
@@ -76,7 +116,11 @@ try {
                 assert.match(await incompatible.locator('#status').textContent(), /Reload extension/);
                 assert.equal(await incompatible.evaluate(() => window.generateRequests), 0, 'A discarded pin must block generation');
                 const restarted = context.waitForEvent('serviceworker', { timeout: 30000 });
-                await incompatible.locator('#update-extension').click();
+                await incompatible.locator('#update-extension').click().catch(error => {
+                    // Reload can invalidate the popup before click acknowledges.
+                    // The replacement worker and new popup are verified below.
+                    if (!error.message.includes('Target page, context or browser has been closed')) throw error;
+                });
                 await restarted;
                 popup = await context.newPage();
                 await popup.goto(`chrome-extension://${extensionId}/popup.html`);
