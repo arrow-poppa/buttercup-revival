@@ -1,5 +1,7 @@
 # Firefox and Gecko browsers
 
+For installation and everyday use, start with the [Firefox / Zen setup tutorial](GECKO_SETUP.md). This page explains architecture, compatibility, and test evidence.
+
 Buttercup builds two extensions from the same codebase:
 
 | Build | Runtime | Directory |
@@ -19,14 +21,9 @@ Mozilla [continues to support MV2 alongside MV3](https://blog.mozilla.org/en/fir
 
 ## Installation
 
-1. Run the normal installer (`sh install.sh` on Linux or `Install Buttercup.cmd` on Windows). It registers both browser families with the same assistant. Existing users must rerun it to add Gecko registration.
-2. Build with `npm run build` if working from source.
-3. In Firefox or Zen, open `about:debugging#/runtime/this-firefox`, choose **Load Temporary Add-on**, and select `dist/firefox/manifest.json`.
-4. Open Buttercup and click **Start and connect**. Import an existing Buttercup settings backup if desired; provider keys/settings are separate for each browser profile. The local pairing is intentionally excluded from backups.
+Use the [step-by-step setup tutorial](GECKO_SETUP.md), including its [browser signing table](GECKO_SETUP.md#which-other-browsers-allow-this). It separates unsigned add-on installation from assistant connectivity, covers permanent and temporary installs, and explains native, Flatseal, and manual connection paths.
 
-**This is an unsigned development build.** Temporary add-ons are unloaded when the browser exits. Standard release Firefox needs Mozilla signing for permanent installation. Zen can permit permanent unsigned installation when `xpinstall.signatures.required` is `false`: open `about:addons`, choose the gear menu → Install Add-on From File, and select `dist/firefox-unsigned.zip`. The stable ID is already included. This disables signature enforcement for that Zen profile; install extensions you trust. No signing, store submission or release publication is performed by this change. See Mozilla's [extension distribution guide](https://extensionworkshop.com/documentation/publish/distribute-sideloading/).
-
-The manifest declares transmission of authentication information, website content and browsing activity: selected provider credentials, requested video/audio/subtitles, and explicitly imported YouTube cookies go only to their configured destinations. This is not telemetry. The minimum desktop version is 140 to support the declaration; the Android metadata minimum only satisfies manifest compatibility checks and does **not** add mobile/Android assistant support.
+The public release ZIP may predate Gecko support. A dual-browser test package or a build from this branch is required until that support is released.
 
 ## Browser families and native messaging
 
@@ -51,33 +48,22 @@ On Windows, use `.venv\Scripts\python.exe` and, when needed, `--gecko-registry-k
 
 ### Optional automatic connection with Flatseal (Zen Flatpak)
 
-Run the normal installer, then `.venv/bin/python scripts/setup-assistant.py --flatpak-bridge app.zen_browser.zen` from the project folder. This creates an app-specific native host launcher without changing Flatpak permissions. In **Flatseal → Zen**, add **Session Bus → Talks → `org.freedesktop.Flatpak`** and **Persistent → Files → `.mozilla`**. Restart Zen completely, then use **Start and connect** as with a native browser.
+Follow [Method A in the tutorial](GECKO_SETUP.md#method-a-automatic-connection-with-flatseal). The helper prepares an app-specific native host launcher; the user separately enables the two Flatseal entries. The launcher calls `flatpak-spawn --host --watch-bus` to the existing host assistant. No browser permissions are changed by the helper.
 
-The launcher calls `flatpak-spawn --host --watch-bus` to the existing host assistant. `.mozilla` persistence exposes the app's own Gecko host manifest; the installer also registers its XDG Mozilla location. No home-wide or entire-bus access is required. The command permission applies to the browser generally, so this path is explicitly opt-in. It is tested with Zen's default filesystem permissions; custom home/filesystem overrides can interfere with persistence mapping. The manual path below requires neither setting.
-
-Uninstall removes Buttercup's app-specific launcher/manifests. Remove the two entries in Flatseal yourself if you no longer need them, preserving any settings required by other extensions. Tests used runtime flags rather than permanent overrides, so the installed Zen application's permissions were left unchanged. Reproduce with `BUTTERCUP_TEST_FLATPAK=app.zen_browser.zen BUTTERCUP_TEST_FLATPAK_BRIDGE=1 BUTTERCUP_GECKO_DELAY_MS=1000 npm run test:gecko-browser`.
+Uninstall removes Buttercup's app-specific launcher/manifests. Remove the two entries in Flatseal yourself if no longer needed, preserving settings required by other extensions. Tests used equivalent per-launch flags with a disposable profile and did not change the installed application's overrides.
 
 ### Manual connection for Flatpak / Snap
 
-Native browsers keep using **Start and connect**. Sandboxed browsers can pair explicitly without a native-messaging portal or extra Flatpak permissions:
+Follow [Method B in the tutorial](GECKO_SETUP.md#method-b-manual-connection-without-extra-flatpak-permissions). The local helper explicitly authorizes an exact browser profile origin and exports a private connection file. Import validates the target origin and stores only local connection settings. No wildcard CORS, extra HTTP pairing endpoint, or sandbox permission is added.
 
-1. In Buttercup, expand **Connect without native messaging** and click **Copy origin**. This is the exact profile URL, not the logical extension ID.
-2. From the installed project folder, run **Set up Buttercup assistant.sh**. In its Flatpak / Snap section, paste the origin and click **Start assistant and save connection file**.
-3. Back in Buttercup, click **Open connection editor**. Select the private JSON file and click **Import connection**. The editor uses a tab so closing the popup/file picker cannot interrupt import.
-4. Delete the connection file after import: it contains the local assistant token. Existing provider keys and settings are preserved.
-
-The helper authorizes only the pasted origin and starts the existing Python assistant. No wildcard CORS, new HTTP pairing endpoint, browser sandbox overrides or additional service is introduced. Connection files are rejected in a different browser profile and are excluded from settings backups. The browser's normal file-selection portal grants access to the selected file.
-
-After restarting the computer, run **Start Buttercup assistant.sh** and click **Check connection** in the extension. The helper starts the assistant detached; it does not keep a terminal open. The connection survives ordinary browser restarts. A new browser profile requires a new connection file.
-
-CLI equivalents (no secrets are printed):
+CLI equivalents, run from the project folder:
 
 ```sh
 .venv/bin/python scripts/setup-assistant.py --manual-origin moz-extension://YOUR-PROFILE-UUID --connection-file /private/path/Buttercup-connection.private.json
 .venv/bin/python scripts/setup-assistant.py --start-service
 ```
 
-Flatpak Zen 1.24b was tested in a disposable profile against a host assistant with separate state. The test uses a temporary filesystem grant only for its generated profile/extension fixtures; no overrides are added to the installed application or normal profile. Zen's BiDi automation cannot choose a file in privileged extension pages, so the test feeds the helper-generated file through the browser's `File` API and exercises the actual import handler. Interactive file-picker/portal selection and the Tk save dialog were not automated. Run this test with `BUTTERCUP_TEST_FLATPAK=app.zen_browser.zen BUTTERCUP_GECKO_DELAY_MS=1000 npm run test:gecko-browser`.
+Flatpak Zen 1.24b was tested against a host assistant with separate state. Zen's BiDi API cannot choose files in privileged extension pages, so automated tests pass the helper-generated file through the browser's `File` API and exercise the real import handler. Interactive portal file selection and the Tk save dialog were not automated. Reproduce with `BUTTERCUP_TEST_FLATPAK=app.zen_browser.zen BUTTERCUP_GECKO_DELAY_MS=1000 npm run test:gecko-browser`; add `BUTTERCUP_TEST_FLATPAK_BRIDGE=1` for the automatic bridge.
 
 ## Compatibility and security details
 

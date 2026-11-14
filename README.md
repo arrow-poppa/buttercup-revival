@@ -4,19 +4,20 @@
 
 # Buttercup Revival
 
-**Accurate, well-timed subtitles for any YouTube video, generated on demand.**
+**On-demand YouTube transcription for Chromium and Gecko browsers.**
 
-Buttercup transcribes the audio of the video you are watching with a speech model of your choice
+Buttercup Revival is an extension for Chromium-based browsers and Gecko browsers such as Firefox and Zen.
+It transcribes the audio of the video you are watching with a speech model of your choice
 and shows the result as captions, sends it to [asbplayer](https://github.com/asbplayer/asbplayer),
 or saves it as an `.srt` file.
 
 [![Tests](https://github.com/arrow-poppa/buttercup-revival/actions/workflows/test.yml/badge.svg)](https://github.com/arrow-poppa/buttercup-revival/actions/workflows/test.yml)
 [![Release](https://img.shields.io/github/v/release/arrow-poppa/buttercup-revival?color=d7476b)](https://github.com/arrow-poppa/buttercup-revival/releases/latest)
 ![Platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20Linux-342334)
-![Browsers](https://img.shields.io/badge/browsers-Chromium%20based-342334)
-![Manifest V3](https://img.shields.io/badge/manifest-v3-342334)
+![Browsers](https://img.shields.io/badge/browsers-Chromium%20%7C%20Gecko-342334)
+![Manifest versions](https://img.shields.io/badge/manifest-Chromium%20V3%20%7C%20Gecko%20V2-342334)
 
-[Install](#-installation) · [First subtitles](#-your-first-subtitles) · [asbplayer](#-using-it-with-asbplayer) · [Settings](#-settings) · [Troubleshooting](#-troubleshooting) · [Developers](#-for-developers)
+[Install](#-installation) · [Firefox / Zen guide](docs/GECKO_SETUP.md) · [First subtitles](#-your-first-subtitles) · [asbplayer](#-using-it-with-asbplayer) · [Settings](#-settings) · [Troubleshooting](#-troubleshooting) · [Developers](#-for-developers)
 
 <img src="docs/images/popup.png" width="380" alt="The Buttercup popup">
 
@@ -30,8 +31,8 @@ or saves it as an `.srt` file.
 - **Follows the speaker.** Each subtitle ends with the sentence, at a comma, or at a breath, so text appears and leaves with the speech instead of in fixed blocks.
 - **You choose the speech model.** DeepInfra, Groq, OpenRouter, or any OpenAI-compatible API. Whisper, Qwen ASR, Voxtral and others.
 - **Three ways to use the result:** captions on the YouTube player, automatic delivery to **asbplayer**, or `.srt` / `.vtt` files saved to a folder you pick.
-- **Pays once per video.** Results are cached, so changing the layout or exporting again costs nothing.
-- **Private by design.** The audio is prepared on your own computer; your API keys never leave the extension.
+- **Reuse cached transcripts.** Change subtitle layout or export again without another provider request. Regenerate explicitly requests a fresh transcription.
+- **Local audio preparation.** The assistant prepares audio on your computer; the extension sends it and the required API key only to your selected transcription provider.
 - **Five interface languages:** English, Português, Español, 日本語, 简体中文.
 
 ## 🧩 How it works
@@ -40,7 +41,7 @@ Buttercup has two parts that the installer sets up together:
 
 | Part | What it is | What it does |
 | --- | --- | --- |
-| **The extension** | A Chrome / Edge extension | Adds the **BC** button to the YouTube player, talks to the speech model, shows and exports subtitles |
+| **The extension** | Chromium or Gecko WebExtension | Adds the **BC** button to the YouTube player, talks to the speech model, shows and exports subtitles |
 | **The local assistant** | A small program on your computer | Fetches the video's audio with `yt-dlp` and prepares it with FFmpeg |
 
 ```mermaid
@@ -60,7 +61,7 @@ The assistant only runs when you ask for it and only listens to your own compute
 ## 📋 What you need
 
 - **Windows 10 or 11**, or **Linux**.
-- **A desktop Chromium-based browser** (Chromium 120 or newer): Chrome, Edge, Brave/Brave Origin, Vivaldi, Opera, Chromium and compatible forks. See [browser setup and limitations](docs/BROWSERS.md).
+- **A supported desktop browser:** Chromium 120+ (Chrome, Edge, Brave, Vivaldi, Opera, Chromium and compatible forks), or Gecko 140+ (Firefox, Zen and compatible modern forks). See [Chromium compatibility](docs/BROWSERS.md) and [Firefox / Zen setup](docs/GECKO_SETUP.md).
 - **An API key** from a speech provider. Creating one takes a couple of minutes; see [step 4](#step-4--add-your-api-key).
 - About **1 GB** of free disk space.
 
@@ -68,7 +69,13 @@ You do **not** need to install Python, Node.js or FFmpeg yourself. The installer
 
 ## 🚀 Installation
 
-No experience needed. Four steps, about ten minutes.
+Start with the route for your browser. Native installations connect through the browser's native-messaging API. Flatpak Zen can use an optional automatic launcher with Flatseal or a manual connection file.
+
+| Browser | Build | Setup guide |
+| --- | --- | --- |
+| Chromium-based | `dist/chromium` | Continue with the steps below |
+| Firefox / Zen / modern Gecko forks | `dist/firefox` or `dist/firefox-unsigned.zip` | [Follow the Firefox / Zen guide](docs/GECKO_SETUP.md) |
+| Zen Flatpak | Gecko build | [Automatic with Flatseal](docs/GECKO_SETUP.md#method-a-automatic-connection-with-flatseal) or [manual connection](docs/GECKO_SETUP.md#method-b-manual-connection-without-extra-flatpak-permissions) |
 
 ### Step 1 · Download
 
@@ -78,6 +85,9 @@ No experience needed. Four steps, about ten minutes.
 
 > [!IMPORTANT]
 > The extension runs from this folder. If you move or delete it later, Buttercup stops working.
+
+> [!NOTE]
+> The Gecko features on this branch may not be included in the latest public release yet. For Firefox/Zen, use the dual-browser test package supplied for this branch, or [build from source](#-for-developers). Your package must contain `dist/firefox` and `dist/firefox-unsigned.zip`.
 
 ### Step 2 · Run the installer
 
@@ -105,30 +115,17 @@ sh install.sh
 
 It uses your package manager (`apt`, `dnf`, `pacman` or `zypper`) and asks for your password only to install missing packages.
 
-For automatic startup, use a native browser package (`.deb` / `.rpm`). **Snap** and **Flatpak** may block native messaging; see [manual pairing and custom browser registration](docs/BROWSERS.md).
+For automatic startup, use a native browser package (`.deb` / `.rpm`). **Snap** and **Flatpak** may block native messaging. Zen Flatpak users can follow the [automatic or manual connection tutorial](docs/GECKO_SETUP.md#4-connect-the-assistant).
 
 </details>
 
 ### Step 3 · Add the extension to your browser
 
-**Firefox, Zen and compatible Gecko browsers:** use the second build, `dist/firefox`. See the [Firefox setup and compatibility guide](docs/firefox.md) for temporary installation, signing requirements and tested browser versions. Flatpak users can use the guided manual connection in that guide. Helium uses the Chromium build; [Linux registration is supported, while live Helium runtime validation remains pending](docs/BROWSERS.md#helium). The steps below apply to Chromium.
+**Firefox, Zen and other modern Gecko browsers:** use the [step-by-step installation guide](docs/GECKO_SETUP.md). It explains permanent unsigned installation in Zen, the differences between Firefox editions, and both Flatpak connection methods. **Helium on Linux** uses the Chromium build; its native-host paths are registered, while live Helium runtime validation remains pending.
 
-**Zen: keep an unsigned test build installed.** In `about:config`, set `xpinstall.signatures.required` to `false`. Then open `about:addons`, choose the gear menu → **Install Add-on From File**, and select `dist/firefox-unsigned.zip`. Buttercup already includes the required stable Gecko ID. Zen can keep this installation across browser restarts. This disables signature enforcement for that Zen profile, so install extensions you trust. Standard Firefox release builds still require Mozilla signing for permanent installation. This setting affects add-on installation; Flatpak assistant connections still use the manual connection flow described above.
+**Unsigned Gecko builds:** Zen can keep an unsigned extension installed after `xpinstall.signatures.required` is set to `false` in `about:config`. Standard Firefox release builds still enforce signing; Firefox ESR, Developer Edition, Nightly, LibreWolf, and Waterfox have different policies. The guide includes [verified signing requirements and source links](docs/GECKO_SETUP.md#which-other-browsers-allow-this).
 
-**Zen Flatpak: optional automatic connection with Flatseal.** After running the installer, prepare the host launcher once from the Buttercup folder:
-
-```sh
-.venv/bin/python scripts/setup-assistant.py --flatpak-bridge app.zen_browser.zen
-```
-
-In **Flatseal → Zen**:
-
-1. Under **Session Bus → Talks**, add `org.freedesktop.Flatpak`.
-2. Under **Persistent → Files**, add `.mozilla`.
-3. Fully quit Zen, reopen it, and click **Start and connect** in Buttercup.
-
-The launcher and both settings are needed together. No “All user files”, “All filesystem files”, or entire-session-bus toggle is needed. These are the fields described in [Flatseal's permission documentation](https://github.com/tchx84/Flatseal/blob/master/DOCUMENTATION.md). This route was tested with Flatpak Zen 1.24b and its default filesystem permissions, using equivalent per-launch permissions and a disposable profile. The host-execution permission lets the browser run host programs generally, not only Buttercup. If you prefer to keep that permission disabled, use the guided manual connection instead. Standard Firefox/Chromium native installations need neither Flatseal setting.
-
+The steps below apply to Chromium-based browsers.
 
 Browsers only install extensions automatically from their store, so this one step is done by hand.
 
@@ -154,7 +151,7 @@ The speech model runs at a provider, which needs a key to know the request is yo
    | **OpenRouter** | One account for many providers | [openrouter.ai/keys](https://openrouter.ai/keys) |
 
 2. Click the **Buttercup icon** in the browser toolbar.
-3. Click **Start and connect**. The badge changes to **Connected**.
+3. Connect the assistant using **Start and connect**, or your chosen [Flatpak method](docs/GECKO_SETUP.md#4-connect-the-assistant). The badge changes to **Connected**.
 4. Under **Transcription**, choose your provider and paste the key.
 
 <img src="docs/images/transcription.png" width="380" alt="Choosing a provider and pasting the API key">
@@ -291,13 +288,13 @@ Python, Node.js and FFmpeg stay installed, since other programs may use them. Re
 
 | What you see | What to do |
 | --- | --- |
-| The assistant badge says **Disconnected** | Click **Start and connect**. This is normal after restarting the computer |
-| *"The assistant is not installed for this browser yet"* | Run the installer again, then reload the extension. For other forks or sandboxed packages, see [browser setup](docs/BROWSERS.md) |
+| The assistant badge says **Disconnected** | Native browsers and the Flatseal bridge use **Start and connect**. Manual Flatpak connections use **Start Buttercup assistant.sh**, then **Check connection** |
+| The browser cannot reach the local assistant | Run the installer from the correct extracted folder. For Flatpak, complete [Method A or B](docs/GECKO_SETUP.md#4-connect-the-assistant); installing the add-on alone is not enough |
 | No **BC** button on the player | Reload the YouTube page. Check that **Enable Buttercup** is on |
 | A **Reload extension** button appears in the popup | Click it. The extension was updated while it was open |
 | *"Set your … API key first"* | Paste the key of the provider selected under **Transcription** |
 | *"YouTube rejected extraction (403)"* or *authentication failed* | Import fresh cookies, or try again later; YouTube sometimes blocks downloads temporarily |
-| Subtitles are huge blocks of text | Keep **Request word timestamps** on and lower **Max words per subtitle**. Some models do not return word timings; try a Whisper model |
+| Subtitles are huge blocks of text | Select a Buttercup segmentation mode and lower **Max words per subtitle**. Original provider segmentation bypasses that limit. If word timings are unavailable, internal cue times are estimated |
 | *"asbplayer is unavailable"* | Start asbplayer's WebSocket server and enable the WebSocket client in asbplayer; see [Using it with asbplayer](#-using-it-with-asbplayer) |
 | The upload is refused as too large | Use **Audio sending → In parts** |
 | The installer says a program could not be installed | Install it by hand ([Python](https://www.python.org/downloads/), [Node.js](https://nodejs.org/), [FFmpeg](https://ffmpeg.org/download.html)) and run the installer again |
@@ -310,7 +307,7 @@ Still stuck? [Open an issue](https://github.com/arrow-poppa/buttercup-revival/is
 - **Audio** is downloaded and converted on your computer, then sent only to the provider you selected.
 - **API keys** are stored in the extension's private storage and are sent only to that provider. The YouTube page never sees them.
 - **The local assistant** accepts connections only from your computer and only from this extension, using a random token created at installation.
-- **Nothing is installed system-wide by Buttercup itself.** The assistant lives in the Buttercup folder and registers per user. It does not start with the computer.
+- **Per-user assistant setup.** The assistant lives in the Buttercup folder and registers per user. The installer may use your system package manager for missing dependencies; the assistant has no automatic login startup.
 - **No telemetry.** The optional community cache is off by default and, when enabled, shares subtitle text and video/model details only.
 
 A settings backup contains your API keys. Treat that file like a password.
@@ -323,7 +320,7 @@ A settings backup contains your API keys. Treat that file like a password.
 ```
 manifest.json, popup.html      Extension manifest and popup
 buttercup.js, content.js       Player button, captions and progress notice (content scripts)
-background/                    Service worker and offscreen document
+background/, gecko/            Shared processing and Chromium/Gecko compatibility
 api/                           Settings, providers, transcription pipeline, i18n
 subtitles/, cache/             Cue formatting, SRT/VTT export, IndexedDB cache
 integrations/                  asbplayer
