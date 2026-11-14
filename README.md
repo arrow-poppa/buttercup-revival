@@ -17,6 +17,8 @@ or saves it as an `.srt` file.
 ![Browsers](https://img.shields.io/badge/browsers-Chromium%20%7C%20Gecko-342334)
 ![Manifest versions](https://img.shields.io/badge/manifest-Chromium%20V3%20%7C%20Gecko%20V2-342334)
 
+**Languages:** English · [Português (Brasil)](README.pt-BR.md) · [Español](README.es.md) · [日本語](README.ja.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-TW.md)
+
 [Install](#-installation) · [Firefox / Zen guide](docs/GECKO_SETUP.md) · [First subtitles](#-your-first-subtitles) · [asbplayer](#-using-it-with-asbplayer) · [Settings](#-settings) · [Troubleshooting](#-troubleshooting) · [Developers](#-for-developers)
 
 <img src="docs/images/popup.png" width="380" alt="The Buttercup popup">
