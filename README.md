@@ -87,7 +87,7 @@ Start with the route for your browser. Native installations connect through the 
 > The extension runs from this folder. If you move or delete it later, Buttercup stops working.
 
 > [!NOTE]
-> The Gecko features on this branch may not be included in the latest public release yet. For Firefox/Zen, use the dual-browser test package supplied for this branch, or [build from source](#-for-developers). Your package must contain `dist/firefox` and `dist/firefox-unsigned.zip`.
+> Starting with **v0.6.0**, the release ZIP includes both browser builds: `dist/chromium`, `dist/firefox` and `dist/firefox-unsigned.zip`. For Firefox/Zen, follow the [Gecko setup guide](docs/GECKO_SETUP.md), including the signing requirements for your browser.
 
 ### Step 2 · Run the installer
 

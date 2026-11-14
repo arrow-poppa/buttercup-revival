@@ -171,6 +171,8 @@ def test_manual_pairing_binds_exact_origin_and_writes_private_connection(install
     setup.install()
     token = 'SYNTHETIC_LOCAL_CONNECTION_TOKEN_' * 2
     monkeypatch.setitem(setup.native_start.__globals__, 'start_service', lambda *args: token)
+    # Windows registers hosts in the registry and does not create this Linux config path.
+    config.mkdir(parents=True, exist_ok=True)
     destination = config / 'connection.private.json'
     origin = 'moz-extension://12345678-1234-1234-1234-123456789abc'
     settings = Settings(token=token, origins=('chrome-extension://' + setup.CHROMIUM_EXTENSION_ID,), state_dir=state, gecko_ids=(setup.GECKO_EXTENSION_ID,))

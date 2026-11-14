@@ -20,7 +20,7 @@ Buttercup targets Gecko 140 or newer. Signing support alone does not establish t
 
 1. Extract the complete Buttercup project ZIP to a folder you intend to keep, such as Documents.
 2. Open the extracted folder. It must contain `install.sh`, `scripts`, and `dist`. There may be another `Buttercup-Revival` folder inside the first one: open the one containing those files.
-3. Check that `dist/firefox/manifest.json` and `dist/firefox-unsigned.zip` exist. An older Chromium-only package will not contain them. Use the dual-browser test package or [build this branch](../README.md#-for-developers).
+3. Check that `dist/firefox/manifest.json` and `dist/firefox-unsigned.zip` exist. An older Chromium-only package will not contain them. Download **v0.6.0 or later**, or [build from source](../README.md#-for-developers).
 
 The **full project ZIP** contains the assistant and installers. The smaller **`dist/firefox-unsigned.zip`** contains only the extension. Select the smaller ZIP when installing the add-on; do not select the full project ZIP.
 

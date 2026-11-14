@@ -23,7 +23,7 @@ Mozilla [continues to support MV2 alongside MV3](https://blog.mozilla.org/en/fir
 
 Use the [step-by-step setup tutorial](GECKO_SETUP.md), including its [browser signing table](GECKO_SETUP.md#which-other-browsers-allow-this). It separates unsigned add-on installation from assistant connectivity, covers permanent and temporary installs, and explains native, Flatseal, and manual connection paths.
 
-The public release ZIP may predate Gecko support. A dual-browser test package or a build from this branch is required until that support is released.
+Release **v0.6.0 and later** includes both browser builds and the unsigned Gecko ZIP. Download `Buttercup-Revival.zip` for the extension and local assistant together; the standalone Firefox ZIP contains only the extension.
 
 ## Browser families and native messaging
 
