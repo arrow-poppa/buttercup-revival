@@ -291,6 +291,18 @@ try {
     const reloaded = await evaluate(popup, `(await import('./api/config.js')).getSettings().then(s=>({language:s.language,paired:s.backendToken===${JSON.stringify(token)}}))`);
     assert.deepEqual(reloaded, {language:'zh',paired:true});
     await until(() => evaluate(youtube, `!!document.getElementById('buttercup-button')`));
+    await evaluate(popup, `(async()=>{localStorage.setItem('buttercup-language','pt-BR');const m=await import('./api/settings.js');await m.persistDraft({uiLanguage:'pt-BR'});await m.commitDraft();return true})()`);
+    await call('browsingContext.close', { context: popup });
+    popup = await open(base + 'popup.html');
+    await until(() => evaluate(popup, `!document.getElementById('settings-fields').disabled`));
+    assert.equal(await evaluate(popup, `document.documentElement.lang`), 'pt-BR');
+    assert.equal(await evaluate(popup, `document.getElementById('regenerate').textContent`), 'Regenerar legendas');
+    assert.equal(await evaluate(popup, `document.querySelector('#manual-connection summary').textContent`), 'Conectar sem mensagens nativas');
+    assert.equal(await evaluate(popup, `document.querySelector('#keyboard-shortcuts summary').textContent`), 'Atalhos de teclado');
+    assert.equal(await evaluate(popup, `document.querySelector('[data-setting="theme"] option[value="dark"]').textContent`), 'Escuro');
+    await evaluate(popup, `(document.getElementById('status').textContent='Starting a fresh transcription…',true)`);
+    await until(() => evaluate(popup, `document.getElementById('status').textContent==='Iniciando uma nova transcrição…'`));
+    console.log('Gecko Portuguese UI and dynamic status localization passed');
     assert.deepEqual(errors, []);
     console.log('PASS: shared UI, private settings, native pairing, hidden long job, subtitles, cache, SRT export, asbplayer, legacy settings, cancellation, reload');
 } finally {

@@ -58,3 +58,19 @@ test('every translation keeps the slots and the markup of its source', () => {
         assert.ok(Object.hasOwn(LANGUAGES.es, source), `es is missing: ${source}`);
     }
 });
+
+test('recent popup controls and status messages have translations in every supported locale', () => {
+    const messages = ['Appearance', 'Auto (system)', 'Light', 'Dark', 'Keyboard shortcuts', 'Configure shortcuts', 'Not assigned',
+        'Regenerate subtitles', 'Starting a fresh transcription…', 'Connect without native messaging', 'Copy origin',
+        'Open connection editor', 'Private connection file', 'Import connection', 'Keep provider segments (original timing)',
+        'Word timestamps are unavailable for some text. Subtitle boundaries were estimated within the original segment to respect the word limit.'];
+    for (const language of ['pt-BR', 'es', 'ja', 'zh-CN']) {
+        setLanguage(language);
+        for (const message of messages) {
+            assert.ok(Object.hasOwn(LANGUAGES[language], message), `${language}: ${message}`);
+            assert.notEqual(tr(message), message, `${language}: ${message}`);
+        }
+        assert.equal(tr('Subtitles ready (cache).'), LANGUAGES[language]['Subtitles ready ({0}).'].replace('{0}', tr('cache')));
+    }
+    setLanguage('en');
+});

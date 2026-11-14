@@ -219,7 +219,7 @@ async function tracks() {
     const items = await rpc({ type: 'TRACKS', videoId });
     const previous = $('track').value;
     $('track').replaceChildren(new Option('Current transcription', ''));
-    for (const item of items) $('track').add(new Option(`${item.language} → ${item.target} · ${item.model}${item.transport === 'chat-completions' ? ' · chat' : ''}${item.upstreamProvider ? ' · ' + item.upstreamProvider : ''}${item.audioTrack === 'original' ? ' · original audio' : ''}`, item.key));
+    for (const item of items) $('track').add(new Option(`${item.language} → ${item.target} · ${item.model}${item.transport === 'chat-completions' ? ' · ' + tr('Chat') : ''}${item.upstreamProvider ? ' · ' + item.upstreamProvider : ''}${item.audioTrack === 'original' ? ' · ' + tr('Original audio') : ''}`, item.key));
     if (items.some(item => item.key === previous)) $('track').value = previous;
 }
 async function poll() {
@@ -295,7 +295,8 @@ $('settings-form').addEventListener('submit', async event => {
 async function showShortcuts() {
     const commands = await chrome.commands.getAll();
     for (const [id, name] of [['shortcut-generate', 'generate-subtitles'], ['shortcut-regenerate', 'regenerate-subtitles']]) {
-        $(id).textContent = commands.find(command => command.name === name)?.shortcut || 'Not assigned';
+        // Shortcut values live in <code>, which the DOM translator preserves.
+        $(id).textContent = commands.find(command => command.name === name)?.shortcut || tr('Not assigned');
     }
 }
 action('configure-shortcuts', async () => {

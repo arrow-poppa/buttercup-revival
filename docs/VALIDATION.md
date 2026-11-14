@@ -11,6 +11,12 @@
 - Windows runtime, additional Gecko forks and live paid-provider FLAC acceptance were not retested for this change. Model-specific format support and any accuracy benefit remain unverified; rejected uploads are never automatically retried with another format/provider. No release was published.
 - Dropdown follow-up: reproduced a disabled DeepInfra selector when an older background process omitted the format-preferences field. The popup now reads the current local settings schema and offers Reload extension. The picker never disables itself based on route/provider validation. Chromium regressions verify both options on every provider, unfinished model fields and four browser restarts; Firefox runtime also verifies an older-schema response and DeepInfra FLAC selection. Both browser suites passed after the fix.
 
+## Popup localization — 2026-11-14 (unreleased)
+
+- Completed the missing Portuguese, Spanish, Japanese and Simplified Chinese catalog entries for themes, shortcuts, regeneration, provider segments, manual Gecko/Flatpak pairing and their status messages. Shortcut placeholders inside preserved `<code>` elements and cached-track labels use explicit `tr()` calls; filenames, model/provider IDs and native language names remain literal.
+- **126 JavaScript tests passed**, including catalog consistency, markup preservation and new-feature coverage. The existing Chromium i18n suite now audits every translatable source string in the popup against each catalog, with explicit exceptions for identifiers/examples, and checks dynamic regeneration/timing warnings and unassigned shortcuts in all five interface languages. All five cases passed on Chromium 151.0.7922.34.
+- Firefox 159.0 passed the existing native-assistant/subtitle runtime harness and additional Portuguese popup checks for regeneration, manual connection, shortcuts, themes and dynamic status translation. External transcription remains simulated; no paid API requests were made. Both browser builds were rebuilt; extension identities and English browser metadata remain unchanged.
+
 Ambiente local: Windows, Python 3.14.6, Node.js 26.4.0, FFmpeg/FFprobe 9.0.2, yt-dlp 2026.8.19, yt-dlp-ejs 0.8.0, pytubefix 11.2.1.
 
 ## Executado localmente
