@@ -6,7 +6,7 @@ Buttercup está destinado a navegadores Chromium de escritorio en Windows y Linu
 
 ## Registro automático
 
-Ejecuta `Install Buttercup.cmd` en Windows o `sh install.sh` en Linux, y luego carga `dist/chromium` desde la página de extensiones de tu navegador (`chrome://extensions`, o su equivalente específico). Haz clic en **Start and connect** en Buttercup.
+Ejecuta `Install Buttercup.cmd` en Windows o `sh install.sh` en Linux, y luego carga `dist/chromium` desde la página de extensiones de tu navegador (`chrome://extensions`, o su equivalente específico). Haz clic en **Iniciar y conectar** en Buttercup.
 
 En Linux, el instalador registra estos directorios de configuración bajo `$XDG_CONFIG_HOME` (predeterminado: `~/.config`):
 
@@ -50,7 +50,7 @@ El inicio automático necesita permiso para lanzar el asistente en el host. Los 
 
 Usa un paquete nativo del navegador para el inicio automático, o ejecuta el backend en el host y empareja manualmente si el navegador permite redes de loopback y las API de extensión necesarias:
 
-1. Copia el ID de la extensión desde **How to connect** en la ventana emergente.
+1. Copia el ID de la extensión desde **Cómo conectar** en la ventana emergente.
 2. Inicia el backend en un terminal del host:
 
    ```sh
@@ -58,7 +58,7 @@ Usa un paquete nativo del navegador para el inicio automático, o ejecuta el bac
    ```
 
    En Windows, usa `.venv\Scripts\python.exe` en su lugar. Si ya hay un asistente en ejecución, detén esa instancia primero o selecciona otro puerto y directorio de estado con `--port` y `--state-dir`.
-3. En **Local connection — advanced options**, introduce `http://127.0.0.1:8767` (o el puerto seleccionado) y el token de emparejamiento mostrado. Haz clic en **Check assistant**. Mantén el terminal abierto. Usa **Check connection** para las comprobaciones posteriores; **Start and connect** vuelve a invocar la mensajería nativa.
+3. En **Conexión local — opciones avanzadas**, introduce `http://127.0.0.1:8767` (o el puerto seleccionado) y el token de emparejamiento mostrado. Haz clic en **Comprobar asistente**. Mantén el terminal abierto. Usa **Comprobar conexión** para las comprobaciones posteriores; **Iniciar y conectar** vuelve a invocar la mensajería nativa.
 
 Copia el token de emparejamiento solo en el campo de contraseña de Buttercup; no lo incluyas en capturas de pantalla, informes de problemas ni URL. Esta ruta manual sigue aplicando el mismo enlace de loopback, la autenticación por token y la lista de orígenes de extensión permitidos. No puede restaurar API de extensión desactivadas por un navegador.
 

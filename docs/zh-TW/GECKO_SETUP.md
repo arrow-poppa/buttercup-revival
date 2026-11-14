@@ -8,9 +8,9 @@ Buttercup Revival 是一款適用於 **Chromium 和 Gecko** 的瀏覽器擴充�
 
 | 你的瀏覽器 | 安裝擴充功能 | 連線助理 |
 | --- | --- | --- |
-| 原生 Zen | 下方的永久未簽署安裝，或臨時安裝 | 按一下 **Start and connect** |
-| 標準 Firefox 發行版 | 用於永久安裝的 Mozilla 簽署套件，或臨時安裝 | 在原生安裝中按一下 **Start and connect** |
-| Firefox ESR、Developer Edition、Nightly 或無品牌建置 | 受支援的建置可以未簽署安裝；請參閱簽章表 | 在原生安裝中按一下 **Start and connect** |
+| 原生 Zen | 下方的永久未簽署安裝，或臨時安裝 | 按一下 **啟動並連線** |
+| 標準 Firefox 發行版 | 用於永久安裝的 Mozilla 簽署套件，或臨時安裝 | 在原生安裝中按一下 **啟動並連線** |
+| Firefox ESR、Developer Edition、Nightly 或無品牌建置 | 受支援的建置可以未簽署安裝；請參閱簽章表 | 在原生安裝中按一下 **啟動並連線** |
 | Zen Flatpak | 依 Zen 的方式安裝 | 選擇**方法 A：使用 Flatseal 自動連線**或**方法 B：手動連線** |
 | 其他現代 Gecko 分支 | 檢查簽章表和瀏覽器需求 | 原生訊息傳遞取決於瀏覽器/套件；請參閱[相容性詳情](../firefox.md) |
 
@@ -96,14 +96,14 @@ Buttercup 已包含永久安裝所需的明確 Gecko 附加元件 ID。ZIP 和�
 <a id="connect"></a>
 ## 4. 連線助理
 
-**原生瀏覽器安裝：** 開啟 Buttercup 並按一下 **Start and connect**。徽章應變成 **Connected**。你不需要下列任一 Flatpak 方法。
+**原生瀏覽器安裝：** 開啟 Buttercup 並按一下 **啟動並連線**。徽章應變成 **已連線**。你不需要下列任一 Flatpak 方法。
 
 **Zen Flatpak：** 選擇下列方法之一。兩者使用相同的助理，並保留你的供應商設定。
 
 <a id="flatseal"></a>
 ### 方法 A：使用 Flatseal 自動連線
 
-如果你希望 **Start and connect** 啟動助理（包括重新啟動電腦後），請選擇此方法。
+如果你希望 **啟動並連線** 啟動助理（包括重新啟動電腦後），請選擇此方法。
 
 #### A1. 準備一次啟動器
 
@@ -128,16 +128,16 @@ Buttercup 已包含永久安裝所需的明確 Gecko 附加元件 ID。ZIP 和�
 
 **這些是文字項目，不是 Socket 區段中的 D-Bus 開關。** 你不需要啟用整個工作階段匯流排、整個系統匯流排、所有使用者檔案或所有檔案系統檔案。第一個值區分大小寫；第二個以點開頭且不含斜線。
 
-工作階段匯流排權限允許 Zen 一般性地執行主機程式，而不僅是 Buttercup。如果你希望保持該權限關閉，請使用方法 B。已測試的方式使用 Zen 的預設檔案系統權限；廣泛的自訂家目錄覆寫可能會干擾持續性對應。請參閱 [Flatseal 的權限參考](https://github.com/tchx84/Flatseal/blob/master/DOCUMENTATION.md)。
+工作階段匯流排權限允許 Zen 執行主機上的程式，並不限於 Buttercup。如果你希望保持該權限關閉，請使用方法 B。已測試的方式使用 Zen 的預設檔案系統權限；範圍過廣的自訂家目錄權限可能會干擾持久化對應。請參閱 [Flatseal 的權限參考](https://github.com/tchx84/Flatseal/blob/master/DOCUMENTATION.md)。
 
 #### A3. 重新啟動並連線
 
 1. 完全結束 Zen，包括其他視窗和背景執行個體。
 2. 再次開啟 Zen。
-3. 開啟 Buttercup 並按一下 **Start and connect**。
-4. 確認徽章顯示 **Connected**。
+3. 開啟 Buttercup 並按一下 **啟動並連線**。
+4. 確認徽章顯示 **已連線**。
 
-此後，正常使用 **Start and connect**。重新啟動電腦後，它可以再次啟動助理；不需要連線檔案或終端機。
+此後，正常使用 **啟動並連線**。重新啟動電腦後，它可以再次啟動助理；不需要連線檔案或終端機。
 
 <a id="manual"></a>
 ### 方法 B：不增加 Flatpak 權限的手動連線
@@ -147,8 +147,8 @@ Buttercup 已包含永久安裝所需的明確 Gecko 附加元件 ID。ZIP 和�
 #### B1. 複製瀏覽器連線來源
 
 1. 在你要使用的瀏覽器設定檔中開啟 Buttercup。
-2. 展開 **Connect without native messaging**。
-3. 按一下 **Copy origin**。
+2. 展開 **不使用原生訊息傳遞連線**。
+3. 按一下 **複製來源**。
 
 使用該按鈕的值。不要複製 How to connect 中的 **Extension ID**：連線來源以 `moz-extension://` 開頭，用於識別此瀏覽器設定檔。
 
@@ -164,11 +164,11 @@ Buttercup 已包含永久安裝所需的明確 Gecko 附加元件 ID。ZIP 和�
 
 #### B3. 匯入並檢查連線
 
-1. 返回 Buttercup → **Connect without native messaging**。
-2. 按一下 **Open connection editor**。會開啟一個分頁，以便彈出式視窗關閉時檔案選擇器仍保持開啟。
+1. 返回 Buttercup → **不使用原生訊息傳遞連線**。
+2. 按一下 **開啟連線編輯器**。會開啟一個分頁，以便彈出式視窗關閉時檔案選擇器仍保持開啟。
 3. 選擇你剛剛儲存的 JSON 檔案。
-4. 按一下 **Import connection**。
-5. 檢查是否顯示 **Assistant connected** / **Connected**。
+4. 按一下 **匯入連線**。
+5. 檢查是否顯示 **Assistant connected** / **已連線**。
 6. 之後刪除該 JSON 檔案：它包含你的私人本機助理權杖。
 
 匯入的連線會為該設定檔保留。變更供應商或字幕設定不會移除它。新的瀏覽器設定檔需要新檔案。設定備份會刻意排除本機連線。
@@ -181,16 +181,16 @@ Buttercup 已包含永久安裝所需的明確 Gecko 附加元件 ID。ZIP 和�
 sh "Start Buttercup assistant.sh"
 ```
 
-然後在 Buttercup 中按一下 **Check connection**。你不需要在每次重新啟動後重新建立/匯入 JSON 檔案。使用此方法時，**Start and connect** 仍會嘗試原生訊息傳遞；請改用輔助程式和 **Check connection**。
+然後在 Buttercup 中按一下 **檢查連線**。你不需要在每次重新啟動後重新建立/匯入 JSON 檔案。使用此方法時，**啟動並連線** 仍會嘗試原生訊息傳遞；請改用輔助程式和 **檢查連線**。
 
 ## 5. 產生你的第一批字幕
 
-1. 在 **Transcription** 中選擇供應商並輸入其 API 金鑰。
+1. 在 **轉錄** 中選擇供應商並輸入其 API 金鑰。
 2. 開啟一個 YouTube 影片。
-3. 按一下播放器上的 **BC** 按鈕，或 Buttercup 中的 **Generate captions**。
+3. 按一下播放器上的 **BC** 按鈕，或 Buttercup 中的 **生成字幕**。
 4. 等待完成訊息。
 
-**Generate** 在可用時重複使用快取的轉錄。**Regenerate subtitles** 明確要求新的轉錄，可能產生供應商費用。在 **Start a new subtitle** 下，選擇供應商原始分段或讓 Buttercup 重新分組。版面變更可以使用現有快取。
+**Generate** 在可用時重複使用快取的轉錄。**重新生成字幕** 明確要求新的轉錄，可能產生供應商費用。在 **開始新字幕的時機** 下，選擇供應商原始分段或讓 Buttercup 重新分組。版面變更可以使用現有快取。
 
 ## 如果發生問題
 
@@ -203,6 +203,6 @@ sh "Start Buttercup assistant.sh"
 | 擴充功能已安裝但助理無法連線 | 這與簽章是不同的問題。原生使用者應重新執行安裝程式；Flatpak 使用者應完成方法 A 或 B。 |
 | 方法 A 仍無法連線 | 確認啟動器命令成功、兩個 Flatseal 項目已新增到 Zen 本身，且 Zen 已完全重新啟動。保持專案資料夾在原位。自訂檔案系統覆寫可能需要改回手動方式。 |
 | 方法 B 提示檔案屬於另一個設定檔 | 從目前設定檔複製連線來源並產生新的連線檔案。 |
-| 方法 B 在重新啟動電腦前可用 | 執行 `Start Buttercup assistant.sh`，然後按一下 **Check connection**。通常不需要重新匯入。 |
+| 方法 B 在重新啟動電腦前可用 | 執行 `Start Buttercup assistant.sh`，然後按一下 **檢查連線**。通常不需要重新匯入。 |
 
 關於已測試版本、限制、手動 CLI 選項和安全設計，請參閱 [Gecko 技術與相容性說明](../firefox.md)。

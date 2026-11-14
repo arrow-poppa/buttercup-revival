@@ -157,8 +157,8 @@ Buttercup 現在會出現在清單中。按一下工具列中的拼圖圖示，�
    | **OpenRouter** | 一個帳戶使用多個供應商 | [openrouter.ai/keys](https://openrouter.ai/keys) |
 
 2. 按一下瀏覽器工具列中的 **Buttercup 圖示**。
-3. 使用 **Start and connect** 或你選擇的 [Flatpak 方法](docs/zh-TW/GECKO_SETUP.md#connect)連接助理。徽章會變成 **Connected**。
-4. 在 **Transcription** 下選擇供應商並貼上金鑰。
+3. 使用 **啟動並連線** 或你選擇的 [Flatpak 方法](docs/zh-TW/GECKO_SETUP.md#connect)連接助理。徽章會變成 **已連線**。
+4. 在 **轉錄** 下選擇供應商並貼上金鑰。
 
 <img src="docs/images/transcription.png" width="380" alt="選擇供應商並貼上 API 金鑰">
 
@@ -176,12 +176,12 @@ Buttercup 現在會出現在清單中。按一下工具列中的拼圖圖示，�
 第一次使用大約需要供應商轉錄音訊所需的時間。之後開啟同一部影片會立即顯示，因為結果已快取。
 
 > [!TIP]
-> 重新啟動電腦後，開啟 Buttercup 彈出式視窗並按一下 **Start and connect** 一次。
+> 重新啟動電腦後，開啟 Buttercup 彈出式視窗並按一下 **啟動並連線** 一次。
 
 **你可能會遇到的兩種訊息**
 
-- *"Human captions are available"*：影片已有由人工撰寫的字幕。如仍要取代，請在 **General** 下關閉 **Prefer human captions**。
-- *"Multiple audio tracks detected"*：影片是配音版本。將 **Audio track for transcription** 設為 **Original audio**。你可以為所有影片保持此設定。
+- *"Human captions are available"*：影片已有由人工撰寫的字幕。如仍要取代，請在 **常規** 下關閉 **優先使用人工字幕**。
+- *"Multiple audio tracks detected"*：影片是配音版本。將 **用於轉錄的音軌** 設為 **原始音訊**。你可以為所有影片保持此設定。
 
 ## 📚 與 asbplayer 搭配使用
 
@@ -209,19 +209,19 @@ go run .
 
 **3 · 讓 Buttercup 使用它**
 
-在 Buttercup 彈出式視窗中，開啟 **Integrations · asbplayer**：
+在 Buttercup 彈出式視窗中，開啟 **整合 · asbplayer**：
 
-- 按一下 **Check connected media**，確認 Buttercup 可以連線到伺服器。
-- 開啟 **Auto-send subtitles to asbplayer**。
-- 如只想查看 asbplayer 的字幕，請在 **General** 下關閉 **Show Buttercup captions on the YouTube video**。
+- 按一下 **檢查已連線的媒體**，確認 Buttercup 可以連線到伺服器。
+- 開啟 **自動將字幕傳送到 asbplayer**。
+- 如只想查看 asbplayer 的字幕，請在 **常規** 下關閉 **在 YouTube 影片上顯示 Buttercup 字幕**。
 
-此後，按下 **BC** 會產生字幕並載入 asbplayer。**Send to asbplayer** 按鈕可隨時再次傳送，包括從快取傳送。
+此後，按下 **BC** 會產生字幕並載入 asbplayer。**傳送到 asbplayer** 按鈕可隨時再次傳送，包括從快取傳送。
 
 ## 💾 儲存字幕檔案
 
-- **Download SRT** / **Download VTT** 會儲存目前影片的字幕。
-- **Save SRT automatically after generating** 會為每部影片自動儲存。
-- **Folder for subtitle files** 選擇儲存位置。留空則使用瀏覽器的下載資料夾，也可以輸入完整路徑，例如 `D:\Subtitles`。該資料夾必須已經存在。
+- **下載 SRT** / **下載 VTT** 會儲存目前影片的字幕。
+- **生成後自動儲存 SRT** 會為每部影片自動儲存。
+- **字幕檔案的儲存資料夾（留空 = 瀏覽器下載目錄）** 選擇儲存位置。留空則使用瀏覽器的下載資料夾，也可以輸入完整路徑，例如 `D:\Subtitles`。該資料夾必須已經存在。
 
 檔案命名為 `[videoID]___Title.srt`，例如 `[dQw4w9WgXcQ]___Never Gonna Give You Up.srt`。較新的檔案會取代同名的舊檔案。
 
@@ -233,53 +233,53 @@ go run .
 
 | 區段 | 設定 | 作用 |
 | --- | --- | --- |
-| **Header** | Language | 介面語言。*Auto* 跟隨瀏覽器 |
-| **General** | Audio track for transcription | *Original audio* 可避免轉錄配音 |
-| | Show Buttercup captions on the YouTube video | 關閉 = 字幕只傳送到 asbplayer 或檔案 |
-| | Spoken language | 留空以自動偵測；如果偵測錯誤，請設定（`ja`、`en`、`pt`…） |
-| | Folder for subtitle files | `.srt` / `.vtt` 檔案的寫入位置 |
-| **Transcription** | Provider, key and model | 使用哪個語音模型轉錄音訊 |
-| | Request word timestamps | 產生簡短、貼合語音的字幕所需。請保持開啟 |
-| | Vocabulary prompt | 名稱和不常見詞彙，協助模型正確拼寫 |
-| **Subtitle layout** | Start a new subtitle | 跟隨說話者，或僅在字數上限處切分 |
-| | Max words per subtitle | 畫面上同時顯示的文字上限 |
-| | Line break every N words | 每 N 個字將一條字幕換行 |
-| **Audio upload (advanced)** | Audio sending | *In parts* 適用於任意長度；*Whole audio* 為單次要求 |
-| | Audio format | MP3（預設）或 FLAC，依每個供應商/模型設定分別記住 |
-| **Keyboard shortcuts** | Configure shortcuts | 在瀏覽器的快速鍵設定中自訂 Generate 與 Regenerate |
-| **Backup** | Export / Import settings | 將設定儲存到檔案並在之後載入 |
+| **Header** | 語言 | 介面語言。*自動* 跟隨瀏覽器 |
+| **常規** | 用於轉錄的音軌 | *原始音訊* 可避免轉錄配音 |
+| | 在 YouTube 影片上顯示 Buttercup 字幕 | 關閉 = 字幕只傳送到 asbplayer 或檔案 |
+| | 語音語言（留空 = 自動） | 留空以自動偵測；如果偵測錯誤，請設定（`ja`、`en`、`pt`…） |
+| | 字幕檔案的儲存資料夾（留空 = 瀏覽器下載目錄） | `.srt` / `.vtt` 檔案的寫入位置 |
+| **轉錄** | Provider, key and model | 使用哪個語音模型轉錄音訊 |
+| | 請求單字時間戳記 | 產生簡短、貼合語音的字幕所需。請保持開啟 |
+| | 詞彙提示 | 名稱和不常見詞彙，協助模型正確拼寫 |
+| **字幕版面配置** | 開始新字幕的時機 | 跟隨說話者，或僅在字數上限處切分 |
+| | 每條字幕的最大單字數 | 畫面上同時顯示的文字上限 |
+| | 每 N 個單字換行（0 = 單行） | 每 N 個字將一條字幕換行 |
+| **音訊上傳（高階）** | 音訊傳送方式 | *分段傳送（適用於長影片）* 適用於任意長度；*整段音訊（單次請求）* 為單次要求 |
+| | 音訊格式 | MP3（預設）或 FLAC，依每個供應商/模型設定分別記住 |
+| **鍵盤快捷鍵** | 設定快捷鍵 | 在瀏覽器的快速鍵設定中自訂 Generate 與 Regenerate |
+| **備份** | Export / Import settings | 將設定儲存到檔案並在之後載入 |
 
-鍵盤快速鍵會在彈出式視窗關閉時對目前作用中的 YouTube 影片生效。預設值：**Alt+Shift+G** 在可用時使用快取產生；**Alt+Shift+U** 透過向供應商發出新要求重新產生（可能產生費用）。在 Buttercup 中開啟 **Keyboard shortcuts → Configure shortcuts** 可重新指派或停用它們。Chromium 會開啟其擴充功能快速鍵頁面；Firefox/Zen 會開啟 Manage Extension Shortcuts。瀏覽器會將指派與設定備份分開儲存，保留或衝突的組合可能維持未指派或被瀏覽器攔截。實體按鍵事件已在 Xvfb 下的 Chromium 與 Firefox 中測試，包括 Firefox 的自訂指派；若要在隔離的 X11 顯示環境中使用 `BUTTERCUP_TEST_SHORTCUTS=1` 執行瀏覽器測試套件來重現。
+鍵盤快速鍵會在彈出式視窗關閉時對目前作用中的 YouTube 影片生效。預設值：**Alt+Shift+G** 在可用時使用快取產生；**Alt+Shift+U** 透過向供應商發出新要求重新產生（可能產生費用）。在 Buttercup 中開啟 **鍵盤快捷鍵 → 設定快捷鍵** 可重新指派或停用它們。Chromium 會開啟其擴充功能快速鍵頁面；Firefox/Zen 會開啟 Manage Extension Shortcuts。瀏覽器會將指派與設定備份分開儲存，保留或衝突的組合可能維持未指派或被瀏覽器攔截。實體按鍵事件已在 Xvfb 下的 Chromium 與 Firefox 中測試，包括 Firefox 的自訂指派；若要在隔離的 X11 顯示環境中使用 `BUTTERCUP_TEST_SHORTCUTS=1` 執行瀏覽器測試套件來重現。
 
-在 Buttercup 的分段模式下，當供應商僅傳回分段時間戳，或將整個詞組放在單一字詞項目中時，字幕字數上限同樣適用。在這些情況下，內部字幕邊界會在原始片段內估算，完成訊息會說明這一點；實際的字詞時間戳會保留。日語/中文使用文字字元數，同時保持拉丁字詞和 Unicode 字素完整。選擇 **Start a new subtitle → Keep provider segments (original timing)** 可使用傳回的片段邊界。這會略過字數上限；將 **Line break** 設為 **0** 可保留傳回的文字版面。未傳回片段時，會使用原始的帶時間戳字詞項目。變更版面會重新格式化快取字幕，而不會呼叫供應商。**Regenerate subtitles** 會明確略過本機與社群快取並要求新的轉錄（可能產生供應商費用）；要求失敗會保留最後快取的結果。
+在 Buttercup 的分段模式下，當供應商僅傳回分段時間戳，或將整個詞組放在單一字詞項目中時，字幕字數上限同樣適用。在這些情況下，內部字幕邊界會在原始片段內估算，完成訊息會說明這一點；實際的字詞時間戳會保留。日語/中文使用文字字元數，同時保持拉丁字母單字和 Unicode 字素完整。選擇 **開始新字幕的時機 → 保留供應商分段（原始時間）** 可使用傳回的片段邊界。這會略過字數上限；將 **每 N 個單字換行（0 = 單行）** 設為 **0** 可保留傳回的文字版面。未傳回片段時，會使用原始的帶時間戳字詞項目。變更版面會重新格式化快取字幕，而不會呼叫供應商。**重新生成字幕** 會明確略過本機與社群快取並要求新的轉錄（可能產生供應商費用）；要求失敗會保留最後快取的結果。
 
 <img src="docs/images/subtitle-layout.png" width="380" alt="字幕版面設定">
 
-變更 **Subtitle layout** 永遠不會產生費用：它只是重新排列已經轉錄的字詞。
+變更 **字幕版面配置** 永遠不會產生費用：它只是重新排列已經轉錄的字詞。
 
 <details>
 <summary><b>關於上傳大小與長影片</b></summary>
 
-供應商會限制單一上傳檔案的大小。請將 **Max audio chunk (MB)** 保持在供應商允許的範圍內；Buttercup 預設為 24 MB。64 kbps 的 MP3 每分鐘約使用 0.48 MB。FLAC 的大小取決於音訊，因此相同的上傳上限可能對應不同的長度。
+供應商會限制單一上傳檔案的大小。請將 **單次上傳的最大大小（MB）** 保持在供應商允許的範圍內；Buttercup 預設為 24 MB。64 kbps 的 MP3 每分鐘約使用 0.48 MB。FLAC 的大小取決於音訊，因此相同的上傳上限可能對應不同的長度。
 
-對於更長的內容，請將 **Audio sending** 保持在 **In parts**：音訊會切成重疊 1.5 秒的片段，每個片段分別轉錄，結果會在不重複或遺漏字詞的情況下合併。
+對於更長的內容，請將 **音訊傳送方式** 保持在 **分段傳送（適用於長影片）**：音訊會切成重疊 1.5 秒的片段，每個片段分別轉錄，結果會在不重複或遺漏字詞的情況下合併。
 
 </details>
 
-**Audio format** 提供 **MP3 — smaller uploads (default)** 與 **FLAC — lossless encoding, usually larger uploads**。兩者都使用 **16 kHz 單聲道**音訊；MP3 使用 **64 kbps**，FLAC 使用 **16 位元取樣**。每種格式都直接從下載的來源編碼。FLAC 可避免額外的有損編碼步驟，但無法復原 YouTube 音訊中已經遺失的細節，也不保證更好的轉錄或時間戳。
+**音訊格式** 提供 **MP3 — 上傳檔案更小（預設）** 與 **FLAC — 無損編碼，上傳檔案通常更大**。兩者都使用 **16 kHz 單聲道**音訊；MP3 使用 **64 kbps**，FLAC 使用 **16 位元取樣**。每種格式都直接從下載的來源編碼。FLAC 可避免額外的有損編碼步驟，但無法復原 YouTube 音訊中已經遺失的細節，也不保證更好的轉錄或時間戳。
 
 Buttercup 會依供應商、API 端點/模式、模型和固定的上游供應商分別記住格式，設定備份中也會包含。現有安裝和舊備份預設使用 MP3。兩種選項對所有供應商都保持可選。格式是否被接受取決於所選的 API/模型；被拒絕的上傳不會以其他格式或其他供應商重試。FLAC 需要更新後的本機助理：更新後請執行安裝程式並重新啟動助理。
 
-變更格式會**重複使用快取字幕**。選擇 **Regenerate subtitles** 可傳送以所選格式重新編碼的音訊；可能產生供應商費用。短樣本測試會原樣上傳你選擇的檔案，因此請使用已按要測試的格式編碼的樣本。我們不聲稱準確度有所提升，也未進行付費供應商基準測試。
+變更格式會**重複使用快取字幕**。選擇 **重新生成字幕** 可傳送以所選格式重新編碼的音訊；可能產生供應商費用。短樣本測試會原樣上傳你選擇的檔案，因此請使用已按要測試的格式編碼的樣本。我們不聲稱準確度有所提升，也未進行付費供應商基準測試。
 
 <details>
 <summary><b>關於 Cookie 與受限影片</b></summary>
 
-年齡受限或僅限會員的影片需要你已登入。在 **YouTube Authentication / Cookies** 下，你可以匯入從瀏覽器匯出的 `cookies.txt` 檔案。僅接受 YouTube 和 Google 的 Cookie，它們會留在你的電腦上。
+年齡受限或僅限會員的影片需要你已登入。在 **YouTube 身份驗證 / Cookie** 下，你可以匯入從瀏覽器匯出的 `cookies.txt` 檔案。僅接受 YouTube 和 Google 的 Cookie，它們會留在你的電腦上。
 
 </details>
 
-對於日語、中文和其他不使用空格的支援文字，字幕版面使用字元數而不是以空格分隔的字詞。帶時間戳的權杖會無人工空格地連接；混合文字中的拉丁字詞和數字保持完整。換行會保留 Unicode 字素，並將結束標點與前文保持在一起。字幕邊界仍遵循供應商的時間戳：以單一帶時間項目傳回的長詞組可以換成多行，但不會指派虛構的逐字元時間。
+對於日語、中文和其他不使用空格的支援文字，字幕版面使用字元數而不是以空格分隔的字詞。帶時間戳的權杖會無人工空格地連接；混合文字中的拉丁字母單字和數字保持完整。換行會保留 Unicode 字素，並將結束標點與前文保持在一起。字幕邊界仍遵循供應商的時間戳：以單一帶時間項目傳回的長詞組可以換成多行，但不會指派虛構的逐字元時間。
 
 ## 🌍 語言
 
@@ -293,9 +293,9 @@ Buttercup 會依供應商、API 端點/模式、模型和固定的上游供應�
 2. 再次執行安裝程式。
 3. 開啟 `chrome://extensions`，按一下 Buttercup 卡片上的**重新載入**箭頭。
 
-你的設定會保留在原處。為安全起見，請先使用 **Backup → Export settings**。若要還原備份，請選擇 **Backup → Import settings**。Buttercup 會開啟設定分頁；在其中選擇你的 JSON 檔案，然後按一下 **Import settings**。請保持分頁開啟，直到匯入完成。
+你的設定會保留在原處。為安全起見，請先使用 **備份 → 匯出設定**。若要還原備份，請選擇 **備份 → 匯入設定**。Buttercup 會開啟設定分頁；在其中選擇你的 JSON 檔案，然後按一下 **匯入設定**。請保持分頁開啟，直到匯入完成。
 
-所有檔案選擇都使用這個持續存在的頁面：**Test transcription and timestamps**、**Import cookies**、**Open connection editor** 和 **Import settings** 會在分頁中開啟相應區段。在那裡選擇檔案，然後按一下測試/匯入按鈕。關閉原始彈出式視窗或切換分頁後，所選檔案仍可使用。開啟頁面或選擇檔案不會傳送它；音訊測試和 Cookie 匯入需要你明確提交。除非你在該次匯入中啟用，否則 Cookie 持續保存保持關閉。
+所有檔案選擇都使用這個持續存在的頁面：**測試轉錄和時間戳記**、**匯入 Cookie**、**開啟連線編輯器** 和 **匯入設定** 會在分頁中開啟相應區段。在那裡選擇檔案，然後按一下測試/匯入按鈕。關閉原始彈出式視窗或切換分頁後，所選檔案仍可使用。開啟頁面或選擇檔案不會傳送它；音訊測試和 Cookie 匯入需要你明確提交。除非你在該次匯入中啟用，否則 Cookie 持續保存保持關閉。
 
 ## 🧹 解除安裝
 
@@ -311,15 +311,15 @@ Python、Node.js 和 FFmpeg 會保持安裝，因為其他程式可能會使用�
 
 | 你看到的情況 | 該怎麼做 |
 | --- | --- |
-| 助理徽章顯示 **Disconnected** | 原生瀏覽器和 Flatseal 橋接使用 **Start and connect**。手動 Flatpak 連線使用 **Start Buttercup assistant.sh**，然後使用 **Check connection** |
+| 助理徽章顯示 **未連線** | 原生瀏覽器和 Flatseal 橋接使用 **啟動並連線**。手動 Flatpak 連線使用 **Start Buttercup assistant.sh**，然後使用 **檢查連線** |
 | 瀏覽器無法連線到本機助理 | 從正確的解壓縮資料夾執行安裝程式。若使用 Flatpak，請完成[方法 A 或 B](docs/zh-TW/GECKO_SETUP.md#connect)；僅安裝附加元件並不足夠 |
-| 播放器上沒有 **BC** 按鈕 | 重新載入 YouTube 頁面。檢查 **Enable Buttercup** 是否已開啟 |
-| 彈出式視窗中顯示 **Reload extension** 按鈕 | 按一下它。擴充功能在開啟期間被更新了 |
-| *"Set your … API key first"* | 貼上 **Transcription** 下所選供應商的金鑰 |
+| 播放器上沒有 **BC** 按鈕 | 重新載入 YouTube 頁面。檢查 **啟用 Buttercup** 是否已開啟 |
+| 彈出式視窗中顯示 **重新載入擴充功能** 按鈕 | 按一下它。擴充功能在開啟期間被更新了 |
+| *"Set your … API key first"* | 貼上 **轉錄** 下所選供應商的金鑰 |
 | *"YouTube rejected extraction (403)"* 或驗證失敗 | 匯入新的 Cookie，或稍後再試；YouTube 有時會暫時封鎖下載 |
-| 字幕是巨大的文字區塊 | 選擇 Buttercup 分段模式並降低 **Max words per subtitle**。供應商原始分段會略過該上限。如果沒有字詞時間，內部字幕時間會被估算 |
+| 字幕是巨大的文字區塊 | 選擇 Buttercup 分段模式並降低 **每條字幕的最大單字數**。供應商原始分段會略過該上限。如果沒有字詞時間，內部字幕時間會被估算 |
 | *"asbplayer is unavailable"* | 啟動 asbplayer 的 WebSocket 伺服器並在 asbplayer 中啟用 WebSocket 用戶端；請參閱[與 asbplayer 搭配使用](#asbplayer) |
-| 上傳因過大而被拒絕 | 使用 **Audio sending → In parts** |
+| 上傳因過大而被拒絕 | 使用 **音訊傳送方式 → In parts** |
 | 安裝程式表示某個程式無法安裝 | 手動安裝它（[Python](https://www.python.org/downloads/)、[Node.js](https://nodejs.org/)、[FFmpeg](https://ffmpeg.org/download.html)），然後再次執行安裝程式 |
 | 沒有任何反應，也沒有訊息 | 開啟彈出式視窗：頂端的狀態列會顯示最後的錯誤 |
 

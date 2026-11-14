@@ -6,7 +6,7 @@ Buttercup 以 Windows 和 Linux 上支援未封裝 Manifest V3 擴充功能、�
 
 ## 自動註冊
 
-在 Windows 上執行 `Install Buttercup.cmd`，或在 Linux 上執行 `sh install.sh`，然後從瀏覽器的擴充功能頁面（`chrome://extensions` 或瀏覽器對應的頁面）載入 `dist/chromium`。在 Buttercup 中按一下 **Start and connect**。
+在 Windows 上執行 `Install Buttercup.cmd`，或在 Linux 上執行 `sh install.sh`，然後從瀏覽器的擴充功能頁面（`chrome://extensions` 或瀏覽器對應的頁面）載入 `dist/chromium`。在 Buttercup 中按一下 **啟動並連線**。
 
 在 Linux 上，安裝程式會在 `$XDG_CONFIG_HOME`（預設：`~/.config`）下註冊下列設定目錄：
 
@@ -50,7 +50,7 @@ Windows 註冊使用目前使用者的 Chrome、Chromium 和 Edge 登錄機碼�
 
 請使用原生瀏覽器套件實現自動啟動；或者，如果瀏覽器允許回送網路和所需的擴充功能 API，請在主機上執行後端並手動配對：
 
-1. 從彈出式視窗的 **How to connect** 中複製擴充功能 ID。
+1. 從彈出式視窗的 **如何連線** 中複製擴充功能 ID。
 2. 在主機上的終端機中啟動後端：
 
    ```sh
@@ -58,7 +58,7 @@ Windows 註冊使用目前使用者的 Chrome、Chromium 和 Edge 登錄機碼�
    ```
 
    在 Windows 上，請改用 `.venv\Scripts\python.exe`。如果助理已在執行，請先停止該執行個體，或使用 `--port` 和 `--state-dir` 選擇其他連接埠和狀態目錄。
-3. 在 **Local connection — advanced options** 中，輸入 `http://127.0.0.1:8767`（或所選連接埠）和顯示的配對權杖。按一下 **Check assistant**。保持終端機執行。後續檢查請使用 **Check connection**；**Start and connect** 會再次呼叫原生訊息傳遞。
+3. 在 **本機連線 — 高階選項** 中，輸入 `http://127.0.0.1:8767`（或所選連接埠）和顯示的配對權杖。按一下 **檢查助手**。保持終端機執行。後續檢查請使用 **檢查連線**；**啟動並連線** 會再次呼叫原生訊息傳遞。
 
 請僅將配對權杖複製到 Buttercup 的密碼欄位中；不要將其包含在螢幕擷取畫面、問題報告或 URL 中。此手動方式仍會執行相同的回送繫結、權杖驗證和擴充功能來源允許清單。它無法復原瀏覽器已停用的擴充功能 API。
 

@@ -157,8 +157,8 @@ Buttercup 现在会出现在列表中。单击工具栏中的拼图图标，并*
    | **OpenRouter** | 一个账户使用多个提供商 | [openrouter.ai/keys](https://openrouter.ai/keys) |
 
 2. 单击浏览器工具栏中的 **Buttercup 图标**。
-3. 使用 **Start and connect** 或你选择的 [Flatpak 方法](docs/zh-CN/GECKO_SETUP.md#connect)连接助手。徽标会变为 **Connected**。
-4. 在 **Transcription** 下选择提供商并粘贴密钥。
+3. 使用 **启动并连接** 或你选择的 [Flatpak 方法](docs/zh-CN/GECKO_SETUP.md#connect)连接助手。徽标会变为 **已连接**。
+4. 在 **转录** 下选择提供商并粘贴密钥。
 
 <img src="docs/images/transcription.png" width="380" alt="选择提供商并粘贴 API 密钥">
 
@@ -176,12 +176,12 @@ Buttercup 现在会出现在列表中。单击工具栏中的拼图图标，并*
 首次使用大约需要提供商转录音频所需的时间。之后打开同一视频会立即显示，因为结果已缓存。
 
 > [!TIP]
-> 重启电脑后，打开 Buttercup 弹出窗口并单击一次 **Start and connect**。
+> 重启电脑后，打开 Buttercup 弹出窗口并单击一次 **启动并连接**。
 
 **你可能会遇到的两种消息**
 
-- *"Human captions are available"*：视频已有由人工编写的字幕。如仍要替换，请在 **General** 下关闭 **Prefer human captions**。
-- *"Multiple audio tracks detected"*：视频是配音版本。将 **Audio track for transcription** 设为 **Original audio**。你可以为所有视频保持此设置。
+- *"Human captions are available"*：视频已有由人工编写的字幕。如仍要替换，请在 **常规** 下关闭 **优先使用人工字幕**。
+- *"Multiple audio tracks detected"*：视频是配音版本。将 **用于转录的音轨** 设为 **原始音频**。你可以为所有视频保持此设置。
 
 ## 📚 与 asbplayer 配合使用
 
@@ -209,19 +209,19 @@ go run .
 
 **3 · 让 Buttercup 使用它**
 
-在 Buttercup 弹出窗口中，打开 **Integrations · asbplayer**：
+在 Buttercup 弹出窗口中，打开 **集成 · asbplayer**：
 
-- 单击 **Check connected media**，确认 Buttercup 可以访问服务器。
-- 打开 **Auto-send subtitles to asbplayer**。
-- 如只想查看 asbplayer 的字幕，请在 **General** 下关闭 **Show Buttercup captions on the YouTube video**。
+- 单击 **检查已连接的媒体**，确认 Buttercup 可以访问服务器。
+- 打开 **自动将字幕发送到 asbplayer**。
+- 如只想查看 asbplayer 的字幕，请在 **常规** 下关闭 **在 YouTube 视频上显示 Buttercup 字幕**。
 
-此后，按 **BC** 会生成字幕并加载到 asbplayer。**Send to asbplayer** 按钮可随时再次发送，包括从缓存发送。
+此后，按 **BC** 会生成字幕并加载到 asbplayer。**发送到 asbplayer** 按钮可随时再次发送，包括从缓存发送。
 
 ## 💾 保存字幕文件
 
-- **Download SRT** / **Download VTT** 保存当前视频的字幕。
-- **Save SRT automatically after generating** 会为每个视频自动保存。
-- **Folder for subtitle files** 选择保存位置。留空则使用浏览器的下载文件夹，也可以输入完整路径，例如 `D:\Subtitles`。该文件夹必须已经存在。
+- **下载 SRT** / **下载 VTT** 保存当前视频的字幕。
+- **生成后自动保存 SRT** 会为每个视频自动保存。
+- **字幕文件的保存文件夹（留空 = 浏览器下载目录）** 选择保存位置。留空则使用浏览器的下载文件夹，也可以输入完整路径，例如 `D:\Subtitles`。该文件夹必须已经存在。
 
 文件命名为 `[videoID]___Title.srt`，例如 `[dQw4w9WgXcQ]___Never Gonna Give You Up.srt`。较新的文件会替换同名的旧文件。
 
@@ -233,53 +233,53 @@ go run .
 
 | 部分 | 设置 | 作用 |
 | --- | --- | --- |
-| **Header** | Language | 界面语言。*Auto* 跟随浏览器 |
-| **General** | Audio track for transcription | *Original audio* 可避免转录配音 |
-| | Show Buttercup captions on the YouTube video | 关闭 = 字幕只发送到 asbplayer 或文件 |
-| | Spoken language | 留空以自动检测；如果检测错误，请设置（`ja`、`en`、`pt`…） |
-| | Folder for subtitle files | `.srt` / `.vtt` 文件的写入位置 |
-| **Transcription** | Provider, key and model | 使用哪个语音模型转录音频 |
-| | Request word timestamps | 生成简短、贴合语音的字幕所需。请保持开启 |
-| | Vocabulary prompt | 名称和不常见词语，帮助模型正确拼写 |
-| **Subtitle layout** | Start a new subtitle | 跟随说话人，或仅在字数上限处切分 |
-| | Max words per subtitle | 屏幕上同时显示的文本上限 |
-| | Line break every N words | 每 N 个词将一条字幕换行 |
-| **Audio upload (advanced)** | Audio sending | *In parts* 适用于任意长度；*Whole audio* 为单次请求 |
-| | Audio format | MP3（默认）或 FLAC，按每个提供商/模型配置分别记忆 |
-| **Keyboard shortcuts** | Configure shortcuts | 在浏览器的快捷键设置中自定义 Generate 和 Regenerate |
-| **Backup** | Export / Import settings | 将设置保存到文件并在以后加载 |
+| **Header** | 语言 | 界面语言。*自动* 跟随浏览器 |
+| **常规** | 用于转录的音轨 | *原始音频* 可避免转录配音 |
+| | 在 YouTube 视频上显示 Buttercup 字幕 | 关闭 = 字幕只发送到 asbplayer 或文件 |
+| | 语音语言（留空 = 自动） | 留空以自动检测；如果检测错误，请设置（`ja`、`en`、`pt`…） |
+| | 字幕文件的保存文件夹（留空 = 浏览器下载目录） | `.srt` / `.vtt` 文件的写入位置 |
+| **转录** | Provider, key and model | 使用哪个语音模型转录音频 |
+| | 请求单词时间戳 | 生成简短、贴合语音的字幕所需。请保持开启 |
+| | 词汇提示 | 名称和不常见词语，帮助模型正确拼写 |
+| **字幕布局** | 开始新字幕的时机 | 跟随说话人，或仅在字数上限处切分 |
+| | 每条字幕的最大单词数 | 屏幕上同时显示的文本上限 |
+| | 每 N 个单词换行（0 = 单行） | 每 N 个词将一条字幕换行 |
+| **音频上传（高级）** | 音频发送方式 | *分段发送（适用于长视频）* 适用于任意长度；*整段音频（单次请求）* 为单次请求 |
+| | 音频格式 | MP3（默认）或 FLAC，按每个提供商/模型配置分别记忆 |
+| **键盘快捷键** | 配置快捷键 | 在浏览器的快捷键设置中自定义 Generate 和 Regenerate |
+| **备份** | Export / Import settings | 将设置保存到文件并在以后加载 |
 
-键盘快捷键在弹出窗口关闭时对当前活动的 YouTube 视频生效。默认值：**Alt+Shift+G** 在可用时使用缓存生成；**Alt+Shift+U** 通过向提供商发出新请求重新生成（可能产生费用）。在 Buttercup 中打开 **Keyboard shortcuts → Configure shortcuts** 可重新分配或禁用它们。Chromium 会打开其扩展快捷键页面；Firefox/Zen 会打开 Manage Extension Shortcuts。浏览器将分配单独于设置备份保存，保留或冲突的组合可能保持未分配或被浏览器拦截。物理按键事件已在 Xvfb 下的 Chromium 和 Firefox 中测试，包括 Firefox 的自定义分配；要在隔离的 X11 显示环境中使用 `BUTTERCUP_TEST_SHORTCUTS=1` 运行浏览器测试套件来复现。
+键盘快捷键在弹出窗口关闭时对当前活动的 YouTube 视频生效。默认值：**Alt+Shift+G** 在可用时使用缓存生成；**Alt+Shift+U** 通过向提供商发出新请求重新生成（可能产生费用）。在 Buttercup 中打开 **键盘快捷键 → 配置快捷键** 可重新分配或禁用它们。Chromium 会打开其扩展快捷键页面；Firefox/Zen 会打开 Manage Extension Shortcuts。浏览器将分配单独于设置备份保存，保留或冲突的组合可能保持未分配或被浏览器拦截。物理按键事件已在 Xvfb 下的 Chromium 和 Firefox 中测试，包括 Firefox 的自定义分配；要复现这些测试，请在隔离的 X11 显示环境中使用 `BUTTERCUP_TEST_SHORTCUTS=1` 运行浏览器测试套件。
 
-在 Buttercup 的分段模式下，当提供商仅返回分段时间戳或将整个短语放在一个词条目中时，字幕字数上限同样适用。在这些情况下，内部字幕边界会在原始片段内估算，完成消息会对此进行说明；真实的词时间戳会保留。日语/中文使用文本字符数，同时保持拉丁词和 Unicode 字素完整。选择 **Start a new subtitle → Keep provider segments (original timing)** 可使用返回的片段边界。这会绕过字数上限；将 **Line break** 设为 **0** 可保留返回的文本布局。未返回片段时，将使用原始的带时间戳词条目。更改布局会重新格式化缓存字幕，而不会调用提供商。**Regenerate subtitles** 会明确绕过本地和社区缓存并请求新的转录（可能产生提供商费用）；请求失败会保留最后缓存的结果。
+在 Buttercup 的分段模式下，当提供商仅返回分段时间戳或将整个短语放在一个词条目中时，字幕字数上限同样适用。在这些情况下，内部字幕边界会在原始片段内估算，完成消息会对此进行说明；真实的词时间戳会保留。日语/中文使用文本字符数，同时保持拉丁字母单词和 Unicode 字素完整。选择 **开始新字幕的时机 → 保留提供商分段（原始时间）** 可使用返回的片段边界。这会绕过字数上限；将 **每 N 个单词换行（0 = 单行）** 设为 **0** 可保留返回的文本布局。未返回片段时，将使用原始的带时间戳词条目。更改布局会重新格式化缓存字幕，而不会调用提供商。**重新生成字幕** 会明确绕过本地和社区缓存并请求新的转录（可能产生提供商费用）；请求失败会保留最后缓存的结果。
 
 <img src="docs/images/subtitle-layout.png" width="380" alt="字幕布局设置">
 
-更改 **Subtitle layout** 永远不会产生费用：它只是重新排列已经转录的词语。
+更改 **字幕布局** 永远不会产生费用：它只是重新排列已经转录的词语。
 
 <details>
 <summary><b>关于上传大小和长视频</b></summary>
 
-提供商限制单个上传文件的大小。请将 **Max audio chunk (MB)** 保持在提供商的允许范围内；Buttercup 默认使用 24 MB。64 kbps 的 MP3 每分钟约使用 0.48 MB。FLAC 的大小取决于音频，因此相同的上传上限可能对应不同的时长。
+提供商限制单个上传文件的大小。请将 **单次上传的最大大小（MB）** 保持在提供商的允许范围内；Buttercup 默认使用 24 MB。64 kbps 的 MP3 每分钟约使用 0.48 MB。FLAC 的大小取决于音频，因此相同的上传上限可能对应不同的时长。
 
-对于更长的内容，请将 **Audio sending** 保持为 **In parts**：音频会被切成重叠 1.5 秒的片段，每个片段单独转录，结果在不重复或丢失词语的情况下合并。
+对于更长的内容，请将 **音频发送方式** 保持为 **分段发送（适用于长视频）**：音频会被切成重叠 1.5 秒的片段，每个片段单独转录，结果在不重复或丢失词语的情况下合并。
 
 </details>
 
-**Audio format** 提供 **MP3 — smaller uploads (default)** 和 **FLAC — lossless encoding, usually larger uploads**。两者都使用 **16 kHz 单声道**音频；MP3 使用 **64 kbps**，FLAC 使用 **16 位采样**。每种格式都直接从下载的源编码。FLAC 避免了额外的有损编码步骤，但无法恢复 YouTube 音频中已经丢失的细节，也不保证更好的转录或时间戳。
+**音频格式** 提供 **MP3 — 上传文件更小（默认）** 和 **FLAC — 无损编码，上传文件通常更大**。两者都使用 **16 kHz 单声道**音频；MP3 使用 **64 kbps**，FLAC 使用 **16 位采样**。每种格式都直接从下载的源编码。FLAC 避免了额外的有损编码步骤，但无法恢复 YouTube 音频中已经丢失的细节，也不保证更好的转录或时间戳。
 
 Buttercup 会按提供商、API 端点/模式、模型和固定的上游提供商分别记住格式，设置备份中也会包含。现有安装和旧备份默认使用 MP3。两种选项对所有提供商都保持可选。格式是否被接受取决于所选的 API/模型；被拒绝的上传不会用其他格式或其他提供商重试。FLAC 需要更新后的本地助手：更新后请运行安装程序并重启助手。
 
-更改格式会**复用缓存字幕**。选择 **Regenerate subtitles** 可发送以所选格式重新编码的音频；可能产生提供商费用。短样本测试会原样上传你选择的文件，因此请使用已按要测试的格式编码的样本。我们不声称精度有所提高，也未进行付费提供商基准测试。
+更改格式会**复用缓存字幕**。选择 **重新生成字幕** 可发送以所选格式重新编码的音频；可能产生提供商费用。短样本测试会原样上传你选择的文件，因此请使用已按要测试的格式编码的样本。我们不声称精度有所提高，也未进行付费提供商基准测试。
 
 <details>
 <summary><b>关于 Cookie 和受限视频</b></summary>
 
-年龄受限或仅限会员的视频需要你已登录。在 **YouTube Authentication / Cookies** 下，你可以导入从浏览器导出的 `cookies.txt` 文件。仅接受 YouTube 和 Google 的 Cookie，它们会留在你的电脑上。
+年龄受限或仅限会员的视频需要你已登录。在 **YouTube 身份验证 / Cookie** 下，你可以导入从浏览器导出的 `cookies.txt` 文件。仅接受 YouTube 和 Google 的 Cookie，它们会留在你的电脑上。
 
 </details>
 
-对于日语、中文和其他不使用空格的支持文字，字幕布局使用字符数而不是以空格分隔的单词。带时间戳的标记会无人工空格地连接；混合文本中的拉丁词和数字保持完整。换行会保留 Unicode 字素，并将结束标点与前文保持在一起。字幕边界仍遵循提供商的时间戳：作为单个带时间条目返回的长短语可以换成多行，但不会分配虚构的逐字符时间。
+对于日语、中文和其他不使用空格的支持文字，字幕布局使用字符数而不是以空格分隔的单词。带时间戳的标记会无人工空格地连接；混合文本中的拉丁字母单词和数字保持完整。换行会保留 Unicode 字素，并将结束标点与前文保持在一起。字幕边界仍遵循提供商的时间戳：作为单个带时间条目返回的长短语可以换成多行，但不会分配虚构的逐字符时间。
 
 ## 🌍 语言
 
@@ -293,9 +293,9 @@ Buttercup 会按提供商、API 端点/模式、模型和固定的上游提供�
 2. 再次运行安装程序。
 3. 打开 `chrome://extensions`，单击 Buttercup 卡片上的**重新加载**箭头。
 
-你的设置会保留在原处。为安全起见，请先使用 **Backup → Export settings**。要恢复备份，请选择 **Backup → Import settings**。Buttercup 会打开一个设置标签页；在那里选择你的 JSON 文件，然后单击 **Import settings**。保持标签页打开，直到导入完成。
+你的设置会保留在原处。为安全起见，请先使用 **备份 → 导出设置**。要恢复备份，请选择 **备份 → 导入设置**。Buttercup 会打开一个设置标签页；在那里选择你的 JSON 文件，然后单击 **导入设置**。保持标签页打开，直到导入完成。
 
-所有文件选择都使用这个持久页面：**Test transcription and timestamps**、**Import cookies**、**Open connection editor** 和 **Import settings** 会在标签页中打开相应部分。在那里选择文件，然后单击测试/导入按钮。关闭原始弹出窗口或切换标签页后，所选文件仍可用。打开页面或选择文件不会发送它；音频测试和 Cookie 导入需要你明确提交。除非你在该次导入中启用，否则 Cookie 持久化保持关闭。
+所有文件选择都使用这个持久页面：**测试转录和时间戳**、**导入 Cookie**、**打开连接编辑器** 和 **导入设置** 会在标签页中打开相应部分。在那里选择文件，然后单击测试/导入按钮。关闭原始弹出窗口或切换标签页后，所选文件仍可用。打开页面或选择文件不会发送它；音频测试和 Cookie 导入需要你明确提交。除非你在该次导入中启用，否则 Cookie 持久化保持关闭。
 
 ## 🧹 卸载
 
@@ -311,15 +311,15 @@ Python、Node.js 和 FFmpeg 会保持安装，因为其他程序可能会使用�
 
 | 你看到的情况 | 该怎么做 |
 | --- | --- |
-| 助手徽标显示 **Disconnected** | 原生浏览器和 Flatseal 桥接使用 **Start and connect**。手动 Flatpak 连接使用 **Start Buttercup assistant.sh**，然后使用 **Check connection** |
+| 助手徽标显示 **未连接** | 原生浏览器和 Flatseal 桥接使用 **启动并连接**。手动 Flatpak 连接使用 **Start Buttercup assistant.sh**，然后使用 **检查连接** |
 | 浏览器无法访问本地助手 | 从正确的解压文件夹运行安装程序。对于 Flatpak，请完成[方法 A 或 B](docs/zh-CN/GECKO_SETUP.md#connect)；仅安装附加组件是不够的 |
-| 播放器上没有 **BC** 按钮 | 重新加载 YouTube 页面。检查 **Enable Buttercup** 是否已开启 |
-| 弹出窗口中显示 **Reload extension** 按钮 | 单击它。扩展在打开期间被更新了 |
-| *"Set your … API key first"* | 粘贴 **Transcription** 下所选提供商的密钥 |
+| 播放器上没有 **BC** 按钮 | 重新加载 YouTube 页面。检查 **启用 Buttercup** 是否已开启 |
+| 弹出窗口中显示 **重新加载扩展** 按钮 | 单击它。扩展在打开期间被更新了 |
+| *"Set your … API key first"* | 粘贴 **转录** 下所选提供商的密钥 |
 | *"YouTube rejected extraction (403)"* 或身份验证失败 | 导入新的 Cookie，或稍后重试；YouTube 有时会暂时阻止下载 |
-| 字幕是大块文本 | 选择 Buttercup 分段模式并降低 **Max words per subtitle**。提供商原始分段会绕过该上限。如果没有词时间，内部字幕时间会被估算 |
+| 字幕是大块文本 | 选择 Buttercup 分段模式并降低 **每条字幕的最大单词数**。提供商原始分段会绕过该上限。如果没有词时间，内部字幕时间会被估算 |
 | *"asbplayer is unavailable"* | 启动 asbplayer 的 WebSocket 服务器并在 asbplayer 中启用 WebSocket 客户端；请参阅[与 asbplayer 配合使用](#asbplayer) |
-| 上传因过大而被拒绝 | 使用 **Audio sending → In parts** |
+| 上传因过大而被拒绝 | 使用 **音频发送方式 → In parts** |
 | 安装程序提示某个程序无法安装 | 手动安装它（[Python](https://www.python.org/downloads/)、[Node.js](https://nodejs.org/)、[FFmpeg](https://ffmpeg.org/download.html)），然后再次运行安装程序 |
 | 没有任何反应，也没有消息 | 打开弹出窗口：顶部的状态行会显示最后的错误 |
 

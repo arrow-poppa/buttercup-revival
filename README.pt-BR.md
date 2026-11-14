@@ -152,8 +152,8 @@ O modelo de fala é executado em um provedor, que precisa de uma chave para iden
    | **OpenRouter** | Uma conta para vários provedores | [openrouter.ai/keys](https://openrouter.ai/keys) |
 
 2. Clique no **ícone do Buttercup** na barra de ferramentas do navegador.
-3. Conecte o assistente usando **Start and connect** ou o [método Flatpak](docs/pt-BR/GECKO_SETUP.md#connect) escolhido. O indicador muda para **Connected**.
-4. Em **Transcription**, escolha o provedor e cole a chave.
+3. Conecte o assistente usando **Iniciar e conectar** ou o [método Flatpak](docs/pt-BR/GECKO_SETUP.md#connect) escolhido. O indicador muda para **Conectado**.
+4. Em **Transcrição**, escolha o provedor e cole a chave.
 
 <img src="docs/images/transcription.png" width="380" alt="Escolhendo um provedor e colando a chave de API">
 
@@ -169,12 +169,12 @@ Tudo é salvo automaticamente. Pronto.
 A primeira vez leva aproximadamente o tempo que o provedor precisa para transcrever o áudio. Ao abrir o mesmo vídeo depois, o resultado é imediato porque fica em cache.
 
 > [!TIP]
-> Após reiniciar o computador, abra o popup do Buttercup e clique uma vez em **Start and connect**.
+> Após reiniciar o computador, abra o popup do Buttercup e clique uma vez em **Iniciar e conectar**.
 
 **Duas mensagens que você pode encontrar**
 
-- *"Human captions are available"*: o vídeo já tem legendas feitas por uma pessoa. Para substituí-las mesmo assim, desative **Prefer human captions** em **General**.
-- *"Multiple audio tracks detected"*: o vídeo é dublado. Defina **Audio track for transcription** como **Original audio**. Você pode deixar essa opção ativa para todos os vídeos.
+- *"Human captions are available"*: o vídeo já tem legendas feitas por uma pessoa. Para substituí-las mesmo assim, desative **Preferir legendas humanas** em **Geral**.
+- *"Multiple audio tracks detected"*: o vídeo é dublado. Defina **Faixa de áudio para transcrição** como **Áudio original**. Você pode deixar essa opção ativa para todos os vídeos.
 
 ## 📚 Usando com o asbplayer
 
@@ -200,19 +200,19 @@ Abra as configurações do asbplayer, acesse **Misc** e ative **WebSocket client
 
 **3 · Configure o Buttercup para usá-lo**
 
-No popup do Buttercup, abra **Integrations · asbplayer**:
+No popup do Buttercup, abra **Integrações · asbplayer**:
 
-- Clique em **Check connected media** para confirmar que o Buttercup alcança o servidor.
-- Ative **Auto-send subtitles to asbplayer**.
-- Para ver somente as legendas do asbplayer, desative **Show Buttercup captions on the YouTube video** em **General**.
+- Clique em **Verificar mídias conectadas** para confirmar que o Buttercup alcança o servidor.
+- Ative **Enviar legendas automaticamente ao asbplayer**.
+- Para ver somente as legendas do asbplayer, desative **Mostrar as legendas do Buttercup no vídeo do YouTube** em **Geral**.
 
-Depois disso, pressionar **BC** gera as legendas e as carrega no asbplayer. O botão **Send to asbplayer** as envia novamente a qualquer momento, inclusive do cache.
+Depois disso, pressionar **BC** gera as legendas e as carrega no asbplayer. O botão **Enviar ao asbplayer** as envia novamente a qualquer momento, inclusive do cache.
 
 ## 💾 Salvando arquivos de legenda
 
-- **Download SRT** / **Download VTT** salvam as legendas do vídeo atual.
-- **Save SRT automatically after generating** faz isso para cada vídeo.
-- **Folder for subtitle files** escolhe onde salvá-las. Deixe vazio para usar a pasta Downloads do navegador ou digite um caminho completo, como `D:\Subtitles`. A pasta já deve existir.
+- **Baixar SRT** / **Baixar VTT** salvam as legendas do vídeo atual.
+- **Salvar o SRT automaticamente depois de gerar** faz isso para cada vídeo.
+- **Pasta para os arquivos de legenda (em branco = Downloads do navegador)** escolhe onde salvá-las. Deixe vazio para usar a pasta Downloads do navegador ou digite um caminho completo, como `D:\Subtitles`. A pasta já deve existir.
 
 Os arquivos são nomeados `[videoID]___Title.srt`, por exemplo `[dQw4w9WgXcQ]___Never Gonna Give You Up.srt`. Um arquivo mais novo substitui outro com o mesmo nome.
 
@@ -222,49 +222,49 @@ O popup é organizado em seções. As opções que você provavelmente usará ma
 
 | Seção | Configuração | O que faz |
 | --- | --- | --- |
-| **Cabeçalho** | Language | Idioma da interface. *Auto* segue o navegador |
-| **General** | Audio track for transcription | *Original audio* evita transcrever uma dublagem |
-| | Show Buttercup captions on the YouTube video | Desativado = legendas apenas no asbplayer ou em arquivos |
-| | Spoken language | Deixe vazio para detectar; defina (`ja`, `en`, `pt`…) se a detecção falhar |
-| | Folder for subtitle files | Onde os arquivos `.srt` / `.vtt` são salvos |
-| **Transcription** | Provedor, chave e modelo | Qual modelo de fala transcreve o áudio |
-| | Request word timestamps | Necessário para legendas curtas alinhadas à fala. Mantenha ativado |
-| | Vocabulary prompt | Nomes e palavras incomuns para ajudar o modelo a escrevê-los |
-| **Subtitle layout** | Start a new subtitle | Acompanha a fala ou corta apenas no limite de palavras |
-| | Max words per subtitle | Limite de texto exibido de uma vez |
-| | Line break every N words | Divide uma legenda em linhas |
-| **Audio upload (advanced)** | Audio sending | *In parts* funciona com qualquer duração; *Whole audio* usa uma única solicitação |
-| | Audio format | MP3 (padrão) ou FLAC, lembrado para cada configuração de provedor/modelo |
-| **Keyboard shortcuts** | Configure shortcuts | Personaliza Gerar e Regenerar nas configurações de atalhos do navegador |
-| **Backup** | Export / Import settings | Salva as configurações em um arquivo e as carrega depois |
+| **Cabeçalho** | Idioma | Idioma da interface. *Automático* segue o navegador |
+| **Geral** | Faixa de áudio para transcrição | *Áudio original* evita transcrever uma dublagem |
+| | Mostrar as legendas do Buttercup no vídeo do YouTube | Desativado = legendas apenas no asbplayer ou em arquivos |
+| | Idioma falado (em branco = automático) | Deixe vazio para detectar; defina (`ja`, `en`, `pt`…) se a detecção falhar |
+| | Pasta para os arquivos de legenda (em branco = Downloads do navegador) | Onde os arquivos `.srt` / `.vtt` são salvos |
+| **Transcrição** | Provedor, chave e modelo | Qual modelo de fala transcreve o áudio |
+| | Solicitar timestamps de palavras | Necessário para legendas curtas alinhadas à fala. Mantenha ativado |
+| | Prompt de vocabulário | Nomes e palavras incomuns para ajudar o modelo a escrevê-los |
+| **Formato das legendas** | Iniciar uma nova legenda | Acompanha a fala ou corta apenas no limite de palavras |
+| | Máximo de palavras por legenda | Limite de texto exibido de uma vez |
+| | Quebra de linha a cada N palavras (0 = uma linha) | Divide uma legenda em linhas |
+| **Envio do áudio (avançado)** | Envio do áudio | *Em partes (compatível com vídeos longos)* funciona com qualquer duração; *Áudio inteiro (um único pedido)* usa uma única solicitação |
+| | Formato de áudio | MP3 (padrão) ou FLAC, lembrado para cada configuração de provedor/modelo |
+| **Atalhos de teclado** | Configurar atalhos | Personaliza Gerar e Regenerar nas configurações de atalhos do navegador |
+| **Cópia de segurança** | Export / Import settings | Salva as configurações em um arquivo e as carrega depois |
 
-Os atalhos funcionam no vídeo ativo do YouTube com o popup fechado. Padrões: **Alt+Shift+G** gera usando o cache quando disponível; **Alt+Shift+U** regenera com uma nova solicitação ao provedor (pode haver cobranças). Abra **Keyboard shortcuts → Configure shortcuts** no Buttercup para alterá-los ou desativá-los. O Chromium abre sua página de atalhos de extensões; Firefox/Zen abre o gerenciamento de atalhos. O navegador salva as atribuições separadamente dos backups, e combinações reservadas ou conflitantes podem permanecer sem atribuição ou ser interceptadas. Eventos físicos de teclas foram testados sob Xvfb no Chromium e Firefox, incluindo atribuições personalizadas no Firefox; execute as suítes de navegador com `BUTTERCUP_TEST_SHORTCUTS=1` em um display X11 isolado para reproduzir.
+Os atalhos funcionam no vídeo ativo do YouTube com o popup fechado. Padrões: **Alt+Shift+G** gera usando o cache quando disponível; **Alt+Shift+U** regenera com uma nova solicitação ao provedor (pode haver cobranças). Abra **Atalhos de teclado → Configurar atalhos** no Buttercup para alterá-los ou desativá-los. O Chromium abre sua página de atalhos de extensões; Firefox/Zen abre o gerenciamento de atalhos. O navegador salva as atribuições separadamente dos backups, e combinações reservadas ou conflitantes podem permanecer sem atribuição ou ser interceptadas. Eventos físicos de teclas foram testados sob Xvfb no Chromium e Firefox, incluindo atribuições personalizadas no Firefox; execute as suítes de navegador com `BUTTERCUP_TEST_SHORTCUTS=1` em um display X11 isolado para reproduzir.
 
-Nos modos de segmentação do Buttercup, os limites de palavras também se aplicam quando o provedor retorna apenas tempos de segmentos ou coloca uma frase inteira em uma entrada de palavra. Nesses casos, os limites internos das legendas são estimados dentro do segmento original e a mensagem de conclusão explica isso; tempos reais por palavra são preservados. Japonês/chinês usam caracteres de texto mantendo palavras latinas e grafemas Unicode intactos. Escolha **Start a new subtitle → Keep provider segments (original timing)** para usar os limites de segmentos retornados. Isso ignora o limite de palavras; defina **Line break** como **0** para preservar o layout retornado. Quando não há segmentos, são usadas as entradas originais de palavras com tempo. Alterar o layout reformata legendas em cache sem chamar um provedor. **Regenerate subtitles** ignora explicitamente os caches local e comunitário e solicita uma nova transcrição (o provedor pode cobrar); uma solicitação malsucedida preserva o último resultado em cache.
+Nos modos de segmentação do Buttercup, os limites de palavras também se aplicam quando o provedor retorna apenas tempos de segmentos ou coloca uma frase inteira em uma entrada de palavra. Nesses casos, os limites internos das legendas são estimados dentro do segmento original e a mensagem de conclusão explica isso; tempos reais por palavra são preservados. Japonês/chinês usam caracteres de texto mantendo palavras latinas e grafemas Unicode intactos. Escolha **Iniciar uma nova legenda → Manter segmentos do provedor (tempos originais)** para usar os limites de segmentos retornados. Isso ignora o limite de palavras; defina **Quebra de linha a cada N palavras (0 = uma linha)** como **0** para preservar o layout retornado. Quando não há segmentos, são usadas as entradas originais de palavras com tempo. Alterar o layout reformata legendas em cache sem chamar um provedor. **Regenerar legendas** ignora explicitamente os caches local e comunitário e solicita uma nova transcrição (o provedor pode cobrar); uma solicitação malsucedida preserva o último resultado em cache.
 
 <img src="docs/images/subtitle-layout.png" width="380" alt="Configurações de layout das legendas">
 
-Alterar **Subtitle layout** nunca tem custo: apenas reorganiza as palavras já transcritas.
+Alterar **Formato das legendas** nunca tem custo: apenas reorganiza as palavras já transcritas.
 
 <details>
 <summary><b>Sobre o tamanho do envio e vídeos longos</b></summary>
 
-Os provedores limitam o tamanho de cada arquivo enviado. Mantenha **Max audio chunk (MB)** dentro do limite do provedor; o padrão do Buttercup é 24 MB. MP3 a 64 kbps usa cerca de 0,48 MB por minuto. O tamanho do FLAC depende do áudio, então o mesmo limite pode comportar durações diferentes.
+Os provedores limitam o tamanho de cada arquivo enviado. Mantenha **Tamanho máximo de um envio (MB)** dentro do limite do provedor; o padrão do Buttercup é 24 MB. MP3 a 64 kbps usa cerca de 0,48 MB por minuto. O tamanho do FLAC depende do áudio, então o mesmo limite pode comportar durações diferentes.
 
-Para vídeos mais longos, mantenha **Audio sending** em **In parts**: o áudio é dividido em partes com sobreposição de 1,5 segundo, cada parte é transcrita separadamente e os resultados são unidos sem repetir ou perder palavras.
+Para vídeos mais longos, mantenha **Envio do áudio** em **Em partes (compatível com vídeos longos)**: o áudio é dividido em partes com sobreposição de 1,5 segundo, cada parte é transcrita separadamente e os resultados são unidos sem repetir ou perder palavras.
 
 </details>
 
-**Audio format** oferece **MP3 — menor tamanho de envio (padrão)** e **FLAC — codificação sem perdas, geralmente maior**. Ambos usam áudio **mono de 16 kHz**; MP3 usa **64 kbps**, e FLAC usa **amostras de 16 bits**. Cada formato é codificado diretamente a partir da fonte baixada. FLAC evita uma etapa adicional de codificação com perdas, mas não recupera detalhes já perdidos no áudio do YouTube nem garante melhor transcrição ou tempos.
+**Formato de áudio** oferece **MP3 — menor tamanho de envio (padrão)** e **FLAC — codificação sem perdas, geralmente maior**. Ambos usam áudio **mono de 16 kHz**; MP3 usa **64 kbps**, e FLAC usa **amostras de 16 bits**. Cada formato é codificado diretamente a partir da fonte baixada. FLAC evita uma etapa adicional de codificação com perdas, mas não recupera detalhes já perdidos no áudio do YouTube nem garante melhor transcrição ou tempos.
 
 O Buttercup lembra o formato separadamente para cada provedor, endpoint/modo de API, modelo e provedor upstream fixado, inclusive nos backups. Instalações existentes e backups antigos usam MP3 por padrão. Ambas as opções continuam selecionáveis para todos os provedores. A aceitação depende da API/modelo; envios rejeitados não são repetidos com outro formato ou provedor. FLAC exige o assistente local atualizado: execute o instalador e reinicie o assistente após atualizar.
 
-Alterar o formato **reutiliza as legendas em cache**. Escolha **Regenerate subtitles** para enviar áudio recém-codificado no formato selecionado; o provedor pode cobrar. O teste de amostra curta envia o arquivo escolhido sem alterá-lo, então use uma amostra já codificada no formato que deseja testar. Não se afirma melhoria de precisão nem foi feito benchmark pago com provedores.
+Alterar o formato **reutiliza as legendas em cache**. Escolha **Regenerar legendas** para enviar áudio recém-codificado no formato selecionado; o provedor pode cobrar. O teste de amostra curta envia o arquivo escolhido sem alterá-lo, então use uma amostra já codificada no formato que deseja testar. Não se afirma melhoria de precisão nem foi feito benchmark pago com provedores.
 
 <details>
 <summary><b>Sobre cookies e vídeos restritos</b></summary>
 
-Vídeos com restrição de idade ou exclusivos para membros exigem que você esteja conectado. Em **YouTube Authentication / Cookies**, importe um arquivo `cookies.txt` exportado do navegador. Apenas cookies do YouTube e Google são aceitos e permanecem no computador.
+Vídeos com restrição de idade ou exclusivos para membros exigem que você esteja conectado. Em **Autenticação do YouTube / Cookies**, importe um arquivo `cookies.txt` exportado do navegador. Apenas cookies do YouTube e Google são aceitos e permanecem no computador.
 
 </details>
 
@@ -282,9 +282,9 @@ As traduções ficam em [`locales/`](locales), um arquivo por idioma, como `"ori
 2. Execute o instalador novamente.
 3. Abra `chrome://extensions` e clique na seta **Recarregar** no cartão do Buttercup.
 
-Suas configurações permanecem salvas. Por segurança, use **Backup → Export settings** antes. Para restaurar um backup, escolha **Backup → Import settings**. O Buttercup abre uma aba de configurações; selecione o arquivo JSON nela e clique em **Import settings**. Mantenha a aba aberta até concluir a importação.
+Suas configurações permanecem salvas. Por segurança, use **Cópia de segurança → Exportar configurações** antes. Para restaurar um backup, escolha **Cópia de segurança → Importar configurações**. O Buttercup abre uma aba de configurações; selecione o arquivo JSON nela e clique em **Importar configurações**. Mantenha a aba aberta até concluir a importação.
 
-Todas as seleções de arquivos usam essa página persistente: **Test transcription and timestamps**, **Import cookies**, **Open connection editor** e **Import settings** abrem a seção correspondente em uma aba. Escolha o arquivo e clique no botão de teste/importação. Fechar o popup original ou trocar de aba mantém o arquivo selecionado disponível. Abrir a página ou selecionar um arquivo não o envia; testes de áudio e importações de cookies exigem envio explícito. A persistência de cookies permanece desativada até ser ativada nessa importação.
+Todas as seleções de arquivos usam essa página persistente: **Testar transcrição e timestamps**, **Importar cookies**, **Abrir editor de conexão** e **Importar configurações** abrem a seção correspondente em uma aba. Escolha o arquivo e clique no botão de teste/importação. Fechar o popup original ou trocar de aba mantém o arquivo selecionado disponível. Abrir a página ou selecionar um arquivo não o envia; testes de áudio e importações de cookies exigem envio explícito. A persistência de cookies permanece desativada até ser ativada nessa importação.
 
 ## 🧹 Desinstalação
 
@@ -298,15 +298,15 @@ Python, Node.js e FFmpeg permanecem instalados, pois outros programas podem usá
 
 | O que aparece | O que fazer |
 | --- | --- |
-| O assistente mostra **Disconnected** | Navegadores nativos e a ponte Flatseal usam **Start and connect**. Conexões Flatpak manuais usam **Start Buttercup assistant.sh** e depois **Check connection** |
+| O assistente mostra **Desconectado** | Navegadores nativos e a ponte Flatseal usam **Iniciar e conectar**. Conexões Flatpak manuais usam **Start Buttercup assistant.sh** e depois **Verificar conexão** |
 | O navegador não consegue acessar o assistente local | Execute o instalador na pasta extraída correta. No Flatpak, conclua o [Método A ou B](docs/pt-BR/GECKO_SETUP.md#connect); instalar a extensão não basta |
-| Não há botão **BC** no player | Recarregue a página do YouTube. Verifique se **Enable Buttercup** está ativado |
-| Aparece **Reload extension** no popup | Clique nele. A extensão foi atualizada enquanto estava aberta |
-| *"Set your … API key first"* | Cole a chave do provedor selecionado em **Transcription** |
+| Não há botão **BC** no player | Recarregue a página do YouTube. Verifique se **Ativar o Buttercup** está ativado |
+| Aparece **Recarregar extensão** no popup | Clique nele. A extensão foi atualizada enquanto estava aberta |
+| *"Set your … API key first"* | Cole a chave do provedor selecionado em **Transcrição** |
 | *"YouTube rejected extraction (403)"* ou falha de autenticação | Importe cookies atualizados ou tente mais tarde; o YouTube às vezes bloqueia downloads temporariamente |
-| Legendas são blocos enormes de texto | Selecione um modo de segmentação do Buttercup e reduza **Max words per subtitle**. A segmentação original do provedor ignora esse limite. Sem tempos por palavra, os tempos internos são estimados |
+| Legendas são blocos enormes de texto | Selecione um modo de segmentação do Buttercup e reduza **Máximo de palavras por legenda**. A segmentação original do provedor ignora esse limite. Sem tempos por palavra, os tempos internos são estimados |
 | *"asbplayer is unavailable"* | Inicie o servidor WebSocket do asbplayer e ative seu cliente; veja [Usando com o asbplayer](#-usando-com-o-asbplayer) |
-| O envio é recusado por ser muito grande | Use **Audio sending → In parts** |
+| O envio é recusado por ser muito grande | Use **Envio do áudio → In parts** |
 | O instalador diz que um programa não pôde ser instalado | Instale-o manualmente ([Python](https://www.python.org/downloads/), [Node.js](https://nodejs.org/), [FFmpeg](https://ffmpeg.org/download.html)) e execute novamente o instalador |
 | Nada acontece e não há mensagem | Abra o popup: a linha de status no topo mostra o último erro |
 

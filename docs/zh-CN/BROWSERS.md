@@ -6,7 +6,7 @@ Buttercup 面向 Windows 和 Linux 上支持未打包 Manifest V3 扩展、离�
 
 ## 自动注册
 
-在 Windows 上运行 `Install Buttercup.cmd`，或在 Linux 上运行 `sh install.sh`，然后从浏览器的扩展程序页面（`chrome://extensions` 或浏览器对应的页面）加载 `dist/chromium`。在 Buttercup 中单击 **Start and connect**。
+在 Windows 上运行 `Install Buttercup.cmd`，或在 Linux 上运行 `sh install.sh`，然后从浏览器的扩展程序页面（`chrome://extensions` 或浏览器对应的页面）加载 `dist/chromium`。在 Buttercup 中单击 **启动并连接**。
 
 在 Linux 上，安装程序会在 `$XDG_CONFIG_HOME`（默认：`~/.config`）下注册以下配置目录：
 
@@ -50,7 +50,7 @@ Windows 注册使用当前用户的 Chrome、Chromium 和 Edge 注册表项。Br
 
 请使用原生浏览器软件包实现自动启动；或者，如果浏览器允许环回网络和所需的扩展 API，请在主机上运行后端并手动配对：
 
-1. 从弹出窗口的 **How to connect** 中复制扩展 ID。
+1. 从弹出窗口的 **如何连接** 中复制扩展 ID。
 2. 在主机上的终端中启动后端：
 
    ```sh
@@ -58,7 +58,7 @@ Windows 注册使用当前用户的 Chrome、Chromium 和 Edge 注册表项。Br
    ```
 
    在 Windows 上，请改用 `.venv\Scripts\python.exe`。如果助手已在运行，请先停止该实例，或使用 `--port` 和 `--state-dir` 选择其他端口和状态目录。
-3. 在 **Local connection — advanced options** 中，输入 `http://127.0.0.1:8767`（或所选端口）和显示的配对令牌。单击 **Check assistant**。保持终端运行。后续检查请使用 **Check connection**；**Start and connect** 会再次调用原生消息传递。
+3. 在 **本地连接 — 高级选项** 中，输入 `http://127.0.0.1:8767`（或所选端口）和显示的配对令牌。单击 **检查助手**。保持终端运行。后续检查请使用 **检查连接**；**启动并连接** 会再次调用原生消息传递。
 
 请仅将配对令牌复制到 Buttercup 的密码字段中；不要将其包含在截图、问题报告或 URL 中。此手动方式仍会执行相同的环回绑定、令牌身份验证和扩展来源允许列表。它无法恢复浏览器已禁用的扩展 API。
 

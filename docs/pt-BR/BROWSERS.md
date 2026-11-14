@@ -6,7 +6,7 @@ O Buttercup é destinado a navegadores Chromium de desktop no Windows e Linux qu
 
 ## Registro automático
 
-Execute `Install Buttercup.cmd` no Windows ou `sh install.sh` no Linux e carregue `dist/chromium` na página de extensões do navegador (`chrome://extensions` ou o endereço equivalente). Clique em **Start and connect** no Buttercup.
+Execute `Install Buttercup.cmd` no Windows ou `sh install.sh` no Linux e carregue `dist/chromium` na página de extensões do navegador (`chrome://extensions` ou o endereço equivalente). Clique em **Iniciar e conectar** no Buttercup.
 
 No Linux, o instalador registra os seguintes diretórios de configuração abaixo de `$XDG_CONFIG_HOME` (padrão: `~/.config`):
 
@@ -50,7 +50,7 @@ A inicialização automática precisa de permissão para iniciar o assistente no
 
 Use um pacote nativo do navegador para a inicialização automática ou execute o backend no sistema hospedeiro e faça o pareamento manualmente, caso o navegador permita conexão de rede local e as APIs necessárias:
 
-1. Copie o ID da extensão em **How to connect** no popup.
+1. Copie o ID da extensão em **Como conectar** no popup.
 2. Inicie o backend em um terminal no sistema hospedeiro:
 
    ```sh
@@ -58,7 +58,7 @@ Use um pacote nativo do navegador para a inicialização automática ou execute 
    ```
 
    No Windows, use `.venv\Scripts\python.exe`. Se já houver um assistente em execução, interrompa essa instância ou selecione outra porta e diretório de estado com `--port` e `--state-dir`.
-3. Em **Local connection — advanced options**, insira `http://127.0.0.1:8767` (ou a porta selecionada) e o token de pareamento exibido. Clique em **Check assistant**. Mantenha o terminal aberto. Use **Check connection** nas verificações seguintes; **Start and connect** invoca mensagens nativas novamente.
+3. Em **Conexão local — opções avançadas**, insira `http://127.0.0.1:8767` (ou a porta selecionada) e o token de pareamento exibido. Clique em **Verificar assistente**. Mantenha o terminal aberto. Use **Verificar conexão** nas verificações seguintes; **Iniciar e conectar** invoca mensagens nativas novamente.
 
 Copie o token de pareamento apenas no campo de senha do Buttercup; não o inclua em capturas de tela, relatórios de problemas ou URLs. Esse método manual mantém a mesma restrição de conexão local, autenticação por token e lista de origens de extensão permitidas. Ele não restaura APIs de extensão desativadas pelo navegador.
 

@@ -8,9 +8,9 @@ Instalarás dos partes: la extensión añade el botón BC a YouTube; el asistent
 
 | Tu navegador | Instalar la extensión | Conectar el asistente |
 | --- | --- | --- |
-| Zen nativo | Instalación permanente sin firma (más abajo) o instalación temporal | Haz clic en **Start and connect** |
-| Firefox Release estándar | Paquete firmado por Mozilla para instalación permanente, o instalación temporal | Haz clic en **Start and connect** en una instalación nativa |
-| Firefox ESR, Developer Edition, Nightly o una compilación sin marca | La instalación sin firma es posible en compilaciones compatibles; consulta la tabla de firmas | Haz clic en **Start and connect** en una instalación nativa |
+| Zen nativo | Instalación permanente sin firma (más abajo) o instalación temporal | Haz clic en **Iniciar y conectar** |
+| Firefox Release estándar | Paquete firmado por Mozilla para instalación permanente, o instalación temporal | Haz clic en **Iniciar y conectar** en una instalación nativa |
+| Firefox ESR, Developer Edition, Nightly o una compilación sin marca | La instalación sin firma es posible en compilaciones compatibles; consulta la tabla de firmas | Haz clic en **Iniciar y conectar** en una instalación nativa |
 | Zen Flatpak | Instala como en Zen | Elige **Método A: automático con Flatseal** o **Método B: conexión manual** |
 | Otros derivados modernos de Gecko | Consulta la tabla de firmas y los requisitos del navegador | La mensajería nativa depende del navegador y del paquete; consulta los [detalles de compatibilidad](../firefox.md) |
 
@@ -96,14 +96,14 @@ Esta instalación se elimina cuando el navegador se cierra. Para la instalación
 <a id="connect"></a>
 ## 4. Conecta el asistente
 
-**Instalación nativa del navegador:** abre Buttercup y haz clic en **Start and connect**. El indicador debería cambiar a **Connected**. No necesitas ninguno de los métodos Flatpak siguientes.
+**Instalación nativa del navegador:** abre Buttercup y haz clic en **Iniciar y conectar**. El indicador debería cambiar a **Conectado**. No necesitas ninguno de los métodos Flatpak siguientes.
 
 **Zen Flatpak:** elige uno de los métodos siguientes. Ambos usan el mismo asistente y conservan tus ajustes de proveedor.
 
 <a id="flatseal"></a>
 ### Método A: conexión automática con Flatseal
 
-Elige esto si quieres que **Start and connect** inicie el asistente, incluso después de reiniciar el ordenador.
+Elige esto si quieres que **Iniciar y conectar** inicie el asistente, incluso después de reiniciar el ordenador.
 
 #### A1. Prepara el lanzador una vez
 
@@ -134,10 +134,10 @@ El permiso del bus de sesión permite a Zen ejecutar programas del host en gener
 
 1. Cierra Zen por completo, incluidas sus otras ventanas e instancias en segundo plano.
 2. Abre Zen de nuevo.
-3. Abre Buttercup y haz clic en **Start and connect**.
-4. Confirma que el indicador dice **Connected**.
+3. Abre Buttercup y haz clic en **Iniciar y conectar**.
+4. Confirma que el indicador dice **Conectado**.
 
-De ahora en adelante, usa **Start and connect** con normalidad. Después de reiniciar el ordenador, puede iniciar el asistente de nuevo; no se necesita archivo de conexión ni terminal.
+De ahora en adelante, usa **Iniciar y conectar** con normalidad. Después de reiniciar el ordenador, puede iniciar el asistente de nuevo; no se necesita archivo de conexión ni terminal.
 
 <a id="manual"></a>
 ### Método B: conexión manual sin permisos Flatpak adicionales
@@ -147,8 +147,8 @@ Elige esto si quieres mantener los permisos de sandbox predeterminados de Zen. P
 #### B1. Copia el origen de conexión del navegador
 
 1. Abre Buttercup en el perfil del navegador que quieras usar.
-2. Expande **Connect without native messaging**.
-3. Haz clic en **Copy origin**.
+2. Expande **Conectar sin mensajería nativa**.
+3. Haz clic en **Copiar origen**.
 
 Usa el valor de ese botón. No copies el **Extension ID** de How to connect: el origen de conexión empieza por `moz-extension://` e identifica este perfil del navegador.
 
@@ -164,11 +164,11 @@ El auxiliar inicia el asistente en segundo plano. No tienes que dejar el termina
 
 #### B3. Importa y comprueba la conexión
 
-1. Vuelve a Buttercup → **Connect without native messaging**.
-2. Haz clic en **Open connection editor**. Se abre una pestaña para que el selector de archivos pueda permanecer abierto cuando se cierre la ventana emergente.
+1. Vuelve a Buttercup → **Conectar sin mensajería nativa**.
+2. Haz clic en **Abrir editor de conexión**. Se abre una pestaña para que el selector de archivos pueda permanecer abierto cuando se cierre la ventana emergente.
 3. Elige el archivo JSON que acabas de guardar.
-4. Haz clic en **Import connection**.
-5. Comprueba que aparezca **Assistant connected** / **Connected**.
+4. Haz clic en **Importar conexión**.
+5. Comprueba que aparezca **Assistant connected** / **Conectado**.
 6. Elimina el archivo JSON después: contiene el token privado de tu asistente local.
 
 La conexión importada permanece guardada para ese perfil. Cambiar los ajustes de proveedor o subtítulos no la elimina. Un nuevo perfil del navegador necesita un archivo nuevo. Las copias de seguridad de ajustes excluyen intencionadamente la conexión local.
@@ -181,16 +181,16 @@ Ejecuta **Start Buttercup assistant.sh** desde la misma carpeta del proyecto. Si
 sh "Start Buttercup assistant.sh"
 ```
 
-Luego haz clic en **Check connection** en Buttercup. No tienes que crear ni importar el archivo JSON de nuevo tras cada reinicio. Con este método, **Start and connect** sigue intentando la mensajería nativa; usa el auxiliar y **Check connection** en su lugar.
+Luego haz clic en **Comprobar conexión** en Buttercup. No tienes que crear ni importar el archivo JSON de nuevo tras cada reinicio. Con este método, **Iniciar y conectar** sigue intentando la mensajería nativa; usa el auxiliar y **Comprobar conexión** en su lugar.
 
 ## 5. Genera tus primeros subtítulos
 
-1. Elige un proveedor en **Transcription** e introduce su clave de API.
+1. Elige un proveedor en **Transcripción** e introduce su clave de API.
 2. Abre un vídeo de YouTube.
-3. Haz clic en el botón **BC** del reproductor, o en **Generate captions** en Buttercup.
+3. Haz clic en el botón **BC** del reproductor, o en **Generar subtítulos** en Buttercup.
 4. Espera el mensaje de finalización.
 
-**Generate** reutiliza una transcripción en caché cuando está disponible. **Regenerate subtitles** solicita explícitamente una transcripción nueva y puede generar cargos del proveedor. En **Start a new subtitle**, elige los segmentos originales del proveedor o deja que Buttercup los reagrupe. Los cambios de diseño pueden usar la caché existente.
+**Generate** reutiliza una transcripción en caché cuando está disponible. **Regenerar subtítulos** solicita explícitamente una transcripción nueva y puede generar cargos del proveedor. En **Empezar un subtítulo nuevo**, elige los segmentos originales del proveedor o deja que Buttercup los reagrupe. Los cambios de diseño pueden usar la caché existente.
 
 ## Si algo va mal
 
@@ -203,6 +203,6 @@ Luego haz clic en **Check connection** en Buttercup. No tienes que crear ni impo
 | La extensión está instalada pero el asistente no conecta | Es un problema distinto de la firma. Los usuarios de navegadores nativos deben volver a ejecutar el instalador; los usuarios de Flatpak deben completar el Método A o B. |
 | El Método A sigue sin conectar | Confirma que el comando del lanzador se ejecutó correctamente, que ambas entradas de Flatseal se añadieron a Zen y que Zen se reinició por completo. Mantén la carpeta del proyecto en su sitio. Las anulaciones personalizadas del sistema de archivos pueden requerir volver a la ruta manual. |
 | El Método B dice que el archivo pertenece a otro perfil | Copia el origen del perfil actual y genera un nuevo archivo de conexión. |
-| El Método B funcionaba antes de reiniciar el ordenador | Ejecuta `Start Buttercup assistant.sh` y luego **Check connection**. Normalmente no hace falta volver a importar. |
+| El Método B funcionaba antes de reiniciar el ordenador | Ejecuta `Start Buttercup assistant.sh` y luego **Comprobar conexión**. Normalmente no hace falta volver a importar. |
 
 Para versiones probadas, limitaciones, opciones manuales de CLI y el diseño de seguridad, consulta las [notas técnicas y de compatibilidad de Gecko](../firefox.md).

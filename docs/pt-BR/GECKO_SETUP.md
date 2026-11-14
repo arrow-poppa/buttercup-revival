@@ -8,9 +8,9 @@ Você instalará duas partes: a extensão adiciona o botão BC ao YouTube; o ass
 
 | Seu navegador | Instalar a extensão | Conectar o assistente |
 | --- | --- | --- |
-| Zen nativo | Instalação permanente não assinada, explicada abaixo, ou instalação temporária | Clique em **Start and connect** |
-| Firefox Release padrão | Pacote assinado pela Mozilla para instalação permanente, ou instalação temporária | Clique em **Start and connect** em uma instalação nativa |
-| Firefox ESR, Developer Edition, Nightly ou uma versão sem marca | A instalação não assinada é possível em versões compatíveis; consulte a tabela de assinaturas | Clique em **Start and connect** em uma instalação nativa |
+| Zen nativo | Instalação permanente não assinada, explicada abaixo, ou instalação temporária | Clique em **Iniciar e conectar** |
+| Firefox Release padrão | Pacote assinado pela Mozilla para instalação permanente, ou instalação temporária | Clique em **Iniciar e conectar** em uma instalação nativa |
+| Firefox ESR, Developer Edition, Nightly ou uma versão sem marca | A instalação não assinada é possível em versões compatíveis; consulte a tabela de assinaturas | Clique em **Iniciar e conectar** em uma instalação nativa |
 | Zen Flatpak | Instale como no Zen | Escolha **Método A: automático com Flatseal** ou **Método B: conexão manual** |
 | Outros navegadores Gecko modernos | Consulte a tabela de assinaturas e os requisitos do navegador | O suporte a mensagens nativas depende do navegador e do pacote; veja os [detalhes de compatibilidade](../firefox.md) |
 
@@ -95,14 +95,14 @@ Essa instalação é removida quando o navegador é fechado. Para instalação p
 <a id="connect"></a>
 ## 4. Conecte o assistente
 
-**Instalação nativa do navegador:** abra o Buttercup e clique em **Start and connect**. O indicador deve mudar para **Connected**. Você não precisa dos métodos Flatpak abaixo.
+**Instalação nativa do navegador:** abra o Buttercup e clique em **Iniciar e conectar**. O indicador deve mudar para **Conectado**. Você não precisa dos métodos Flatpak abaixo.
 
 **Zen Flatpak:** escolha um dos métodos a seguir. Ambos usam o mesmo assistente e preservam suas configurações de provedor.
 
 <a id="flatseal"></a>
 ### Método A: conexão automática com Flatseal
 
-Escolha este método se quiser que **Start and connect** inicie o assistente, inclusive depois de reiniciar o computador.
+Escolha este método se quiser que **Iniciar e conectar** inicie o assistente, inclusive depois de reiniciar o computador.
 
 #### A1. Prepare o inicializador uma vez
 
@@ -133,10 +133,10 @@ A permissão do barramento de sessão permite que o Zen execute programas no sis
 
 1. Feche completamente o Zen, inclusive outras janelas e instâncias em segundo plano.
 2. Abra o Zen novamente.
-3. Abra o Buttercup e clique em **Start and connect**.
-4. Confirme que o indicador mostra **Connected**.
+3. Abra o Buttercup e clique em **Iniciar e conectar**.
+4. Confirme que o indicador mostra **Conectado**.
 
-A partir de agora, use **Start and connect** normalmente. Após reiniciar o computador, ele pode iniciar o assistente novamente; não é necessário arquivo de conexão nem terminal.
+A partir de agora, use **Iniciar e conectar** normalmente. Após reiniciar o computador, ele pode iniciar o assistente novamente; não é necessário arquivo de conexão nem terminal.
 
 <a id="manual"></a>
 ### Método B: conexão manual sem permissões Flatpak adicionais
@@ -146,8 +146,8 @@ Escolha este método se quiser manter as permissões padrão da sandbox do Zen. 
 #### B1. Copie a origem de conexão do navegador
 
 1. Abra o Buttercup no perfil do navegador que deseja usar.
-2. Expanda **Connect without native messaging**.
-3. Clique em **Copy origin**.
+2. Expanda **Conectar sem mensagens nativas**.
+3. Clique em **Copiar origem**.
 
 Use o valor desse botão. Não copie o **Extension ID** exibido em How to connect: a origem de conexão começa com `moz-extension://` e identifica esse perfil do navegador.
 
@@ -163,11 +163,11 @@ O programa inicia o assistente em segundo plano. Não é necessário deixar o te
 
 #### B3. Importe e verifique a conexão
 
-1. Volte ao Buttercup → **Connect without native messaging**.
-2. Clique em **Open connection editor**. Uma aba é aberta para que o seletor de arquivos permaneça disponível quando o popup fechar.
+1. Volte ao Buttercup → **Conectar sem mensagens nativas**.
+2. Clique em **Abrir editor de conexão**. Uma aba é aberta para que o seletor de arquivos permaneça disponível quando o popup fechar.
 3. Escolha o arquivo JSON que você acabou de salvar.
-4. Clique em **Import connection**.
-5. Verifique se aparece **Assistant connected** / **Connected**.
+4. Clique em **Importar conexão**.
+5. Verifique se aparece **Assistant connected** / **Conectado**.
 6. Exclua o arquivo JSON depois: ele contém seu token privado do assistente local.
 
 A conexão importada permanece salva nesse perfil. Alterar as configurações de provedor ou legenda não a remove. Um novo perfil do navegador precisa de um novo arquivo. Os backups de configurações excluem intencionalmente a conexão local.
@@ -180,16 +180,16 @@ Execute **Start Buttercup assistant.sh** na mesma pasta do projeto. Se necessár
 sh "Start Buttercup assistant.sh"
 ```
 
-Em seguida, clique em **Check connection** no Buttercup. Normalmente não é preciso criar e importar o JSON novamente a cada reinicialização. Com esse método, **Start and connect** ainda tenta usar mensagens nativas; use o inicializador e **Check connection**.
+Em seguida, clique em **Verificar conexão** no Buttercup. Normalmente não é preciso criar e importar o JSON novamente a cada reinicialização. Com esse método, **Iniciar e conectar** ainda tenta usar mensagens nativas; use o inicializador e **Verificar conexão**.
 
 ## 5. Gere suas primeiras legendas
 
-1. Escolha um provedor em **Transcription** e insira sua chave de API.
+1. Escolha um provedor em **Transcrição** e insira sua chave de API.
 2. Abra um vídeo no YouTube.
-3. Clique no botão **BC** no player ou em **Generate captions** no Buttercup.
+3. Clique no botão **BC** no player ou em **Gerar legendas** no Buttercup.
 4. Aguarde a mensagem de conclusão.
 
-**Generate** reutiliza uma transcrição em cache quando disponível. **Regenerate subtitles** solicita explicitamente uma nova transcrição e pode gerar cobranças do provedor. Em **Start a new subtitle**, escolha os segmentos originais do provedor ou permita que o Buttercup os reagrupe. Alterações de layout podem usar o cache existente.
+**Generate** reutiliza uma transcrição em cache quando disponível. **Regenerar legendas** solicita explicitamente uma nova transcrição e pode gerar cobranças do provedor. Em **Iniciar uma nova legenda**, escolha os segmentos originais do provedor ou permita que o Buttercup os reagrupe. Alterações de layout podem usar o cache existente.
 
 ## Se algo der errado
 
@@ -202,6 +202,6 @@ Em seguida, clique em **Check connection** no Buttercup. Normalmente não é pre
 | A extensão está instalada, mas o assistente não conecta | Esse problema é diferente da assinatura. Usuários de navegadores nativos devem executar o instalador novamente; usuários Flatpak devem concluir o Método A ou B. |
 | O Método A ainda não conecta | Confirme que o comando do inicializador funcionou, que as duas entradas foram adicionadas ao próprio Zen no Flatseal e que o Zen foi reiniciado completamente. Mantenha a pasta do projeto no lugar. Permissões personalizadas de arquivos podem exigir o uso da conexão manual. |
 | O Método B diz que o arquivo pertence a outro perfil | Copie a origem do perfil atual e gere um novo arquivo de conexão. |
-| O Método B funcionava antes de reiniciar o computador | Execute `Start Buttercup assistant.sh` e clique em **Check connection**. Normalmente não é necessário importar novamente. |
+| O Método B funcionava antes de reiniciar o computador | Execute `Start Buttercup assistant.sh` e clique em **Verificar conexão**. Normalmente não é necessário importar novamente. |
 
 Para versões testadas, limitações, opções manuais de linha de comando e detalhes de segurança, consulte as [notas técnicas e de compatibilidade Gecko](../firefox.md).
