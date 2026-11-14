@@ -148,7 +148,7 @@ export function validateSettings(input) {
     value.audioFormatProfiles = validateAudioFormatProfiles(value.audioFormatProfiles);
     if (!['speech', 'words', 'provider'].includes(value.cueBreaks)) throw new Error('Invalid subtitle break mode');
     if (!['auto', 'light', 'dark'].includes(value.theme)) throw new Error('Invalid appearance');
-    if (!['auto', 'en', 'pt-BR', 'es', 'ja', 'zh-CN'].includes(value.uiLanguage)) throw new Error('Invalid interface language');
+    if (!['auto', 'en', 'pt-BR', 'es', 'ja', 'zh-CN', 'zh-TW'].includes(value.uiLanguage)) throw new Error('Invalid interface language');
     if (!['transcriptions', 'chat'].includes(value.openrouterMode)) throw new Error('Invalid OpenRouter API mode');
     if (!['transcriptions', 'chat'].includes(value.customMode)) throw new Error('Invalid custom API mode');
     for (const key of ['openrouterProvider', 'customProvider']) {

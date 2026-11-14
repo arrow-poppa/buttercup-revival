@@ -303,6 +303,20 @@ try {
     await evaluate(popup, `(document.getElementById('status').textContent='Starting a fresh transcription…',true)`);
     await until(() => evaluate(popup, `document.getElementById('status').textContent==='Iniciando uma nova transcrição…'`));
     console.log('Gecko Portuguese UI and dynamic status localization passed');
+    await evaluate(popup, `(async()=>{localStorage.setItem('buttercup-language','zh-TW');const m=await import('./api/settings.js');await m.persistDraft({uiLanguage:'zh-TW'});await m.commitDraft();return true})()`);
+    await call('browsingContext.close', { context: popup });
+    popup = await open(base + 'popup.html');
+    await until(() => evaluate(popup, `document.documentElement.lang==='zh-TW'&&!document.getElementById('settings-fields').disabled`));
+    assert.equal(await evaluate(popup, `document.querySelector('[data-setting="uiLanguage"]').value`), 'zh-TW');
+    assert.equal(await evaluate(popup, `document.querySelector('[data-setting="uiLanguage"] option[value="zh-TW"]').textContent`), '繁體中文');
+    assert.equal(await evaluate(popup, `document.getElementById('regenerate').textContent`), '重新生成字幕');
+    assert.equal(await evaluate(popup, `document.querySelector('#manual-connection summary').textContent`), '不使用原生訊息傳遞連線');
+    const chineseLocales = await evaluate(popup, `(async()=>{const {resolveLanguage}=await import('./api/i18n.js');return ['zh-TW','zh-HK','zh-MO','zh-Hant','zh-Hans-TW'].map(locale=>resolveLanguage('auto',locale))})()`);
+    assert.deepEqual(chineseLocales, ['zh-TW', 'zh-TW', 'zh-TW', 'zh-TW', 'zh-CN']);
+    await evaluate(popup, `(document.getElementById('status').textContent='Settings saved.',true)`);
+    await until(() => evaluate(popup, `document.getElementById('status').textContent==='設定已儲存。'`));
+    assert.equal(await evaluate(popup, `(await import('./api/config.js')).getSettings().then(s=>s.backendToken===${JSON.stringify(token)})`), true);
+    console.log('Gecko Traditional Chinese UI, locale detection, persistence and dynamic status passed');
     assert.deepEqual(errors, []);
     console.log('PASS: shared UI, private settings, native pairing, hidden long job, subtitles, cache, SRT export, asbplayer, legacy settings, cancellation, reload');
 } finally {

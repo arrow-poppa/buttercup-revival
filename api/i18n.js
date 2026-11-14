@@ -4,18 +4,23 @@ import ptBR from '../locales/pt-BR.js';
 import es from '../locales/es.js';
 import ja from '../locales/ja.js';
 import zhCN from '../locales/zh-CN.js';
+import zhTW from '../locales/zh-TW.js';
 
 // Each dictionary maps a source string, exactly as written in the code or in
 // popup.html, to its translation. A source with {0}, {1}… is a pattern whose
 // slots carry the changing parts (and are translated themselves). Anything
 // missing from a dictionary is shown as written, so a new string never breaks.
-export const LANGUAGES = { en, 'pt-BR': ptBR, es, ja, 'zh-CN': zhCN };
+export const LANGUAGES = { en, 'pt-BR': ptBR, es, ja, 'zh-CN': zhCN, 'zh-TW': zhTW };
 let exact = null, patterns = [];
 
 export function resolveLanguage(choice = 'auto', system = globalThis.navigator?.language || 'en') {
     if (Object.hasOwn(LANGUAGES, choice)) return choice;
-    const base = String(system).toLowerCase().split('-')[0];
-    return { pt: 'pt-BR', es: 'es', ja: 'ja', zh: 'zh-CN' }[base] || 'en';
+    try {
+        const locale = new Intl.Locale(String(system).replaceAll('_', '-'));
+        // Explicit script subtags take priority over region (e.g. zh-Hans-HK).
+        if (locale.language === 'zh') return locale.maximize().script === 'Hant' ? 'zh-TW' : 'zh-CN';
+        return { pt: 'pt-BR', es: 'es', ja: 'ja' }[locale.language] || 'en';
+    } catch { return 'en'; }
 }
 
 export function setLanguage(choice, system) {

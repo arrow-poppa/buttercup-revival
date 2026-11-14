@@ -12,7 +12,7 @@ await mkdir(workspace, { recursive: true });
 const extension = path.join(root, 'dist/chromium');
 const source = await readFile(path.join(root, 'popup.html'), 'utf8');
 // Product/API identifiers, native language names and example values stay literal.
-const preserved = new Set(['Buttercup', 'English', 'Português', 'Español', '日本語', '简体中文',
+const preserved = new Set(['Buttercup', 'English', 'Português', 'Español', '日本語', '简体中文', '繁體中文',
     'pt, en, ja…', 'OpenRouter', 'DeepInfra', 'Groq', 'whisper-large-v3-turbo', 'openai/whisper-large-v3-turbo',
     'Audio Transcriptions', 'Audio Transcriptions (/audio/transcriptions)', 'Chat Completions (/chat/completions)',
     'https://your-worker.example', 'v', 'iGerman00’s Buttercup']);
@@ -22,6 +22,10 @@ const cases = [
     ['es-ES', 'es', 'Conectar', 'Asistente local'],
     ['ja-JP', 'ja', '接続', 'ローカルアシスタント'],
     ['zh-CN', 'zh-CN', '连接', '本地助手'],
+    ['zh-TW', 'zh-TW', '連線', '本機助手'],
+    ['zh-HK', 'zh-TW', '連線', '本機助手'],
+    ['zh-Hant', 'zh-TW', '連線', '本機助手'],
+    ['zh-Hans-HK', 'zh-CN', '连接', '本地助手'],
 ];
 for (const [locale, language, badge, heading] of cases) {
     const profile = await mkdtemp(path.join(workspace, 'i18n-'));
@@ -94,6 +98,15 @@ for (const [locale, language, badge, heading] of cases) {
             assert.equal(await pageColor(), 'rgb(28, 25, 32)');
             await popup.emulateMedia({ colorScheme: 'light' });
             assert.equal(await pageColor(), 'rgb(255, 248, 244)');
+            const languagePicker = popup.locator('[data-setting="uiLanguage"]');
+            await languagePicker.selectOption('zh-TW');
+            await popup.waitForFunction(() => document.documentElement.lang === 'zh-TW' && !document.getElementById('settings-fields').disabled);
+            assert.equal(await popup.locator('#regenerate').textContent(), LANGUAGES['zh-TW']['Regenerate subtitles']);
+            await popup.reload();
+            await popup.waitForFunction(() => document.documentElement.lang === 'zh-TW' && !document.getElementById('settings-fields').disabled);
+            assert.equal(await languagePicker.inputValue(), 'zh-TW', 'An explicit language choice must persist over an English browser locale');
+            await languagePicker.selectOption('en');
+            await popup.waitForFunction(() => document.documentElement.lang === 'en' && !document.getElementById('settings-fields').disabled);
         }
         if (language === 'en') await popup.locator('details').filter({ has: first }).screenshot({ path: path.join(workspace, 'subtitle-layout.png') });
         console.log(`PASS ${language}: complete popup catalog, translated controls/status/shortcuts, English metadata, aligned inputs`);

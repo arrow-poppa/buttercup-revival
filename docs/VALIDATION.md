@@ -17,6 +17,12 @@
 - **126 JavaScript tests passed**, including catalog consistency, markup preservation and new-feature coverage. The existing Chromium i18n suite now audits every translatable source string in the popup against each catalog, with explicit exceptions for identifiers/examples, and checks dynamic regeneration/timing warnings and unassigned shortcuts in all five interface languages. All five cases passed on Chromium 151.0.7922.34.
 - Firefox 159.0 passed the existing native-assistant/subtitle runtime harness and additional Portuguese popup checks for regeneration, manual connection, shortcuts, themes and dynamic status translation. External transcription remains simulated; no paid API requests were made. Both browser builds were rebuilt; extension identities and English browser metadata remain unchanged.
 
+## Traditional Chinese — 2026-11-14 (unreleased)
+
+- Added a complete `zh-TW` catalog with **386 entries**, matching the Simplified Chinese source keys and preserving placeholders, HTML, identifiers and filenames. The popup offers **繁體中文**; settings validation and backup import/export accept and preserve the new language.
+- Automatic selection uses the browser locale's maximized script: Taiwan, Hong Kong, Macao and `zh-Hant` select Traditional Chinese. An explicit `Hans`/`Hant` script takes priority over the region, while a saved UI language takes priority over automatic selection. No runtime conversion dependency was added.
+- **127 JavaScript tests passed**. The Chromium 151.0.7922.34 i18n suite passed all six interface languages plus Hong Kong, Hant and explicit-Hans regional cases, including manual language switching and reload persistence. Firefox 159.0 passed Traditional Chinese UI, saved language, locale-resolution and dynamic-status checks alongside its existing subtitle/native-assistant regressions. Both build targets include the new catalog; extension IDs and English metadata remain unchanged. External transcription was simulated; no release was published.
+
 Ambiente local: Windows, Python 3.14.6, Node.js 26.4.0, FFmpeg/FFprobe 9.0.2, yt-dlp 2026.8.19, yt-dlp-ejs 0.8.0, pytubefix 11.2.1.
 
 ## Executado localmente

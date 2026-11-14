@@ -33,7 +33,7 @@ or saves it as an `.srt` file.
 - **Three ways to use the result:** captions on the YouTube player, automatic delivery to **asbplayer**, or `.srt` / `.vtt` files saved to a folder you pick.
 - **Reuse cached transcripts.** Change subtitle layout or export again without another provider request. Regenerate explicitly requests a fresh transcription.
 - **Local audio preparation.** The assistant prepares audio on your computer; the extension sends it and the required API key only to your selected transcription provider.
-- **Five interface languages:** English, Português, Español, 日本語, 简体中文.
+- **Six interface languages:** English, Português, Español, 日本語, 简体中文, 繁體中文.
 
 ## 🧩 How it works
 
@@ -271,7 +271,7 @@ For Japanese, Chinese, and other supported scripts without spaces, subtitle layo
 
 ## 🌍 Languages
 
-The interface is available in **English, Português (Brasil), Español, 日本語 and 简体中文**. Pick one from the menu at the top of the popup.
+The interface is available in **English, Português (Brasil), Español, 日本語, 简体中文 and 繁體中文**. Pick one from the menu at the top of the popup. With automatic language selection, Traditional Chinese is used for Taiwan, Hong Kong, Macao and `zh-Hant` browser locales; an explicit script preference takes priority over the region.
 
 Translations live in [`locales/`](locales), one file per language, as `"original text": "translation"`. All source strings and translation keys are English. The extension description and installers are always English. Text without a translation is shown as written, so a missing entry never breaks anything. To add a language, copy a file, translate the values, and register it in [`api/i18n.js`](api/i18n.js).
 

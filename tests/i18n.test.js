@@ -1,13 +1,23 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { LANGUAGES, resolveLanguage, setLanguage, tr } from '../api/i18n.js';
+import { DEFAULTS, validateSettings } from '../api/config.js';
+import { formDraft, draftSettings, exportDraft, importDraft } from '../api/settings.js';
 
 test('language follows the explicit choice, then the browser language, then English', () => {
     assert.equal(resolveLanguage('es', 'pt-BR'), 'es');
     assert.equal(resolveLanguage('auto', 'pt-PT'), 'pt-BR');
     assert.equal(resolveLanguage('auto', 'es-419'), 'es');
     assert.equal(resolveLanguage('auto', 'ja-JP'), 'ja');
-    assert.equal(resolveLanguage('auto', 'zh-TW'), 'zh-CN');
+    for (const language of ['zh-TW', 'zh-HK', 'zh-MO', 'zh-Hant', 'zh-Hant-CN', 'zh_Hant_HK']) {
+        assert.equal(resolveLanguage('auto', language), 'zh-TW', language);
+    }
+    for (const language of ['zh', 'zh-CN', 'zh-SG', 'zh-Hans', 'zh-Hans-TW', 'zh-Hans-HK']) {
+        assert.equal(resolveLanguage('auto', language), 'zh-CN', language);
+    }
+    assert.equal(resolveLanguage('zh-TW', 'zh-CN'), 'zh-TW');
+    assert.equal(resolveLanguage('zh-CN', 'zh-TW'), 'zh-CN');
+    assert.equal(resolveLanguage('auto', 'invalid--locale'), 'en');
     assert.equal(resolveLanguage('auto', 'de-DE'), 'en');
     assert.equal(resolveLanguage('unknown', 'fr'), 'en');
 });
@@ -42,6 +52,12 @@ test('messages are translated whole, by pattern with nested parts, or left as wr
     setLanguage('zh-CN');
     assert.equal(tr('Settings saved.'), '设置已保存。');
     assert.equal(tr('Subtitles ready (cache).'), '字幕已就绪（缓存）。');
+    setLanguage('zh-TW');
+    assert.equal(tr('Settings saved.'), '設定已儲存。');
+    assert.equal(tr('Local assistant'), '本機助手');
+    assert.equal(tr('Not assigned'), '未指派');
+    assert.equal(tr('Subtitles ready (cache).'), '字幕已就緒（快取）。');
+    setLanguage('en');
 });
 
 test('every translation keeps the slots and the markup of its source', () => {
@@ -54,7 +70,7 @@ test('every translation keeps the slots and the markup of its source', () => {
     }
     // Every translated source key is English; English itself needs no dictionary.
     for (const source of [...Object.keys(LANGUAGES.en), ...Object.keys(LANGUAGES['pt-BR']), ...Object.keys(LANGUAGES.es)]) {
-        for (const language of ['ja', 'zh-CN']) assert.ok(Object.hasOwn(LANGUAGES[language], source), `${language} is missing: ${source}`);
+        for (const language of ['ja', 'zh-CN', 'zh-TW']) assert.ok(Object.hasOwn(LANGUAGES[language], source), `${language} is missing: ${source}`);
         assert.ok(Object.hasOwn(LANGUAGES.es, source), `es is missing: ${source}`);
     }
 });
@@ -64,7 +80,7 @@ test('recent popup controls and status messages have translations in every suppo
         'Regenerate subtitles', 'Starting a fresh transcription…', 'Connect without native messaging', 'Copy origin',
         'Open connection editor', 'Private connection file', 'Import connection', 'Keep provider segments (original timing)',
         'Word timestamps are unavailable for some text. Subtitle boundaries were estimated within the original segment to respect the word limit.'];
-    for (const language of ['pt-BR', 'es', 'ja', 'zh-CN']) {
+    for (const language of ['pt-BR', 'es', 'ja', 'zh-CN', 'zh-TW']) {
         setLanguage(language);
         for (const message of messages) {
             assert.ok(Object.hasOwn(LANGUAGES[language], message), `${language}: ${message}`);
@@ -73,4 +89,12 @@ test('recent popup controls and status messages have translations in every suppo
         assert.equal(tr('Subtitles ready (cache).'), LANGUAGES[language]['Subtitles ready ({0}).'].replace('{0}', tr('cache')));
     }
     setLanguage('en');
+});
+
+test('Traditional Chinese has a complete catalog and persists through settings backups', () => {
+    assert.deepEqual(Object.keys(LANGUAGES['zh-TW']).sort(), Object.keys(LANGUAGES['zh-CN']).sort());
+    const settings = validateSettings({ ...DEFAULTS, uiLanguage: 'zh-TW' });
+    const backup = exportDraft(formDraft(settings), 'test');
+    const restored = draftSettings({ ...formDraft(DEFAULTS), ...importDraft(JSON.parse(JSON.stringify(backup))) });
+    assert.equal(restored.uiLanguage, 'zh-TW');
 });
