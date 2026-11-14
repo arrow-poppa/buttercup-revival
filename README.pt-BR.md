@@ -274,7 +274,7 @@ Para japonês, chinês e outros sistemas de escrita compatíveis sem espaços, o
 
 A interface está disponível em **English, Português (Brasil), Español, 日本語, 简体中文 e 繁體中文**. Escolha um no menu no topo do popup. Na seleção automática, chinês tradicional é usado para localidades de Taiwan, Hong Kong, Macau e `zh-Hant`; uma preferência explícita de escrita tem prioridade sobre a região.
 
-As traduções ficam em [`locales/`](locales), um arquivo por idioma, como `"texto original": "tradução"`. Todos os textos de origem e chaves de tradução são em inglês. A descrição da extensão e os instaladores são sempre em inglês. Textos sem tradução aparecem como foram escritos, portanto uma entrada ausente não impede o funcionamento. Para adicionar um idioma, copie um arquivo, traduza os valores e registre-o em [`api/i18n.js`](api/i18n.js).
+As traduções ficam em [`locales/`](locales), um arquivo por idioma, como `"original text": "tradução"`. Todos os textos de origem e chaves de tradução são em inglês. A descrição da extensão e os instaladores são sempre em inglês. Textos sem tradução aparecem como foram escritos, portanto uma entrada ausente não impede o funcionamento. Para adicionar um idioma, copie um arquivo, traduza os valores e registre-o em [`api/i18n.js`](api/i18n.js).
 
 ## 🔄 Atualização
 
